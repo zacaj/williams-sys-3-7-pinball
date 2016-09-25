@@ -1,0 +1,131 @@
+0001   0000             displayStrobe: 	.equ $2800
+0002   0000             displayBcd: 	.equ $2802
+0003   0000             displayStrobeC:	.equ $2801
+0004   0000             displayBcdC:	.equ $2803
+0005   0000             lampRow:		.equ $2400
+0006   0000             lampRowC:		.equ $2401
+0007   0000             lampStrobe:		.equ $2402
+0008   0000             lampStrobeC:	.equ $2403
+0009   0000             
+0010   0000             RAM:			.equ $0000
+0011   0000             cRAM:			.equ $0100
+0012   0000             strobe:			.equ RAM + $00
+0013   0000             counter:		.equ RAM + $01
+0014   0000             temp:			.equ RAM + $02
+0015   0000             counter2:		.equ RAM + $03
+0016   0000             lampColumn:		.equ RAM + $07
+0017   0000             lampRow1:		.equ RAM + $08
+0018   0000             
+0019   0000             displayBcd1:	.equ RAM + $10
+0020   0000             
+0021   7800             main:		.org $7800
+0022   7800             	
+0023   7800             piaSetup:
+0024   7800 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0025   7802 B7 28 01    	staA 	displayStrobeC
+0026   7805 86 3F       	ldaA 	#00111111b	;set LED pins to outputs
+0027   7807 B7 28 00    	staA 	displayStrobe
+0028   780A 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0029   780C B7 28 01    	staA 	displayStrobeC
+0030   780F             	
+0031   780F 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0032   7811 B7 28 03    	staA 	displayBcdC
+0033   7814 86 FF       	ldaA 	#11111111b	;set display BCD to output
+0034   7816 B7 28 02    	staA 	displayBcd
+0035   7819 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0036   781B B7 28 03    	staA 	displayBcdC
+0037   781E             	
+0038   781E 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0039   7820 B7 24 01    	staA 	lampRowC
+0040   7823 86 FF       	ldaA 	#11111111b	;set to output
+0041   7825 B7 24 00    	staA 	lampRow
+0042   7828 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0043   782A B7 24 01    	staA 	lampRowC
+0044   782D             	
+0045   782D 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0046   782F B7 24 03    	staA 	lampStrobeC
+0047   7832 86 FF       	ldaA 	#11111111b	;set to output
+0048   7834 B7 24 02    	staA 	lampStrobe
+0049   7837 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0050   7839 B7 24 03    	staA 	lampStrobeC
+0051   783C             	
+0052   783C 86 00       	ldaA	#00
+0053   783E D7 10       	staB	displayBcd1
+0054   7840             	
+0055   7840 86 FF       	ldaA	#$FF	
+0056   7842 B7 28 00    	staA 	displayStrobe
+0057   7845             
+0058   7845 86 00       	ldaA	#00
+0059   7847 97 07       	staA	lampColumn
+0060   7849             	
+0061   7849 86 F0       	ldaA	#$F0
+0062   784B 97 08       	staA	lampRow1
+0063   784D             	
+0064   784D             loop:
+0065   784D 7C 00 01    	inc		counter
+0066   7850 86 00       	ldaA	#0
+0067   7852 91 01       	cmpA	counter
+0068   7854 26 1F       	bne		counterHandled
+0069   7856 7C 00 03    	inc 	counter2
+0070   7859 91 03       	cmpA	counter2
+0071   785B 26 18       	bne		counterHandled
+0072   785D             	
+0073   785D 86 F0       	ldaA	#$F0
+0074   785F 91 08       	cmpA	lampRow1
+0075   7861 27 0A       	beq		on
+0076   7863             	
+0077   7863 86 F0       	ldaA	#$F0
+0078   7865 97 08       	staA	lampRow1
+0079   7867 86 77       	ldaA	#01110111b
+0080   7869 97 10       	staA	displayBcd1	
+0081   786B 20 08       	bra		counterHandled
+0082   786D             on:
+0083   786D 86 0F       	ldaA	#$0F
+0084   786F 97 08       	staA	lampRow1
+0085   7871 86 33       	ldaA	#00110011b
+0086   7873 97 10       	staA	displayBcd1	
+0087   7875             
+0088   7875             counterHandled:
+0089   7875             
+0090   7875 86 F0       	ldaA	#11110000b	
+0091   7877 9A 00       	oraA	strobe	
+0092   7879 C6 FF       	ldaB 	#$FF
+0093   787B F7 28 02    	staB	displayBcd
+0094   787E B7 28 00    	staA	displayStrobe
+0095   7881 D6 10       	ldaB	displayBcd1
+0096   7883 F7 28 02    	staB	displayBcd
+0097   7886 7C 00 00    	inc 	strobe
+0098   7889             	
+0099   7889 86 FF       	ldaA	#$FF
+0100   788B B7 24 00    	staA	lampRow
+0101   788E 96 07       	ldaA	lampColumn
+0102   7890 B7 24 02    	staA	lampStrobe
+0103   7893 96 08       	ldaA	lampRow1
+0104   7895 B7 24 00    	staA	lampRow
+0105   7898 86 00       	ldaA	#00
+0106   789A 78 00 07    	asl		lampColumn
+0107   789D 91 07       	cmpA	lampColumn
+0108   789F 26 04       	bne		lsNotZero
+0109   78A1             	
+0110   78A1 86 01       	ldaA	#00000001b
+0111   78A3 97 07       	staA	lampColumn
+0112   78A5             lsNotZero:
+0113   78A5             
+0114   78A5 20 A6       	bra		loop
+0115   78A7             	
+0116   78A7             end:
+0117   78A7 20 FE       	bra		end
+0118   78A9             	
+0119   78A9             interrupt:	
+0120   78A9 3B          	rti
+0121   78AA             
+0122   78AA             
+0123   7FF8             pointers: 	.org $7FF8  	; is this right?
+0124   7FF8             	.msfirst
+0125   7FF8 78 A9       	.dw interrupt			
+0126   7FFA 78 A9       	.dw interrupt			
+0127   7FFC 78 A9       	.dw interrupt			
+0128   7FFE 78 00       	.dw main
+0129   8000             	
+0130   8000             	
+0131   8000             	.endtasm: Number of errors = 0

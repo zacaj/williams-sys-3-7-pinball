@@ -1,0 +1,3004 @@
+0001   0000             ;***************************************************************************
+0002   0000             ;* Williams Level 7 Game ROM Template: 
+0003   0000             ;* File Version 0.29 Updated 10-18-2004
+0004   0000             ;* Check back for more recent versions.
+0005   0000             ;***************************************************************************
+0006   0000             ;* While this file describes and works with the Wiliams Level 7 Flipper OS
+0007   0000             ;* there is no code contained in this file, it is simply a description and
+0008   0000             ;* implementation of an interface to the copyrighted code used by Williams
+0009   0000             ;* Electronic Games Inc.
+0010   0000             ;***************************************************************************
+0011   0000             ;* I belive this code was the creation of Larry Demar and the group of 
+0012   0000             ;* inventive programmers at Williams during 1980. If you have information
+0013   0000             ;* on the origins of this system and would like to share them, please email
+0014   0000             ;* me.
+0015   0000             ;***************************************************************************
+0016   0000             ;* Written/Decoded by Jess M. Askey (jess@askey.org)
+0017   0000             ;* More info at...
+0018   0000             ;*    http://www.gamearchive.com/pinball/manufacturer/williams/pinbuilder
+0019   0000             ;***************************************************************************
+0020   0000             ;* The following included file contains the name exports for common system
+0021   0000             ;* calls.
+0022   0000             ;***************************************************************************
+0023   0000             #include "level7.exp"
+0001+  0000             .module noname
+0002+  0000             
+0003+  0000             aud_leftcoins    .EQU  $0102
+0004+  0000             aud_centercoins  .EQU  $0106
+0005+  0000             aud_rightcoins   .EQU  $010a
+0006+  0000             aud_paidcredits  .EQU  $010e
+0007+  0000             aud_specialcredits .EQU  $0112
+0008+  0000             aud_replaycredits .EQU  $0116
+0009+  0000             aud_matchcredits .EQU  $011a
+0010+  0000             aud_totalcredits .EQU  $011e
+0011+  0000             aud_extraballs   .EQU  $0122
+0012+  0000             aud_avgballtime  .EQU  $0126
+0013+  0000             aud_totalballs   .EQU  $012a
+0014+  0000             aud_game1        .EQU  $012e
+0015+  0000             aud_game2        .EQU  $0132
+0016+  0000             aud_game3        .EQU  $0136
+0017+  0000             aud_game4        .EQU  $013a
+0018+  0000             aud_game5        .EQU  $013e
+0019+  0000             aud_game6        .EQU  $0142
+0020+  0000             aud_game7        .EQU  $0146
+0021+  0000             aud_autocycles   .EQU  $014a
+0022+  0000             aud_hstdcredits  .EQU  $014e
+0023+  0000             aud_replay1times .EQU  $0150
+0024+  0000             aud_replay2times .EQU  $0154
+0025+  0000             aud_replay3times .EQU  $0158
+0026+  0000             aud_replay4times .EQU  $015c
+0027+  0000             aud_currenthstd  .EQU  $0166
+0028+  0000             aud_currentcredits .EQU  $016e
+0029+  0000             aud_command      .EQU  $0170
+0030+  0000             adj_cmoscsum     .EQU  $017d
+0031+  0000             adj_backuphstd   .EQU  $0181
+0032+  0000             adj_replay1      .EQU  $0183
+0033+  0000             adj_replay2      .EQU  $0185
+0034+  0000             adj_replay3      .EQU  $0187
+0035+  0000             adj_replay4      .EQU  $0189
+0036+  0000             adj_matchenable  .EQU  $018b
+0037+  0000             adj_specialaward .EQU  $018d
+0038+  0000             adj_replayaward  .EQU  $018f
+0039+  0000             adj_maxplumbbobtilts .EQU  $0191
+0040+  0000             adj_numberofballs .EQU  $0193
+0041+  0000             adj_gameadjust1  .EQU  $0195
+0042+  0000             adj_gameadjust2  .EQU  $0197
+0043+  0000             adj_gameadjust3  .EQU  $0199
+0044+  0000             adj_gameadjust4  .EQU  $019b
+0045+  0000             adj_gameadjust5  .EQU  $019d
+0046+  0000             adj_gameadjust6  .EQU  $019f
+0047+  0000             adj_gameadjust7  .EQU  $01a1
+0048+  0000             adj_gameadjust8  .EQU  $01a3
+0049+  0000             adj_gameadjust9  .EQU  $01a5
+0050+  0000             adj_hstdcredits  .EQU  $01a7
+0051+  0000             adj_max_extraballs .EQU  $01a9
+0052+  0000             adj_max_credits  .EQU  $01ab
+0053+  0000             adj_pricecontrol .EQU  $01ad
+0054+  0000             addthread        .EQU  $ea2f
+0055+  0000             add_points       .EQU  $ec96
+0056+  0000             a_cmosinc        .EQU  $efaf
+0057+  0000             abx_ret          .EQU  $f213
+0058+  0000             award_special    .EQU  $f6a5
+0059+  0000             award_replay     .EQU  $f6bf
+0060+  0000             addcredits       .EQU  $f6fe
+0061+  0000             addcredit2       .EQU  $f701
+0062+  0000             add_player       .EQU  $f858
+0063+  0000             adjust_func      .EQU  $fd0b
+0064+  0000             adjust_a         .EQU  $fff2
+0065+  0000             bitflags         .EQU  $0018
+0066+  0000             b_plus10         .EQU  $ecee
+0067+  0000             b_cmosinc        .EQU  $ef69
+0068+  0000             bit_switch       .EQU  $f2ea
+0069+  0000             bit_lamp_flash   .EQU  $f2ef
+0070+  0000             bit_lamp_buf_1   .EQU  $f2f4
+0071+  0000             bit_lamp_buf_0   .EQU  $f2f9
+0072+  0000             bit_main         .EQU  $f2fc
+0073+  0000             branch_lookup    .EQU  $f38b
+0074+  0000             breg_sto         .EQU  $f3cf
+0075+  0000             branchdata       .EQU  $f5f8
+0076+  0000             branch_invert    .EQU  $f636
+0077+  0000             branch_lamp_on   .EQU  $f63b
+0078+  0000             branch_lamprangeoff .EQU  $f647
+0079+  0000             branch_lamprangeon .EQU  $f64e
+0080+  0000             branch_tilt      .EQU  $f653
+0081+  0000             branch_gameover  .EQU  $f65a
+0082+  0000             branch_lampbuf1  .EQU  $f661
+0083+  0000             branch_switch    .EQU  $f666
+0084+  0000             branch_and       .EQU  $f66b
+0085+  0000             branch_add       .EQU  $f670
+0086+  0000             branch_or        .EQU  $f672
+0087+  0000             branch_equal     .EQU  $f677
+0088+  0000             branch_ge        .EQU  $f67c
+0089+  0000             branch_threadpri .EQU  $f67f
+0090+  0000             branch_bitwise   .EQU  $f686
+0091+  0000             balladjust       .EQU  $f9e6
+0092+  0000             block_copy       .EQU  $ffd1
+0093+  0000             cred_b0          .EQU  $005a
+0094+  0000             cred_b1          .EQU  $005b
+0095+  0000             comma_flags      .EQU  $0060
+0096+  0000             comma_data_temp  .EQU  $008d
+0097+  0000             credp1p2_bufferselect .EQU  $008e
+0098+  0000             current_thread   .EQU  $00b1
+0099+  0000             cur_sndflags     .EQU  $00ba
+0100+  0000             csound_timer     .EQU  $00c3
+0101+  0000             credit_x_temp    .EQU  $00dc
+0102+  0000             cmos_base        .EQU  $0100
+0103+  0000             cmos_csum        .EQU  $0100
+0104+  0000             cmos_bonusunits  .EQU  $0162
+0105+  0000             cmos_coinunits   .EQU  $0164
+0106+  0000             cmos_leftcoinmult .EQU  $01af
+0107+  0000             cmos_centercoinmult .EQU  $01b1
+0108+  0000             cmos_rightcoinmult .EQU  $01b3
+0109+  0000             cmos_coinsforcredit .EQU  $01b5
+0110+  0000             cmos_bonuscoins  .EQU  $01b7
+0111+  0000             cmos_minimumcoins .EQU  $01b9
+0112+  0000             csum1            .EQU  $e83f
+0113+  0000             clear_all        .EQU  $e86c
+0114+  0000             checkswitch      .EQU  $e8d4
+0115+  0000             check_threads    .EQU  $e9fc
+0116+  0000             check_threadid   .EQU  $eb00
+0117+  0000             comma_million    .EQU  $eb99
+0118+  0000             comma_thousand   .EQU  $eb9d
+0119+  0000             checkreplay      .EQU  $ecac
+0120+  0000             check_sw_mask    .EQU  $ede7
+0121+  0000             check_sw_close   .EQU  $ee61
+0122+  0000             check_sw_open    .EQU  $eebb
+0123+  0000             copy_word        .EQU  $ef0f
+0124+  0000             cmosinc_a        .EQU  $ef53
+0125+  0000             cmosinc_b        .EQU  $ef63
+0126+  0000             clr_ram_100      .EQU  $ef74
+0127+  0000             clr_ram          .EQU  $ef77
+0128+  0000             copyblock        .EQU  $efbc
+0129+  0000             copyblock2       .EQU  $efe4
+0130+  0000             csum2            .EQU  $f318
+0131+  0000             complexbranch    .EQU  $f615
+0132+  0000             credit_special   .EQU  $f6b8
+0133+  0000             coinlockout      .EQU  $f72c
+0134+  0000             checkmaxcredits  .EQU  $f749
+0135+  0000             creditq          .EQU  $f75f
+0136+  0000             coin_accepted    .EQU  $f7a2
+0137+  0000             cmos_a_plus_b_cmos .EQU  $f80f
+0138+  0000             clr_bonus_coins  .EQU  $f829
+0139+  0000             csum3            .EQU  $f833
+0140+  0000             clear_range      .EQU  $f894
+0141+  0000             clear_displays   .EQU  $f89a
+0142+  0000             copyplayerdata   .EQU  $f8c8
+0143+  0000             check_hstd       .EQU  $fa92
+0144+  0000             credit_button    .EQU  $fb92
+0145+  0000             check_adv        .EQU  $fc6a
+0146+  0000             check_aumd       .EQU  $fc75
+0147+  0000             cmos_add_d       .EQU  $fde6
+0148+  0000             cmos_a           .EQU  $fe1f
+0149+  0000             cmos_byteloc     .EQU  $01bb
+0150+  0000             cmos_error       .EQU  $ffcb
+0151+  0000             cmos_restore     .EQU  $ffe5
+0152+  0000             dmask_p1         .EQU  $005c
+0153+  0000             dmask_p2         .EQU  $005d
+0154+  0000             dmask_p3         .EQU  $005e
+0155+  0000             dmask_p4         .EQU  $005f
+0156+  0000             delaythread      .EQU  $ea24
+0157+  0000             dump_thread      .EQU  $ea39
+0158+  0000             dsnd_pts         .EQU  $ebfe
+0159+  0000             do_complex_snd   .EQU  $eda7
+0160+  0000             dly_sto          .EQU  $f4d4
+0161+  0000             do_eb            .EQU  $f6d6
+0162+  0000             divide_ab        .EQU  $f816
+0163+  0000             dec2hex          .EQU  $f834
+0164+  0000             do_game_init     .EQU  $f847
+0165+  0000             disp_mask        .EQU  $f919
+0166+  0000             disp_clear       .EQU  $f926
+0167+  0000             dump_score_queue .EQU  $f994
+0168+  0000             do_match         .EQU  $fb39
+0169+  0000             do_tilt          .EQU  $fbe9
+0170+  0000             do_aumd          .EQU  $fc57
+0171+  0000             do_audadj        .EQU  $fca5
+0172+  0000             diag             .EQU  $ff2b
+0173+  0000             diag_showerror   .EQU  $ff7b
+0174+  0000             diag_ramtest     .EQU  $ff81
+0175+  0000             eb_x_temp        .EQU  $00da
+0176+  0000             exe_buffer       .EQU  $1130
+0177+  0000             extraball        .EQU  $f6d5
+0178+  0000             flag_tilt        .EQU  $00c8
+0179+  0000             flag_gameover    .EQU  $00c9
+0180+  0000             flag_bonusball   .EQU  $00ca
+0181+  0000             flags_selftest   .EQU  $00cb
+0182+  0000             flag_timer_bip   .EQU  $00d6
+0183+  0000             flashlamp        .EQU  $e957
+0184+  0000             factory_zeroaudits .EQU  $ef7d
+0185+  0000             fill_hstd_digits .EQU  $fb24
+0186+  0000             fn_gameid        .EQU  $fd23
+0187+  0000             fn_gameaud       .EQU  $fd2e
+0188+  0000             fn_sysaud        .EQU  $fd30
+0189+  0000             fn_hstd          .EQU  $fda9
+0190+  0000             fn_replay        .EQU  $fdb1
+0191+  0000             fn_pricec        .EQU  $fdef
+0192+  0000             fn_prices        .EQU  $fe09
+0193+  0000             fn_ret           .EQU  $fe22
+0194+  0000             fn_credit        .EQU  $fe26
+0195+  0000             fn_cdtbtn        .EQU  $fe29
+0196+  0000             fn_adj           .EQU  $fe33
+0197+  0000             fn_command       .EQU  $fe3e
+0198+  0000             game_ram_2       .EQU  $0002
+0199+  0000             game_ram_3       .EQU  $0003
+0200+  0000             game_ram_4       .EQU  $0004
+0201+  0000             game_ram_5       .EQU  $0005
+0202+  0000             game_ram_6       .EQU  $0006
+0203+  0000             game_ram_7       .EQU  $0007
+0204+  0000             game_ram_8       .EQU  $0008
+0205+  0000             game_ram_9       .EQU  $0009
+0206+  0000             game_ram_a       .EQU  $000a
+0207+  0000             game_ram_b       .EQU  $000b
+0208+  0000             game_ram_c       .EQU  $000c
+0209+  0000             game_ram_d       .EQU  $000d
+0210+  0000             get_hs_digits    .EQU  $ece4
+0211+  0000             getswitch        .EQU  $ee98
+0212+  0000             gettabledata_w   .EQU  $f48c
+0213+  0000             gettabledata_b   .EQU  $f48e
+0214+  0000             getx_rts         .EQU  $f49e
+0215+  0000             give_credit      .EQU  $f6cb
+0216+  0000             gameover         .EQU  $fa1e
+0217+  0000             get_random       .EQU  $fb80
+0218+  0000             hex2bitpos       .EQU  $eb8e
+0219+  0000             hex2dec          .EQU  $ec7f
+0220+  0000             hstd_nextp       .EQU  $fac6
+0221+  0000             hstd_adddig      .EQU  $fb13
+0222+  0000             has_credit       .EQU  $fba3
+0223+  0000             irq_counter      .EQU  $0089
+0224+  0000             irqcount16       .EQU  $0095
+0225+  0000             irqcount         .EQU  $00ac
+0226+  0000             init_done        .EQU  $e840
+0227+  0000             isnd_pts         .EQU  $ebfa
+0228+  0000             isnd_once        .EQU  $ecfc
+0229+  0000             isnd_test        .EQU  $ed42
+0230+  0000             isnd_mult        .EQU  $ed53
+0231+  0000             initialize_game  .EQU  $f878
+0232+  0000             init_player_game .EQU  $f8ad
+0233+  0000             init_player_up   .EQU  $f8d2
+0234+  0000             init_player_sys  .EQU  $f933
+0235+  0000             irq_entry        .EQU  $fff8
+0236+  0000             killthread       .EQU  $ea67
+0237+  0000             killthread_sp    .EQU  $eacc
+0238+  0000             kill_thread      .EQU  $eaf3
+0239+  0000             kill_threads     .EQU  $eafb
+0240+  0000             lampbuffer0      .EQU  $0010
+0241+  0000             lampbufferselect .EQU  $0020
+0242+  0000             lampbuffer1      .EQU  $0028
+0243+  0000             lampflashflag    .EQU  $0030
+0244+  0000             lamp_index_word  .EQU  $008a
+0245+  0000             lamp_bit         .EQU  $008c
+0246+  0000             lamp_flash_rate  .EQU  $00b5
+0247+  0000             lamp_flash_count .EQU  $00b6
+0248+  0000             lastsound        .EQU  $00b9
+0249+  0000             loadpricing      .EQU  $efd0
+0250+  0000             lampbuffers      .EQU  $f134
+0251+  0000             lamp_on          .EQU  $f13c
+0252+  0000             lamp_or          .EQU  $f141
+0253+  0000             lamp_commit      .EQU  $f147
+0254+  0000             lamp_done        .EQU  $f157
+0255+  0000             lamp_off         .EQU  $f15b
+0256+  0000             lamp_and         .EQU  $f160
+0257+  0000             lamp_flash       .EQU  $f169
+0258+  0000             lamp_invert      .EQU  $f170
+0259+  0000             lamp_eor         .EQU  $f175
+0260+  0000             lamp_on_b        .EQU  $f17e
+0261+  0000             lamp_off_b       .EQU  $f183
+0262+  0000             lamp_invert_b    .EQU  $f188
+0263+  0000             lamp_on_1        .EQU  $f18d
+0264+  0000             lamp_off_1       .EQU  $f192
+0265+  0000             lamp_invert_1    .EQU  $f197
+0266+  0000             lampm_off        .EQU  $f1a7
+0267+  0000             lampm_noflash    .EQU  $f1b6
+0268+  0000             lampm_f          .EQU  $f1c7
+0269+  0000             lampm_a          .EQU  $f1ee
+0270+  0000             lampm_b          .EQU  $f1f8
+0271+  0000             lampm_8          .EQU  $f208
+0272+  0000             lampr_start      .EQU  $f21a
+0273+  0000             lr_ret           .EQU  $f21f
+0274+  0000             lampr_end        .EQU  $f226
+0275+  0000             lampr_setup      .EQU  $f22c
+0276+  0000             lamp_left        .EQU  $f255
+0277+  0000             ls_ret           .EQU  $f25a
+0278+  0000             lamp_right       .EQU  $f264
+0279+  0000             lampm_c          .EQU  $f26b
+0280+  0000             lm_test          .EQU  $f26d
+0281+  0000             lampm_e          .EQU  $f27c
+0282+  0000             lampm_d          .EQU  $f294
+0283+  0000             lampm_z          .EQU  $f2b3
+0284+  0000             lampm_x          .EQU  $f302
+0285+  0000             load_sw_no       .EQU  $f5b0
+0286+  0000             lesscredit       .EQU  $fbc1
+0287+  0000             mbip_b0          .EQU  $0058
+0288+  0000             mbip_b1          .EQU  $0059
+0289+  0000             mbipp3p4_bufferselect .EQU  $008f
+0290+  0000             minutetimer      .EQU  $00d4
+0291+  0000             main             .EQU  $e8ad
+0292+  0000             master_vm_lookup .EQU  $f319
+0293+  0000             macro_start      .EQU  $f3ab
+0294+  0000             macro_rts        .EQU  $f3af
+0295+  0000             macro_go         .EQU  $f3b5
+0296+  0000             macro_pcminus100 .EQU  $f3db
+0297+  0000             macro_code_start .EQU  $f3e2
+0298+  0000             macro_special    .EQU  $f3ea
+0299+  0000             macro_extraball  .EQU  $f3ef
+0300+  0000             macro_x8f        .EQU  $f3fb
+0301+  0000             macro_17         .EQU  $f418
+0302+  0000             macro_x17        .EQU  $f41b
+0303+  0000             macro_exec       .EQU  $f46b
+0304+  0000             macro_getnextbyte .EQU  $f495
+0305+  0000             macro_ramadd     .EQU  $f4aa
+0306+  0000             macro_ramcopy    .EQU  $f4bf
+0307+  0000             macro_set_pri    .EQU  $f4ca
+0308+  0000             macro_delay_imm_b .EQU  $f4d2
+0309+  0000             macro_getnextword .EQU  $f4e2
+0310+  0000             macro_get2bytes  .EQU  $f4ea
+0311+  0000             macro_rem_th_s   .EQU  $f4ef
+0312+  0000             macro_rem_th_m   .EQU  $f4f6
+0313+  0000             macro_jsr_noreturn .EQU  $f4fd
+0314+  0000             macro_a_ram      .EQU  $f509
+0315+  0000             macro_b_ram      .EQU  $f518
+0316+  0000             macro_jsr_return .EQU  $f527
+0317+  0000             macro_jmp_cpu    .EQU  $f54f
+0318+  0000             macro_jmp_abs    .EQU  $f566
+0319+  0000             macro_pcadd      .EQU  $f58e
+0320+  0000             macro_setswitch  .EQU  $f5a4
+0321+  0000             macro_clearswitch .EQU  $f5bc
+0322+  0000             macro_branch     .EQU  $f5cd
+0323+  0000             num_players      .EQU  $00cc
+0324+  0000             num_eb           .EQU  $00d0
+0325+  0000             num_tilt         .EQU  $00d3
+0326+  0000             next_sw          .EQU  $e910
+0327+  0000             nextthread       .EQU  $e9ff
+0328+  0000             newthread_sp     .EQU  $ea78
+0329+  0000             newthread_06     .EQU  $eac4
+0330+  0000             nmi_entry        .EQU  $fffc
+0331+  0000             outhole_main     .EQU  $f9ab
+0332+  0000             player_up        .EQU  $00cd
+0333+  0000             pscore_buf       .EQU  $00ce
+0334+  0000             p1_gamedata      .EQU  $1140
+0335+  0000             p2_gamedata      .EQU  $1159
+0336+  0000             p3_gamedata      .EQU  $1172
+0337+  0000             p4_gamedata      .EQU  $118b
+0338+  0000             pia_sound_data   .EQU  $2100
+0339+  0000             pia_sound_ctrl   .EQU  $2101
+0340+  0000             pia_comma_data   .EQU  $2102
+0341+  0000             pia_comma_ctrl   .EQU  $2103
+0342+  0000             pia_sol_low_data .EQU  $2200
+0343+  0000             pia_sol_low_ctrl .EQU  $2201
+0344+  0000             pia_sol_high_data .EQU  $2202
+0345+  0000             pia_sol_high_ctrl .EQU  $2203
+0346+  0000             pia_lamp_row_data .EQU  $2400
+0347+  0000             pia_lamp_row_ctrl .EQU  $2401
+0348+  0000             pia_lamp_col_data .EQU  $2402
+0349+  0000             pia_lamp_col_ctrl .EQU  $2403
+0350+  0000             pia_disp_digit_data .EQU  $2800
+0351+  0000             pia_disp_digit_ctrl .EQU  $2801
+0352+  0000             pia_disp_seg_data .EQU  $2802
+0353+  0000             pia_disp_seg_ctrl .EQU  $2803
+0354+  0000             pia_switch_return_data .EQU  $3000
+0355+  0000             pia_switch_return_ctrl .EQU  $3001
+0356+  0000             pia_switch_strobe_data .EQU  $3002
+0357+  0000             pia_switch_strobe_ctrl .EQU  $3003
+0358+  0000             pia_alphanum_digit_data .EQU  $4000
+0359+  0000             pia_alphanum_digit_ctrl .EQU  $4001
+0360+  0000             pia_alphanum_seg_data .EQU  $4002
+0361+  0000             pia_alphanum_seg_ctrl .EQU  $4003
+0362+  0000             pri_next         .EQU  $eb0a
+0363+  0000             pri_skipme       .EQU  $eb17
+0364+  0000             pack_done        .EQU  $eeb8
+0365+  0000             pia_ddr_data     .EQU  $f10e
+0366+  0000             pc_sto2          .EQU  $f505
+0367+  0000             pc_sto           .EQU  $f54a
+0368+  0000             pull_ba_rts      .EQU  $f75c
+0369+  0000             ptrx_plus_1      .EQU  $f77f
+0370+  0000             ptrx_plus_a      .EQU  $f784
+0371+  0000             ptrx_plus        .EQU  $f785
+0372+  0000             player_ready     .EQU  $f8dd
+0373+  0000             powerup_init     .EQU  $fa34
+0374+  0000             randomseed       .EQU  $00d7
+0375+  0000             reset            .EQU  $e800
+0376+  0000             reset_audits     .EQU  $ef6f
+0377+  0000             restore_hstd     .EQU  $ef9d
+0378+  0000             ram_sto2         .EQU  $f4ba
+0379+  0000             ret_sto          .EQU  $f529
+0380+  0000             ram_sto          .EQU  $f574
+0381+  0000             ret_false        .EQU  $f657
+0382+  0000             ret_true         .EQU  $f65e
+0383+  0000             resetplayerdata  .EQU  $f952
+0384+  0000             rambad           .EQU  $ff1f
+0385+  0000             res_entry        .EQU  $fffe
+0386+  0000             score_p1_b0      .EQU  $0038
+0387+  0000             score_p3_b0      .EQU  $0040
+0388+  0000             score_p4_b0      .EQU  $0044
+0389+  0000             score_p1_b1      .EQU  $0048
+0390+  0000             score_p2_b1      .EQU  $004c
+0391+  0000             score_p3_b1      .EQU  $0050
+0392+  0000             score_p4_b1      .EQU  $0054
+0393+  0000             switch_debounced .EQU  $0061
+0394+  0000             switch_masked    .EQU  $0069
+0395+  0000             switch_pending   .EQU  $0071
+0396+  0000             switch_aux       .EQU  $0079
+0397+  0000             switch_b4        .EQU  $0081
+0398+  0000             swap_player_displays .EQU  $0090
+0399+  0000             solenoid_address .EQU  $0091
+0400+  0000             solenoid_bitpos  .EQU  $0093
+0401+  0000             solenoid_counter .EQU  $0094
+0402+  0000             switch_queue_pointer .EQU  $0096
+0403+  0000             solenoid_queue_pointer .EQU  $0098
+0404+  0000             sys_temp1        .EQU  $00a0
+0405+  0000             sys_temp2        .EQU  $00a1
+0406+  0000             sys_temp3        .EQU  $00a2
+0407+  0000             sys_temp4        .EQU  $00a3
+0408+  0000             sys_temp5        .EQU  $00a4
+0409+  0000             sw_encoded       .EQU  $00a5
+0410+  0000             sys_temp_w2      .EQU  $00a6
+0411+  0000             sys_temp_w3      .EQU  $00a8
+0412+  0000             soundcount       .EQU  $00b8
+0413+  0000             soundptr         .EQU  $00bb
+0414+  0000             soundirqcount    .EQU  $00bd
+0415+  0000             soundindex_com   .EQU  $00bf
+0416+  0000             sys_soundflags   .EQU  $00c1
+0417+  0000             soundindex       .EQU  $00c2
+0418+  0000             spare_ram        .EQU  $00e0
+0419+  0000             switch_queue     .EQU  $1100
+0420+  0000             sol_queue        .EQU  $1118
+0421+  0000             score_queue      .EQU  $1128
+0422+  0000             switches         .EQU  $e90d
+0423+  0000             sw_break         .EQU  $e942
+0424+  0000             solq             .EQU  $e970
+0425+  0000             snd_queue        .EQU  $e98c
+0426+  0000             solbuf           .EQU  $eb23
+0427+  0000             set_solenoid     .EQU  $eb47
+0428+  0000             set_ss_off       .EQU  $eb5f
+0429+  0000             set_s_pia        .EQU  $eb62
+0430+  0000             set_ss_on        .EQU  $eb6b
+0431+  0000             soladdr          .EQU  $eb71
+0432+  0000             ssoladdr         .EQU  $eb82
+0433+  0000             set_comma_bit    .EQU  $ebc4
+0434+  0000             snd_pts          .EQU  $ec01
+0435+  0000             score_main       .EQU  $ec05
+0436+  0000             score_update     .EQU  $ec1d
+0437+  0000             score2hex        .EQU  $ec86
+0438+  0000             sh_exit          .EQU  $ec95
+0439+  0000             split_ab         .EQU  $ecf3
+0440+  0000             sound_sub        .EQU  $ed03
+0441+  0000             snd_exit_pull    .EQU  $ed99
+0442+  0000             snd_exit         .EQU  $ed9b
+0443+  0000             send_snd_save    .EQU  $ed9e
+0444+  0000             send_snd         .EQU  $eda0
+0445+  0000             store_csndflg    .EQU  $edbf
+0446+  0000             sw_ignore        .EQU  $ee01
+0447+  0000             sw_active        .EQU  $ee02
+0448+  0000             sw_down          .EQU  $ee04
+0449+  0000             sw_dtime         .EQU  $ee15
+0450+  0000             sw_trig_yes      .EQU  $ee19
+0451+  0000             sw_proc          .EQU  $ee48
+0452+  0000             sw_pack          .EQU  $eeab
+0453+  0000             sw_get_time      .EQU  $eedb
+0454+  0000             sw_tbl_lookup    .EQU  $eef7
+0455+  0000             setup_vm_stack   .EQU  $ef22
+0456+  0000             stack_done       .EQU  $ef3f
+0457+  0000             sys_irq          .EQU  $eff7
+0458+  0000             spec_sol_def     .EQU  $f122
+0459+  0000             switch_entry     .EQU  $f3cb
+0460+  0000             set_logic        .EQU  $f68b
+0461+  0000             store_display_mask .EQU  $f8a4
+0462+  0000             setplayerbuffer  .EQU  $f8bc
+0463+  0000             saveplayertobuffer .EQU  $f9cb
+0464+  0000             show_hstd        .EQU  $fa0b
+0465+  0000             set_gameover     .EQU  $fa44
+0466+  0000             show_all_scores  .EQU  $fa58
+0467+  0000             set_hstd         .EQU  $fad7
+0468+  0000             send_sound       .EQU  $fb30
+0469+  0000             start_new_game   .EQU  $fbbc
+0470+  0000             selftest_entry   .EQU  $fc23
+0471+  0000             st_diagnostics   .EQU  $fc31
+0472+  0000             st_init          .EQU  $fc80
+0473+  0000             st_nexttest      .EQU  $fc94
+0474+  0000             show_func        .EQU  $fccf
+0475+  0000             st_reset         .EQU  $fd16
+0476+  0000             st_display       .EQU  $fe43
+0477+  0000             st_sound         .EQU  $fe62
+0478+  0000             st_lamp          .EQU  $fe8d
+0479+  0000             st_autocycle     .EQU  $feac
+0480+  0000             st_solenoid      .EQU  $fecb
+0481+  0000             st_switch        .EQU  $fef0
+0482+  0000             st_swnext        .EQU  $fefc
+0483+  0000             swi_entry        .EQU  $fffa
+0484+  0000             temp1            .EQU  $009a
+0485+  0000             temp2            .EQU  $009c
+0486+  0000             temp3            .EQU  $009e
+0487+  0000             thread_priority  .EQU  $00aa
+0488+  0000             thread_timer_byte .EQU  $00b7
+0489+  0000             time             .EQU  $e8f0
+0490+  0000             test_mask_b      .EQU  $ebd0
+0491+  0000             to_ldx_rts       .EQU  $ee95
+0492+  0000             to_macro_go1     .EQU  $f433
+0493+  0000             to_macro_go2     .EQU  $f4bc
+0494+  0000             to_getx_rts      .EQU  $f516
+0495+  0000             to_macro_go4     .EQU  $f54c
+0496+  0000             to_macro_go3     .EQU  $f5c7
+0497+  0000             to_macro_getnextbyte .EQU  $f5ca
+0498+  0000             to_rts3          .EQU  $f63a
+0499+  0000             test_z           .EQU  $f643
+0500+  0000             test_c           .EQU  $f64a
+0501+  0000             to_rts4          .EQU  $f68a
+0502+  0000             to_pula_rts      .EQU  $f898
+0503+  0000             to_copyblock     .EQU  $f9e3
+0504+  0000             to_rts1          .EQU  $fb23
+0505+  0000             to_rts2          .EQU  $fb91
+0506+  0000             tilt_warning     .EQU  $fbdd
+0507+  0000             testdata         .EQU  $fbfa
+0508+  0000             testlists        .EQU  $fc04
+0509+  0000             to_clear_range   .EQU  $fc91
+0510+  0000             to_audadj        .EQU  $fca3
+0511+  0000             tightloop        .EQU  $ff7f
+0512+  0000             unused_ram1      .EQU  $00ab
+0513+  0000             unknown_ram4     .EQU  $00c5
+0514+  0000             unknown_ram5     .EQU  $00c6
+0515+  0000             unknown_ram6     .EQU  $00c7
+0516+  0000             update_commas    .EQU  $eba1
+0517+  0000             update_eb_count  .EQU  $ebdb
+0518+  0000             unpack_byte      .EQU  $f19c
+0519+  0000             update_hstd      .EQU  $faf5
+0520+  0000             vm_reg_a         .EQU  $0000
+0521+  0000             vm_reg_b         .EQU  $0001
+0522+  0000             vm_base          .EQU  $00ad
+0523+  0000             vm_nextslot      .EQU  $00af
+0524+  0000             vm_tail_thread   .EQU  $00b3
+0525+  0000             vm_pc            .EQU  $00d1
+0526+  0000             vm_irqcheck      .EQU  $e946
+0527+  0000             vm_lookup_0x     .EQU  $f339
+0528+  0000             vm_lookup_1x_a   .EQU  $f347
+0529+  0000             vm_lookup_1x_b   .EQU  $f357
+0530+  0000             vm_lookup_2x     .EQU  $f35f
+0531+  0000             vm_lookup_4x     .EQU  $f365
+0532+  0000             vm_lookup_5x     .EQU  $f36b
+0533+  0000             vm_control_0x    .EQU  $f3d3
+0534+  0000             vm_control_1x    .EQU  $f3f4
+0535+  0000             vm_control_2x    .EQU  $f436
+0536+  0000             vm_control_3x    .EQU  $f442
+0537+  0000             vm_control_4x    .EQU  $f44f
+0538+  0000             vm_control_5x    .EQU  $f4a1
+0539+  0000             vm_control_6x    .EQU  $f540
+0540+  0000             vm_control_7x    .EQU  $f544
+0541+  0000             vm_control_8x    .EQU  $f548
+0542+  0000             vm_control_9x    .EQU  $f558
+0543+  0000             vm_control_ax    .EQU  $f562
+0544+  0000             vm_control_bx    .EQU  $f56b
+0545+  0000             vm_control_cx    .EQU  $f578
+0546+  0000             vm_control_dx    .EQU  $f57d
+0547+  0000             vm_control_ex    .EQU  $f587
+0548+  0000             vm_control_fx    .EQU  $f587
+0549+  0000             write_range      .EQU  $f840
+0550+  0000             wordplusbyte     .EQU  $fb17
+0551+  0000             x_temp_1         .EQU  $00d8
+0552+  0000             x_temp_2         .EQU  $00de
+0553+  0000             xplusa           .EQU  $eeff
+0554+  0000             xplusb           .EQU  $ef4d
+0024   0000             #include "wvm7.asm"
+0001+  0000             ;*****************************************************************************
+0002+  0000             ;* Williams Level 7 Virtual Machine Macro Definitions
+0003+  0000             ;*****************************************************************************
+0004+  0000             ;* Code copyright Williams Electronic Games Inc.
+0005+  0000             ;* Written/Decoded by Jess M. Askey (jess@askey.org)
+0006+  0000             ;* For use with TASMx Assembler
+0007+  0000             ;* Visit http://www.gamearchive.com/pinball/manufacturer/williams/pinbuilder
+0008+  0000             ;* for more information.
+0009+  0000             ;* You may redistribute this file as long as this header remains intact.
+0010+  0000             ;*****************************************************************************
+0011+  0000             .module wml7
+0012+  0000             .msfirst
+0013+  0000             
+0014+  0000             wml1_       .equ  $00
+0015+  0000             wml2_       .equ  $00
+0016+  0000             wml3_       .equ  $00
+0017+  0000             wml4_       .equ  $00
+0018+  0000             wml5_       .equ  $00
+0019+  0000             wml6_       .equ  $00
+0020+  0000             
+0021+  0000             #define     FLAG_WML_IF       $10
+0022+  0000             #define     FLAG_WML_ELSE     $20
+0023+  0000             #define	FLAG_WML_BEGIN 	$40
+0024+  0000             #define     FLAG_WML_EXE      $80
+0025+  0000             
+0026+  0000             ;********************************************************
+0027+  0000             ;* First Define the Thread Structure used in the virtual 
+0028+  0000             ;* machine linked list.
+0029+  0000             ;********************************************************
+0030+  0000             ;* Next:	This is the pointer to the next thread in 
+0031+  0000             ;* 		the linked list. The VM requires this to 
+0032+  0000             ;*		move about the list of threads. This is 
+0033+  0000             ;* 		set by the VM thread handlers and does not
+0034+  0000             ;*          need to be manually fiddled with by the 
+0035+  0000             ;*          game program as it is automatic.
+0036+  0000             ;*
+0037+  0000             ;* Timer:	This is a byte timer (0-255) that holds the 
+0038+  0000             ;*          number of IRQ's counts required before the 
+0039+  0000             ;*          thread is executed. This is set by the 
+0040+  0000             ;*          programmer for delays between executions.	
+0041+  0000             ;*
+0042+  0000             ;* Vars:	When a thread is created, the originating
+0043+  0000             ;*          program may push up to 8 additional bytes
+0044+  0000             ;* 		of data onto the stack which will then be
+0045+  0000             ;*          placed into these 8 byte holders.
+0046+  0000             ;*
+0047+  0000             ;* PC:	This is the address of the program entry 
+0048+  0000             ;*          point that will be executed when the thread
+0049+  0000             ;*       	timer expires.
+0050+  0000             ;*
+0051+  0000             ;* ID:	The thread ID is a number that identifies 
+0052+  0000             ;* 		the thread type. The ID defintions are all
+0053+  0000             ;*		decided by the programmer except for thread
+0054+  0000             ;*		ID #06 which is a general 'end-of-ball' terminated
+0055+  0000             ;*		thread. Because the VM can destroy groups of 
+0056+  0000             ;* 		threads by ID and branch on existence of threads
+0057+  0000             ;*    	with certain ID's, this is a very important
+0058+  0000             ;*		design consideration. See the programming 
+0059+  0000             ;*  		manual for more information.
+0060+  0000             ;*	
+0061+  0000             ;* RegA:	This holds the value that was contained in 
+0062+  0000             ;*		the CPU register A when the Thread was created.
+0063+  0000             ;*
+0064+  0000             ;* RegB:	Similar to above, holds the value of CPU reg B.
+0065+  0000             ;*
+0066+  0000             ;* RegX:	Again, holds the value of the X register upon
+0067+  0000             ;*		thread creation.
+0068+  0000             ;*
+0069+  0000             ;************************************************************
+0070+  0000             
+0071+  0000             threadobj_next	.equ	$00
+0072+  0000             threadobj_timer	.equ	$02
+0073+  0000             threadobj_var1	.equ	$03
+0074+  0000             threadobj_var2	.equ	$04
+0075+  0000             threadobj_var3	.equ	$05
+0076+  0000             threadobj_var4	.equ	$06
+0077+  0000             threadobj_var5	.equ	$07
+0078+  0000             threadobj_var6	.equ	$09
+0079+  0000             threadobj_var7	.equ	$09
+0080+  0000             threadobj_var8	.equ	$0a
+0081+  0000             threadobj_pc	.equ	$0b
+0082+  0000             threadobj_id	.equ	$0d
+0083+  0000             threadobj_rega	.equ	$0e
+0084+  0000             threadobj_regb	.equ	$0f
+0085+  0000             threadobj_regx	.equ	$10
+0086+  0000             
+0087+  0000             ;********************************************************
+0088+  0000             ;* Now define some standard RAM locations etc...
+0089+  0000             ;********************************************************
+0090+  0000             rega	.equ	$00
+0091+  0000             regb	.equ	$01
+0092+  0000             
+0093+  0000             ;********************************************************
+0094+  0000             ;* Switch Table Equates
+0095+  0000             ;********************************************************
+0096+  0000             #define	SWITCHENTRY(a,b)	\.db a \.dw b
+0097+  0000             
+0098+  0000             sf_wml7	      .equ	$80
+0099+  0000             sf_code 	      .equ 	$00
+0100+  0000             sf_tilt	      .equ	$40
+0101+  0000             sf_notilt         .equ  $00
+0102+  0000             sf_gameover	      .equ	$20
+0103+  0000             sf_nogameover     .equ  $00
+0104+  0000             sf_enabled	      .equ	$10
+0105+  0000             sf_disabled       .equ  $00
+0106+  0000             sf_instant	      .equ	$08
+0107+  0000             sf_delayed        .equ  $00
+0108+  0000             
+0109+  0000             ;********************************************************
+0110+  0000             ;* Test for our current execution mode, CODE or WML7
+0111+  0000             ;* If we think the programmer has their code wrong, 
+0112+  0000             ;* then throw an error.
+0113+  0000             ;********************************************************
+0114+  0000             ;_MODECPU_         .equ  $00
+0115+  0000             ;_MODEWML_         .equ  $80
+0116+  0000             ;_CURRENTMODE_     .equ  _MODECPU_
+0117+  0000             ;
+0118+  0000             ;#define     _SETMODECPU_      \_CURRENTMODE_     .set  _MODECPU_
+0119+  0000             ;#define     _SETMODEWML_      \_CURRENTMODE_     .set  _MODEWML_
+0120+  0000             ;
+0121+  0000             ;#define     _CHECKWML_        \#if _CURRENTMODE_ != _MODEWML_
+0122+  0000             ;#defcont                      \     .error "WML7: Execution mode does not expect WML codes now, are you sure your code is structured properly?"
+0123+  0000             ;#defcont                      \#endif
+0124+  0000             ;
+0125+  0000             ;#define     _CHECKCPU_        \#if _CURRENTMODE_ != _MODECPU_
+0126+  0000             ;#defcont                      \     .error "WML7: Execution mode does not expect CPU codes now, are you sure your code is structured properly?"
+0127+  0000             ;#defcont                      \#endif
+0128+  0000             ;********************************************************
+0129+  0000             ;* Define our Level 7 macros.
+0130+  0000             ;********************************************************
+0131+  0000             
+0132+  0000             #define 	PC100_	\.db $00	
+0133+  0000             #define 	NOP_		\.db $01	
+0134+  0000             #define	MRTS_		\.db $02
+0135+  0000             #define	KILL_		\.db $03	
+0136+  0000             #define 	CPUX_		\.db $04
+0137+  0000             #define	SPEC_		\.db $05	
+0138+  0000             #define	EB_		\.db $06	
+0139+  0000             
+0140+  0000             ;********************************************************
+0141+  0000             ;* Lamp Macro Definition: These take care of turning lamps
+0142+  0000             ;*                        on/off and doing the basic lamp
+0143+  0000             ;*                        effects.
+0144+  0000             ;********************************************************
+0145+  0000             #define	BITX_(x,a)		      \.db x,a
+0146+  0000             #define	BITX_(x,a,b)		\.db x,((a&$7F)+$80),b
+0147+  0000             #define	BITX_(x,a,b,c)	      \.db x,((a&$7F)+$80),((b&$7F)+$80),c
+0148+  0000             #define	BITX_(x,a,b,c,d)	      \.db x,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),d
+0149+  0000             #define	BITX_(x,a,b,c,d,e)	\.db x,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),e
+0150+  0000             #define	BITX_(x,a,b,c,d,e,f)    \.db x,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),((e&$7F)+$80),f
+0151+  0000             #define	BITX_(x,a,b,c,d,e,f,g)  \.db x,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),((e&$7F)+$80),((f&$7F)+$80),g
+0152+  0000             
+0153+  0000             #define	BITON_(a)		      \BITX_($10,a)
+0154+  0000             #define	BITON_(a,b)		      \BITX_($10,a,b)
+0155+  0000             #define	BITON_(a,b,c)	      \BITX_($10,a,b,c)
+0156+  0000             #define	BITON_(a,b,c,d)	      \BITX_($10,a,b,c,d)
+0157+  0000             #define	BITON_(a,b,c,d,e)	      \BITX_($10,a,b,c,d,e)
+0158+  0000             #define	BITON_(a,b,c,d,e,f)     \BITX_($10,a,b,c,d,e,f)
+0159+  0000             #define	BITON_(a,b,c,d,e,f,g)   \BITX_($10,a,b,c,d,e,f,g)
+0160+  0000             
+0161+  0000             #define	BITOFF_(a)		      \BITX_($11,a)            
+0162+  0000             #define	BITOFF_(a,b)		\BITX_($11,a,b)          
+0163+  0000             #define	BITOFF_(a,b,c)	      \BITX_($11,a,b,c)        
+0164+  0000             #define	BITOFF_(a,b,c,d)	      \BITX_($11,a,b,c,d)      
+0165+  0000             #define	BITOFF_(a,b,c,d,e)	\BITX_($11,a,b,c,d,e)    
+0166+  0000             #define	BITOFF_(a,b,c,d,e,f)    \BITX_($11,a,b,c,d,e,f)  
+0167+  0000             #define	BITOFF_(a,b,c,d,e,f,g)  \BITX_($11,a,b,c,d,e,f,g)
+0168+  0000                                                 
+0169+  0000             #define	BITINV_(a)		      \BITX_($12,a)            
+0170+  0000             #define	BITINV_(a,b)		\BITX_($12,a,b)          
+0171+  0000             #define	BITINV_(a,b,c)	      \BITX_($12,a,b,c)        
+0172+  0000             #define	BITINV_(a,b,c,d)	      \BITX_($12,a,b,c,d)      
+0173+  0000             #define	BITINV_(a,b,c,d,e)	\BITX_($12,a,b,c,d,e)    
+0174+  0000             #define	BITINV_(a,b,c,d,e,f)    \BITX_($12,a,b,c,d,e,f)  
+0175+  0000             #define	BITINV_(a,b,c,d,e,f,g)  \BITX_($12,a,b,c,d,e,f,g)
+0176+  0000             
+0177+  0000             #define	BITFL_(a)		      \BITX_($13,a)            
+0178+  0000             #define	BITFL_(a,b)			\BITX_($13,a,b)          
+0179+  0000             #define	BITFL_(a,b,c)	      \BITX_($13,a,b,c)        
+0180+  0000             #define	BITFL_(a,b,c,d)	      \BITX_($13,a,b,c,d)      
+0181+  0000             #define	BITFL_(a,b,c,d,e)		\BITX_($13,a,b,c,d,e)    
+0182+  0000             #define	BITFL_(a,b,c,d,e,f)    	\BITX_($13,a,b,c,d,e,f)  
+0183+  0000             #define	BITFL_(a,b,c,d,e,f,g)  	\BITX_($13,a,b,c,d,e,f,g)
+0184+  0000              
+0185+  0000             #define	BITONP_(a)		      \BITX_($14,a)            
+0186+  0000             #define	BITONP_(a,b)		\BITX_($14,a,b)          
+0187+  0000             #define	BITONP_(a,b,c)	      \BITX_($14,a,b,c)        
+0188+  0000             #define	BITONP_(a,b,c,d)	      \BITX_($14,a,b,c,d)      
+0189+  0000             #define	BITONP_(a,b,c,d,e)	\BITX_($14,a,b,c,d,e)    
+0190+  0000             #define	BITONP_(a,b,c,d,e,f)    \BITX_($14,a,b,c,d,e,f)  
+0191+  0000             #define	BITONP_(a,b,c,d,e,f,g)  \BITX_($14,a,b,c,d,e,f,g)
+0192+  0000             
+0193+  0000             #define	BITOFFP_(a)		      \BITX_($15,a)            
+0194+  0000             #define	BITOFFP_(a,b)		\BITX_($15,a,b)          
+0195+  0000             #define	BITOFFP_(a,b,c)	      \BITX_($15,a,b,c)        
+0196+  0000             #define	BITOFFP_(a,b,c,d)	      \BITX_($15,a,b,c,d)      
+0197+  0000             #define	BITOFFP_(a,b,c,d,e)	\BITX_($15,a,b,c,d,e)    
+0198+  0000             #define	BITOFFP_(a,b,c,d,e,f)   \BITX_($15,a,b,c,d,e,f)  
+0199+  0000             #define	BITOFFP_(a,b,c,d,e,f,g) \BITX_($15,a,b,c,d,e,f,g)
+0200+  0000             
+0201+  0000             #define	BITINVP_(a)		      \BITX_($16,a)            
+0202+  0000             #define	BITINVP_(a,b)		\BITX_($16,a,b)          
+0203+  0000             #define	BITINVP_(a,b,c)	      \BITX_($16,a,b,c)        
+0204+  0000             #define	BITINVP_(a,b,c,d)	      \BITX_($16,a,b,c,d)      
+0205+  0000             #define	BITINVP_(a,b,c,d,e)	\BITX_($16,a,b,c,d,e)    
+0206+  0000             #define	BITINVP_(a,b,c,d,e,f)   \BITX_($16,a,b,c,d,e,f)  
+0207+  0000             #define	BITINVP_(a,b,c,d,e,f,g) \BITX_($16,a,b,c,d,e,f,g)
+0208+  0000             
+0209+  0000             #define	BITFLP_(a)		      \BITX_($17,a)            
+0210+  0000             #define	BITFLP_(a,b)		\BITX_($17,a,b)          
+0211+  0000             #define	BITFLP_(a,b,c)	      \BITX_($17,a,b,c)        
+0212+  0000             #define	BITFLP_(a,b,c,d)	      \BITX_($17,a,b,c,d)      
+0213+  0000             #define	BITFLP_(a,b,c,d,e)	\BITX_($17,a,b,c,d,e)    
+0214+  0000             #define	BITFLP_(a,b,c,d,e,f)   	\BITX_($17,a,b,c,d,e,f)  
+0215+  0000             #define	BITFLP_(a,b,c,d,e,f,g) 	\BITX_($17,a,b,c,d,e,f,g)
+0216+  0000             
+0217+  0000             ;************************
+0218+  0000             ;* Lamp/Bit Effects
+0219+  0000             ;************************
+0220+  0000             #define	BE18_(a)		      \BITX_($18,a)            
+0221+  0000             #define	BE18_(a,b)			\BITX_($18,a,b)          
+0222+  0000             #define	BE18_(a,b,c)	      \BITX_($18,a,b,c)        
+0223+  0000             #define	BE18_(a,b,c,d)	      \BITX_($18,a,b,c,d)      
+0224+  0000             #define	BE18_(a,b,c,d,e)		\BITX_($18,a,b,c,d,e)    
+0225+  0000             #define	BE18_(a,b,c,d,e,f)   	\BITX_($18,a,b,c,d,e,f)  
+0226+  0000             #define	BE18_(a,b,c,d,e,f,g) 	\BITX_($18,a,b,c,d,e,f,g)
+0227+  0000             
+0228+  0000             #define	BE19_(a)		      \BITX_($19,a)            
+0229+  0000             #define	BE19_(a,b)			\BITX_($19,a,b)          
+0230+  0000             #define	BE19_(a,b,c)	      \BITX_($19,a,b,c)        
+0231+  0000             #define	BE19_(a,b,c,d)	      \BITX_($19,a,b,c,d)      
+0232+  0000             #define	BE19_(a,b,c,d,e)		\BITX_($19,a,b,c,d,e)    
+0233+  0000             #define	BE19_(a,b,c,d,e,f)   	\BITX_($19,a,b,c,d,e,f)  
+0234+  0000             #define	BE19_(a,b,c,d,e,f,g) 	\BITX_($19,a,b,c,d,e,f,g)
+0235+  0000             
+0236+  0000             #define	BE1A_(a)		      \BITX_($1A,a)            
+0237+  0000             #define	BE1A_(a,b)			\BITX_($1A,a,b)          
+0238+  0000             #define	BE1A_(a,b,c)	      \BITX_($1A,a,b,c)        
+0239+  0000             #define	BE1A_(a,b,c,d)	      \BITX_($1A,a,b,c,d)      
+0240+  0000             #define	BE1A_(a,b,c,d,e)		\BITX_($1A,a,b,c,d,e)    
+0241+  0000             #define	BE1A_(a,b,c,d,e,f)   	\BITX_($1A,a,b,c,d,e,f)  
+0242+  0000             #define	BE1A_(a,b,c,d,e,f,g) 	\BITX_($1A,a,b,c,d,e,f,g)
+0243+  0000             
+0244+  0000             #define	BE1B_(a)		      \BITX_($1B,a)            
+0245+  0000             #define	BE1B_(a,b)			\BITX_($1B,a,b)          
+0246+  0000             #define	BE1B_(a,b,c)	      \BITX_($1B,a,b,c)        
+0247+  0000             #define	BE1B_(a,b,c,d)	      \BITX_($1B,a,b,c,d)      
+0248+  0000             #define	BE1B_(a,b,c,d,e)		\BITX_($1B,a,b,c,d,e)    
+0249+  0000             #define	BE1B_(a,b,c,d,e,f)   	\BITX_($1B,a,b,c,d,e,f)  
+0250+  0000             #define	BE1B_(a,b,c,d,e,f,g) 	\BITX_($1B,a,b,c,d,e,f,g)
+0251+  0000             
+0252+  0000             #define	BE1C_(a)		      \BITX_($1C,a)            
+0253+  0000             #define	BE1C_(a,b)			\BITX_($1C,a,b)          
+0254+  0000             #define	BE1C_(a,b,c)	      \BITX_($1C,a,b,c)        
+0255+  0000             #define	BE1C_(a,b,c,d)	      \BITX_($1C,a,b,c,d)      
+0256+  0000             #define	BE1C_(a,b,c,d,e)		\BITX_($1C,a,b,c,d,e)    
+0257+  0000             #define	BE1C_(a,b,c,d,e,f)   	\BITX_($1C,a,b,c,d,e,f)  
+0258+  0000             #define	BE1C_(a,b,c,d,e,f,g) 	\BITX_($1C,a,b,c,d,e,f,g)
+0259+  0000             
+0260+  0000             #define	BE1D_(a)		      \BITX_($1D,a)            
+0261+  0000             #define	BE1D_(a,b)			\BITX_($1D,a,b)          
+0262+  0000             #define	BE1D_(a,b,c)	      \BITX_($1D,a,b,c)        
+0263+  0000             #define	BE1D_(a,b,c,d)	      \BITX_($1D,a,b,c,d)      
+0264+  0000             #define	BE1D_(a,b,c,d,e)		\BITX_($1D,a,b,c,d,e)    
+0265+  0000             #define	BE1D_(a,b,c,d,e,f)   	\BITX_($1D,a,b,c,d,e,f)  
+0266+  0000             #define	BE1D_(a,b,c,d,e,f,g) 	\BITX_($1D,a,b,c,d,e,f,g)
+0267+  0000             
+0268+  0000             #define	BE1E_(a)		      \BITX_($1E,a)            
+0269+  0000             #define	BE1E_(a,b)			\BITX_($1E,a,b)          
+0270+  0000             #define	BE1E_(a,b,c)	      \BITX_($1E,a,b,c)        
+0271+  0000             #define	BE1E_(a,b,c,d)	      \BITX_($1E,a,b,c,d)      
+0272+  0000             #define	BE1E_(a,b,c,d,e)		\BITX_($1E,a,b,c,d,e)    
+0273+  0000             #define	BE1E_(a,b,c,d,e,f)   	\BITX_($1E,a,b,c,d,e,f)  
+0274+  0000             #define	BE1E_(a,b,c,d,e,f,g) 	\BITX_($1E,a,b,c,d,e,f,g)
+0275+  0000             
+0276+  0000             #define	BE1F_(a)		      \BITX_($1F,a)            
+0277+  0000             #define	BE1F_(a,b)			\BITX_($1F,a,b)          
+0278+  0000             #define	BE1F_(a,b,c)	      \BITX_($1F,a,b,c)        
+0279+  0000             #define	BE1F_(a,b,c,d)	      \BITX_($1F,a,b,c,d)      
+0280+  0000             #define	BE1F_(a,b,c,d,e)		\BITX_($1F,a,b,c,d,e)    
+0281+  0000             #define	BE1F_(a,b,c,d,e,f)   	\BITX_($1F,a,b,c,d,e,f)  
+0282+  0000             #define	BE1F_(a,b,c,d,e,f,g) 	\BITX_($1F,a,b,c,d,e,f,g)
+0283+  0000             
+0284+  0000             ;BUFFER 2
+0285+  0000             
+0286+  0000             #define	BITON2_(a)		      	\BITX_($20,a)
+0287+  0000             #define	BITON2_(a,b)			\BITX_($20,a,b)
+0288+  0000             #define	BITON2_(a,b,c)	      	\BITX_($20,a,b,c)
+0289+  0000             #define	BITON2_(a,b,c,d)	      	\BITX_($20,a,b,c,d)
+0290+  0000             #define	BITON2_(a,b,c,d,e)		\BITX_($20,a,b,c,d,e)
+0291+  0000             #define	BITON2_(a,b,c,d,e,f)    	\BITX_($20,a,b,c,d,e,f)
+0292+  0000             #define	BITON2_(a,b,c,d,e,f,g)  	\BITX_($20,a,b,c,d,e,f,g)
+0293+  0000             
+0294+  0000             #define	BITOFF2_(a)		      	\BITX_($21,a)            
+0295+  0000             #define	BITOFF2_(a,b)			\BITX_($21,a,b)          
+0296+  0000             #define	BITOFF2_(a,b,c)	      	\BITX_($21,a,b,c)        
+0297+  0000             #define	BITOFF2_(a,b,c,d)	      	\BITX_($21,a,b,c,d)      
+0298+  0000             #define	BITOFF2_(a,b,c,d,e)		\BITX_($21,a,b,c,d,e)    
+0299+  0000             #define	BITOFF2_(a,b,c,d,e,f)   	\BITX_($21,a,b,c,d,e,f)  
+0300+  0000             #define	BITOFF2_(a,b,c,d,e,f,g) 	\BITX_($21,a,b,c,d,e,f,g)
+0301+  0000                                                 
+0302+  0000             #define	BITINV2_(a)		      	\BITX_($22,a)            
+0303+  0000             #define	BITINV2_(a,b)			\BITX_($22,a,b)          
+0304+  0000             #define	BITINV2_(a,b,c)	      	\BITX_($22,a,b,c)        
+0305+  0000             #define	BITINV2_(a,b,c,d)	      	\BITX_($22,a,b,c,d)      
+0306+  0000             #define	BITINV2_(a,b,c,d,e)		\BITX_($22,a,b,c,d,e)    
+0307+  0000             #define	BITINV2_(a,b,c,d,e,f)   	\BITX_($22,a,b,c,d,e,f)  
+0308+  0000             #define	BITINV2_(a,b,c,d,e,f,g) 	\BITX_($22,a,b,c,d,e,f,g)
+0309+  0000             
+0310+  0000             #define	BITFL2_(a)		      	\BITX_($23,a)            
+0311+  0000             #define	BITFL2_(a,b)			\BITX_($23,a,b)          
+0312+  0000             #define	BITFL2_(a,b,c)	      	\BITX_($23,a,b,c)        
+0313+  0000             #define	BITFL2_(a,b,c,d)	      	\BITX_($23,a,b,c,d)      
+0314+  0000             #define	BITFL2_(a,b,c,d,e)		\BITX_($23,a,b,c,d,e)    
+0315+  0000             #define	BITFL2_(a,b,c,d,e,f)    	\BITX_($23,a,b,c,d,e,f)  
+0316+  0000             #define	BITFL2_(a,b,c,d,e,f,g)  	\BITX_($23,a,b,c,d,e,f,g)
+0317+  0000              
+0318+  0000             #define	BITONP2_(a)		      	\BITX_($24,a)            
+0319+  0000             #define	BITONP2_(a,b)			\BITX_($24,a,b)          
+0320+  0000             #define	BITONP2_(a,b,c)	      	\BITX_($24,a,b,c)        
+0321+  0000             #define	BITONP2_(a,b,c,d)	      	\BITX_($24,a,b,c,d)      
+0322+  0000             #define	BITONP2_(a,b,c,d,e)		\BITX_($24,a,b,c,d,e)    
+0323+  0000             #define	BITONP2_(a,b,c,d,e,f)   	\BITX_($24,a,b,c,d,e,f)  
+0324+  0000             #define	BITONP2_(a,b,c,d,e,f,g) 	\BITX_($24,a,b,c,d,e,f,g)
+0325+  0000             
+0326+  0000             #define	BITOFFP2_(a)			\BITX_($25,a)            
+0327+  0000             #define	BITOFFP2_(a,b)			\BITX_($25,a,b)          
+0328+  0000             #define	BITOFFP2_(a,b,c)	      	\BITX_($25,a,b,c)        
+0329+  0000             #define	BITOFFP2_(a,b,c,d)		\BITX_($25,a,b,c,d)      
+0330+  0000             #define	BITOFFP2_(a,b,c,d,e)		\BITX_($25,a,b,c,d,e)    
+0331+  0000             #define	BITOFFP2_(a,b,c,d,e,f)  	\BITX_($25,a,b,c,d,e,f)  
+0332+  0000             #define	BITOFFP2_(a,b,c,d,e,f,g)	\BITX_($25,a,b,c,d,e,f,g)
+0333+  0000             
+0334+  0000             #define	BITINVP2_(a)			\BITX_($26,a)            
+0335+  0000             #define	BITINVP2_(a,b)			\BITX_($26,a,b)          
+0336+  0000             #define	BITINVP2_(a,b,c)	      	\BITX_($26,a,b,c)        
+0337+  0000             #define	BITINVP2_(a,b,c,d)		\BITX_($26,a,b,c,d)      
+0338+  0000             #define	BITINVP2_(a,b,c,d,e)		\BITX_($26,a,b,c,d,e)    
+0339+  0000             #define	BITINVP2_(a,b,c,d,e,f)   	\BITX_($26,a,b,c,d,e,f)  
+0340+  0000             #define	BITINVP2_(a,b,c,d,e,f,g) 	\BITX_($26,a,b,c,d,e,f,g)
+0341+  0000             
+0342+  0000             #define	BITFLP2_(a)		      	\BITX_($27,a)            
+0343+  0000             #define	BITFLP2_(a,b)			\BITX_($27,a,b)          
+0344+  0000             #define	BITFLP2_(a,b,c)	      	\BITX_($27,a,b,c)        
+0345+  0000             #define	BITFLP2_(a,b,c,d)	      	\BITX_($27,a,b,c,d)      
+0346+  0000             #define	BITFLP2_(a,b,c,d,e)		\BITX_($27,a,b,c,d,e)    
+0347+  0000             #define	BITFLP2_(a,b,c,d,e,f)   	\BITX_($27,a,b,c,d,e,f)  
+0348+  0000             #define	BITFLP2_(a,b,c,d,e,f,g) 	\BITX_($27,a,b,c,d,e,f,g)
+0349+  0000             
+0350+  0000             ;************************
+0351+  0000             ;* Lamp/Bit Effects
+0352+  0000             ;************************
+0353+  0000             #define	BE28_(a)		      \BITX_($28,a)            
+0354+  0000             #define	BE28_(a,b)			\BITX_($28,a,b)          
+0355+  0000             #define	BE28_(a,b,c)	      \BITX_($28,a,b,c)        
+0356+  0000             #define	BE28_(a,b,c,d)	      \BITX_($28,a,b,c,d)      
+0357+  0000             #define	BE28_(a,b,c,d,e)		\BITX_($28,a,b,c,d,e)    
+0358+  0000             #define	BE28_(a,b,c,d,e,f)   	\BITX_($28,a,b,c,d,e,f)  
+0359+  0000             #define	BE28_(a,b,c,d,e,f,g) 	\BITX_($28,a,b,c,d,e,f,g)
+0360+  0000             
+0361+  0000             #define	BE29_(a)		      \BITX_($29,a)            
+0362+  0000             #define	BE29_(a,b)			\BITX_($29,a,b)          
+0363+  0000             #define	BE29_(a,b,c)	      \BITX_($29,a,b,c)        
+0364+  0000             #define	BE29_(a,b,c,d)	      \BITX_($29,a,b,c,d)      
+0365+  0000             #define	BE29_(a,b,c,d,e)		\BITX_($29,a,b,c,d,e)    
+0366+  0000             #define	BE29_(a,b,c,d,e,f)   	\BITX_($29,a,b,c,d,e,f)  
+0367+  0000             #define	BE29_(a,b,c,d,e,f,g) 	\BITX_($29,a,b,c,d,e,f,g)
+0368+  0000             
+0369+  0000             #define	BE2A_(a)		      \BITX_($2A,a)            
+0370+  0000             #define	BE2A_(a,b)			\BITX_($2A,a,b)          
+0371+  0000             #define	BE2A_(a,b,c)	      \BITX_($2A,a,b,c)        
+0372+  0000             #define	BE2A_(a,b,c,d)	      \BITX_($2A,a,b,c,d)      
+0373+  0000             #define	BE2A_(a,b,c,d,e)		\BITX_($2A,a,b,c,d,e)    
+0374+  0000             #define	BE2A_(a,b,c,d,e,f)   	\BITX_($2A,a,b,c,d,e,f)  
+0375+  0000             #define	BE2A_(a,b,c,d,e,f,g) 	\BITX_($2A,a,b,c,d,e,f,g)
+0376+  0000             
+0377+  0000             #define	BE2B_(a)		      \BITX_($2B,a)            
+0378+  0000             #define	BE2B_(a,b)			\BITX_($2B,a,b)          
+0379+  0000             #define	BE2B_(a,b,c)	      \BITX_($2B,a,b,c)        
+0380+  0000             #define	BE2B_(a,b,c,d)	      \BITX_($2B,a,b,c,d)      
+0381+  0000             #define	BE2B_(a,b,c,d,e)		\BITX_($2B,a,b,c,d,e)    
+0382+  0000             #define	BE2B_(a,b,c,d,e,f)   	\BITX_($2B,a,b,c,d,e,f)  
+0383+  0000             #define	BE2B_(a,b,c,d,e,f,g) 	\BITX_($2B,a,b,c,d,e,f,g)
+0384+  0000             
+0385+  0000             #define	BE2C_(a)		      \BITX_($2C,a)            
+0386+  0000             #define	BE2C_(a,b)			\BITX_($2C,a,b)          
+0387+  0000             #define	BE2C_(a,b,c)	      \BITX_($2C,a,b,c)        
+0388+  0000             #define	BE2C_(a,b,c,d)	      \BITX_($2C,a,b,c,d)      
+0389+  0000             #define	BE2C_(a,b,c,d,e)		\BITX_($2C,a,b,c,d,e)    
+0390+  0000             #define	BE2C_(a,b,c,d,e,f)   	\BITX_($2C,a,b,c,d,e,f)  
+0391+  0000             #define	BE2C_(a,b,c,d,e,f,g) 	\BITX_($2C,a,b,c,d,e,f,g)
+0392+  0000             
+0393+  0000             #define	BE2D_(a)		      \BITX_($2D,a)            
+0394+  0000             #define	BE2D_(a,b)			\BITX_($2D,a,b)          
+0395+  0000             #define	BE2D_(a,b,c)	      \BITX_($2D,a,b,c)        
+0396+  0000             #define	BE2D_(a,b,c,d)	      \BITX_($2D,a,b,c,d)      
+0397+  0000             #define	BE2D_(a,b,c,d,e)		\BITX_($2D,a,b,c,d,e)    
+0398+  0000             #define	BE2D_(a,b,c,d,e,f)   	\BITX_($2D,a,b,c,d,e,f)  
+0399+  0000             #define	BE2D_(a,b,c,d,e,f,g) 	\BITX_($2D,a,b,c,d,e,f,g)
+0400+  0000             
+0401+  0000             #define	BE2E_(a)		      \BITX_($2E,a)            
+0402+  0000             #define	BE2E_(a,b)			\BITX_($2E,a,b)          
+0403+  0000             #define	BE2E_(a,b,c)	      \BITX_($2E,a,b,c)        
+0404+  0000             #define	BE2E_(a,b,c,d)	      \BITX_($2E,a,b,c,d)      
+0405+  0000             #define	BE2E_(a,b,c,d,e)		\BITX_($2E,a,b,c,d,e)    
+0406+  0000             #define	BE2E_(a,b,c,d,e,f)   	\BITX_($2E,a,b,c,d,e,f)  
+0407+  0000             #define	BE2E_(a,b,c,d,e,f,g) 	\BITX_($2E,a,b,c,d,e,f,g)
+0408+  0000             
+0409+  0000             #define	BE2F_(a)		      \BITX_($2F,a)            
+0410+  0000             #define	BE2F_(a,b)			\BITX_($2F,a,b)          
+0411+  0000             #define	BE2F_(a,b,c)	      \BITX_($2F,a,b,c)        
+0412+  0000             #define	BE2F_(a,b,c,d)	      \BITX_($2F,a,b,c,d)      
+0413+  0000             #define	BE2F_(a,b,c,d,e)		\BITX_($2F,a,b,c,d,e)    
+0414+  0000             #define	BE2F_(a,b,c,d,e,f)   	\BITX_($2F,a,b,c,d,e,f)  
+0415+  0000             #define	BE2F_(a,b,c,d,e,f,g) 	\BITX_($2F,a,b,c,d,e,f,g)
+0416+  0000             
+0417+  0000             ;********************************************************
+0418+  0000             ;* Solenoid Macro Definition: Up to 15 Solenoids are Supported
+0419+  0000             ;* 
+0420+  0000             ;* The macro takes a coded value of the solenoid number 
+0421+  0000             ;* and the number of IRQ's to leave the solenoid on.
+0422+  0000             ;* You can define the solenoid number plus the time by using
+0423+  0000             ;* the equates following this macro definition...
+0424+  0000             ;* 
+0425+  0000             ;* Example #1:  Turn on Solenoid #1 for 4 IRQ cycles
+0426+  0000             ;*
+0427+  0000             ;*          sol_1_on    .equ  $00+SOLENOID_ON_4_CYCLES
+0428+  0000             ;*          sol_1_off   .equ  $00+SOLENOID_OFF
+0429+  0000             ;* 
+0430+  0000             ;* Then use the SOL_ macro...
+0431+  0000             ;*
+0432+  0000             ;*    Turn it on:       SOL_(sol_1_on)
+0433+  0000             ;*    Turn it off:      SOL_(sol_1_off)
+0434+  0000             ;*
+0435+  0000             ;* Example #2:  Turn on Solenoid #15 indefinitely, and Solenoid #6 for 2 IRQ cycles
+0436+  0000             ;*
+0437+  0000             ;*          sol_15_on   .equ  $0E+SOLENOID_ON_LATCH
+0438+  0000             ;*          sol_15_off  .equ  $0E+SOLENOID_OFF
+0439+  0000             ;*
+0440+  0000             ;*          sol_2_on    .equ  $01+SOLENOID_ON_2_CYCLES
+0441+  0000             ;*          sol_2_off   .equ  $01+SOLENOID_OFF
+0442+  0000             ;* 
+0443+  0000             ;* Then use the SOL_ macro...
+0444+  0000             ;*
+0445+  0000             ;*    Turn them on:       SOL_(sol_15_on,sol_2_on)
+0446+  0000             ;*    Turn them off:      SOL_(sol_15_off,sol_2_off)
+0447+  0000             ;********************************************************
+0448+  0000             #define	SOL_(a)		                  \.db $31,a
+0449+  0000             #define	SOL_(a,b)		                  \.db $32,a,b
+0450+  0000             #define 	SOL_(a,b,c)		                  \.db $33,a,b,c
+0451+  0000             #define	SOL_(a,b,c,d)	                  \.db $34,a,b,c,d
+0452+  0000             #define	SOL_(a,b,c,d,e)	                  \.db $35,a,b,c,d,e
+0453+  0000             #define	SOL_(a,b,c,d,e,f)	                  \.db $36,a,b,c,d,e,f
+0454+  0000             #define	SOL_(a,b,c,d,e,f,g)	            \.db $37,a,b,c,d,e,f,g
+0455+  0000             #define	SOL_(a,b,c,d,e,f,g,h)	            \.db $38,a,b,c,d,e,f,g,h
+0456+  0000             #define	SOL_(a,b,c,d,e,f,g,h,i)	            \.db $39,a,b,c,d,e,f,g,h,i
+0457+  0000             #define	SOL_(a,b,c,d,e,f,g,h,i,j)	      \.db $3A,a,b,c,d,e,f,g,h,i,j
+0458+  0000             #define	SOL_(a,b,c,d,e,f,g,h,i,j,k)	      \.db $3B,a,b,c,d,e,f,g,h,i,j,k
+0459+  0000             #define	SOL_(a,b,c,d,e,f,g,h,i,j,k,l)	      \.db $3C,a,b,c,d,e,f,g,h,i,j,k,l
+0460+  0000             #define	SOL_(a,b,c,d,e,f,g,h,i,j,k,l,m)	\.db $3D,a,b,c,d,e,f,g,h,i,j,k,l,m
+0461+  0000             #define	SOL_(a,b,c,d,e,f,g,h,i,j,k,l,m,n)	\.db $3E,a,b,c,d,e,f,g,h,i,j,k,l,m,n
+0462+  0000             #define	SOL_(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)	\.db $3F,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o
+0463+  0000             
+0464+  0000             ;********************************************************
+0465+  0000             ;* some additional solenoid defines for timing
+0466+  0000             ;* Use these in the top of your game definition to specify 
+0467+  0000             ;* static lables for each solenoid
+0468+  0000             ;********************************************************
+0469+  0000             SOLENOID_ON_1_CYCLES       .equ  $20
+0470+  0000             SOLENOID_ON_2_CYCLES       .equ  $40
+0471+  0000             SOLENOID_ON_3_CYCLES       .equ  $60
+0472+  0000             SOLENOID_ON_4_CYCLES       .equ  $80
+0473+  0000             SOLENOID_ON_5_CYCLES       .equ  $A0
+0474+  0000             SOLENOID_ON_6_CYCLES       .equ  $C0
+0475+  0000             SOLENOID_ON_LATCH          .equ  $E0
+0476+  0000             SOLENOID_OFF               .equ  $00
+0477+  0000             
+0478+  0000             ;********************************************************
+0479+  0000             ;* Macros 40-43: Static Length, easy
+0480+  0000             ;********************************************************
+0481+  0000             #define	PTSND_(snd,count,unit)	\.db $40,snd      \ ADDPOINTS_(count,unit)
+0482+  0000             
+0483+  0000             #define	PTCHIME_(count,unit)	\.db $41    \ ADDPOINTS_(count,unit)
+0484+  0000             
+0485+  0000             #define	POINTS_(count,unit)	\.db $42    \ ADDPOINTS_(count,unit)
+0486+  0000             
+0487+  0000             #define	PTSDIG_(count,unit)	\.db $43    \ ADDPOINTS_(count,unit)
+0488+  0000             
+0489+  0000             #define     ADDPOINTS_(count,unit)  \#if ((unit < 10) & (count <= 32))
+0490+  0000             #defcont				      \	.error "Point unit must be multples of 10 and count must be less than 33"
+0491+  0000             #defcont				      \#else
+0492+  0000             #defcont					      \#if (unit == 10)
+0493+  0000             #defcont					      \	.db (((count)<<3)&$F8)+1
+0494+  0000             #defcont					      \#else 
+0495+  0000             #defcont					      	\#if (unit == 100)
+0496+  0000             #defcont						      \	.db (((count)<<3)&$F8)+2
+0497+  0000             #defcont						      \#else 
+0498+  0000             #defcont							      \#if (unit == 1000)
+0499+  0000             #defcont							      \	.db (((count)<<3)&$F8)+3
+0500+  0000             #defcont							      \#else 
+0501+  0000             #defcont								      \#if (unit == 10000)
+0502+  0000             #defcont								      \	.db (((count)<<3)&$F8)+4
+0503+  0000             #defcont								      \#else 
+0504+  0000             #defcont									      \#if (unit == 100000)
+0505+  0000             #defcont									      \	.db (((count)<<3)&$F8)+5
+0506+  0000             #defcont									      \#else 
+0507+  0000             #defcont									      \	.error "Macros only support points under 1,000,000 points"
+0508+  0000             #defcont									      \#endif
+0509+  0000             #defcont								      \#endif
+0510+  0000             #defcont							      \#endif
+0511+  0000             #defcont						      \#endif
+0512+  0000             #defcont					      \#endif
+0513+  0000             #defcont				      \#endif
+0514+  0000             
+0515+  0000             
+0516+  0000             
+0517+  0000             ;********************************************************
+0518+  0000             ;* Macros 44-4F: Define temporary execution of CPU code.
+0519+  0000             ;*               The length of bytes to execute is in 
+0520+  0000             ;*               the lower nibble and must be between
+0521+  0000             ;*               4-f. Therefore, number of bytes to 
+0522+  0000             ;*               execute must be between 2 and 13.
+0523+  0000             :*
+0524+  0000             ;* There are two macros defined here, the first is the
+0525+  0000             ;* new style macro where it will automatically calculate
+0526+  0000             ;* the number of opcode bytes that are executed. This 
+0527+  0000             ;* style requires and end tag for the macro called EXEEND_
+0528+  0000             ;* that marks where execution returns to WML7.
+0529+  0000             ;*
+0530+  0000             ;* The old style macro does not require an end tag but
+0531+  0000             ;* does require you to calcuate the number of bytes that
+0532+  0000             ;* will be executed as native 680X code. This is obviously
+0533+  0000             ;* more tedious but I left it here for some reason. 
+0534+  0000             ;********************************************************
+0535+  0000             #define     EXE_              \.push *,FLAG_WML_EXE
+0536+  0000             #defcont                      \.db $44
+0537+  0000             
+0538+  0000             #define     EXEEND_           \wml4_ .set *
+0539+  0000             #defcont                      \.pop wml1_,wml2_
+0540+  0000             #defcont                      \#if wml1_ == FLAG_WML_EXE
+0541+  0000             #defcont                            \wml3_ .set wml4_-wml2_
+0542+  0000             #defcont                            \#if (wml3_>14)|(wml3_<3)
+0543+  0000             #defcont                            \     .error "Macro EXE_: Number of executed bytes must be between 2 and 15"
+0544+  0000             #defcont                            \#else
+0545+  0000             #defcont                            \     .org wml2_
+0546+  0000             #defcont                            \     .db $44+wml3_-3
+0547+  0000             #defcont                            \#endif
+0548+  0000             #defcont                            \.org wml4_
+0549+  0000             #defcont                      \#else
+0550+  0000             #defcont                            \.error "EXE_END did not have a starting EXE_ code"
+0551+  0000             #defcont                      \#endif
+0552+  0000             
+0553+  0000                
+0554+  0000             #define	EXE_(a)		\#if (a>13)|(a<2)
+0555+  0000             #defcont				\    .error "Macro EXE_: Number of bytes to execute must be between 2-15"
+0556+  0000             #defcont				\#else
+0557+  0000             #defcont				\    .db ($44+a-2)
+0558+  0000             #defcont				\#endif
+0559+  0000             
+0560+  0000             ;********************************************************
+0561+  0000             ;* Macros 50-57:
+0562+  0000             ;********************************************************
+0563+  0000             #define	RAMADD_(a,b)	\#if (a<16)&(a>=0)&(b<16)&(b>=0)
+0564+  0000             #defcont				\	.db $50,((a*16)+b) 
+0565+  0000             #defcont				\#else
+0566+  0000             #defcont				\	.error "Macro RAMADD_: Parameters out of range"
+0567+  0000             #defcont				\#endif
+0568+  0000             
+0569+  0000             #define	RAMCPY_(a,b)	\#if (a<16)&(a>=0)&(b<16)&(b>=0)
+0570+  0000             #defcont				\	.db $51,((a*16)+b) 
+0571+  0000             #defcont				\#else
+0572+  0000             #defcont				\	.error "Macro RAMCPY_: Parameters out of range"
+0573+  0000             #defcont				\#endif
+0574+  0000             
+0575+  0000             #define	PRI_(a)		\.db $52,a
+0576+  0000             
+0577+  0000             #define	SLEEP_(a)		\#if (a<16)
+0578+  0000             #defcont				\	.db ($70+a)
+0579+  0000             #defcont				\#else
+0580+  0000             #defcont				\	.db $53,a
+0581+  0000             #defcont				\#endif
+0582+  0000             
+0583+  0000             #define	REMTHREAD_(a,b)	\.db $54,a,b
+0584+  0000             
+0585+  0000             #define  	REMTHREADS_(a,b)	\.db $55,a,b
+0586+  0000             
+0587+  0000             #define 	JSR_(a)		\.db $56 \.dw a
+0588+  0000             #define	JSRD_(a)		\.db $57 \.dw a
+0589+  0000             
+0590+  0000             ;*******************************************************************
+0591+  0000             ;* Branch Macros: 58-5B
+0592+  0000             ;*******************************************************************
+0593+  0000             #define     IFLOC_(type,vars)    \ .push  *, vars, type        
+0594+  0000             
+0595+  0000             ;*******************************************************************
+0596+  0000             ;* Begin: The start marker for logical loops, must terminate with  *
+0597+  0000             ;*        an 'XXEND_' statement.                                    *
+0598+  0000             ;******************************************************************* 
+0599+  0000             #define     BEGIN_	      IFLOC_(FLAG_WML_BEGIN,0)
+0600+  0000             
+0601+  0000             ;*******************************************************************
+0602+  0000             ;* Logic End: This is the end macro for the 'begin' statement. It  *
+0603+  0000             ;*            pulls the pc location of the beginning of the loop   *
+0604+  0000             ;*            and verifies that the 'type' is correct.             *
+0605+  0000             ;*******************************************************************
+0606+  0000             #define 	LOGIC_LOOPEND_(vars)	\ .pop wml1_, wml2_, wml3_
+0607+  0000             #defcont						\wml2_ .set vars
+0608+  0000             #defcont						\wml4_ .set *
+0609+  0000             #defcont						\#if (wml1_ & FLAG_WML_BEGIN)
+0610+  0000             #defcont							\#if ((wml4_-wml3_) <= 127)
+0611+  0000             #defcont								\ .org wml4_-1
+0612+  0000             #defcont								\ .db wml3_-wml4_
+0613+  0000             #defcont								\ .org wml4_
+0614+  0000             #defcont							\#else
+0615+  0000             #defcont								\ .error "Loop Branch out of Range."
+0616+  0000             #defcont							\#endif
+0617+  0000             #defcont						\#else
+0618+  0000             #defcont							\ .error "Inappropriate End for BEGIN Loop."
+0619+  0000             #defcont						\#endif
+0620+  0000             
+0621+  0000             ;*******************************************************************
+0622+  0000             ;* Basic Loop
+0623+  0000             ;*******************************************************************
+0624+  0000             #define	LOOP_		\ .pop wml1_, wml2_, wml3_ \ JMPR_(wml3_)
+0625+  0000             
+0626+  0000             ;*******************************************************************
+0627+  0000             ;* Conditional Looping
+0628+  0000             ;*******************************************************************
+0629+  0000             #define	EQEND_(z)						BNER_(z,*+3) \ LOGIC_LOOPEND_(1)		
+0630+  0000             #define	EQEND_(z,y)						BNER_(z,y,*+3) \ LOGIC_LOOPEND_(2)
+0631+  0000             #define	EQEND_(z,y,x)					BNER_(z,y,x,*+3) \ LOGIC_LOOPEND_(3)
+0632+  0000             #define	EQEND_(z,y,x,w)					BNER_(z,y,x,w,*+3) \ LOGIC_LOOPEND_(4)
+0633+  0000             #define	EQEND_(z,y,x,w,v)					BNER_(z,y,x,w,v,*+3) \ LOGIC_LOOPEND_(5)
+0634+  0000             #define     EQEND_(z,y,x,w,v,u)				BNER_(z,y,x,w,v,u,*+3) \ LOGIC_LOOPEND_(6)
+0635+  0000             #define     EQEND_(z,y,x,w,v,u,t)			     	BNER_(z,y,x,w,v,u,t,*+3) \ LOGIC_LOOPEND_(7)
+0636+  0000             #define     EQEND_(z,y,x,w,v,u,t,s)     			BNER_(z,y,x,w,v,u,t,s,*+3) \ LOGIC_LOOPEND_(8)
+0637+  0000             #define     EQEND_(z,y,x,w,v,u,t,s,r)     		BNER_(z,y,x,w,v,u,t,s,r,*+3) \ LOGIC_LOOPEND_(9)
+0638+  0000             #define     EQEND_(z,y,x,w,v,u,t,s,r,q)     		BNER_(z,y,x,w,v,u,t,s,r,q,*+3) \ LOGIC_LOOPEND_(10)
+0639+  0000             #define     EQEND_(z,y,x,w,v,u,t,s,r,q,p)     		BNER_(z,y,x,w,v,u,t,s,r,q,p,*+3) \ LOGIC_LOOPEND_(11)
+0640+  0000             #define     EQEND_(z,y,x,w,v,u,t,s,r,q,p,o)    		BNER_(z,y,x,w,v,u,t,s,r,q,p,o,*+3) \ LOGIC_LOOPEND_(12)
+0641+  0000             #define     EQEND_(z,y,x,w,v,u,t,s,r,q,p,o,n)     	BNER_(z,y,x,w,v,u,t,s,r,q,p,o,n,*+3) \ LOGIC_LOOPEND_(13)
+0642+  0000             #define     EQEND_(z,y,x,w,v,u,t,s,r,q,p,o,n,m)     	BNER_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,*+3) \ LOGIC_LOOPEND_(14)
+0643+  0000             #define     EQEND_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,l)     BNER_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,*+3) \ LOGIC_LOOPEND_(15)
+0644+  0000             
+0645+  0000             #define	NEEND_(z)						BEQR_(z,*+3) \ LOGIC_LOOPEND_(1)		
+0646+  0000             #define	NEEND_(z,y)						BEQR_(z,y,*+3) \ LOGIC_LOOPEND_(2)
+0647+  0000             #define	NEEND_(z,y,x)					BEQR_(z,y,x,*+3) \ LOGIC_LOOPEND_(3)
+0648+  0000             #define	NEEND_(z,y,x,w)					BEQR_(z,y,x,w,*+3) \ LOGIC_LOOPEND_(4)
+0649+  0000             #define	NEEND_(z,y,x,w,v)					BEQR_(z,y,x,w,v,*+3) \ LOGIC_LOOPEND_(5)
+0650+  0000             #define     NEEND_(z,y,x,w,v,u)				BEQR_(z,y,x,w,v,u,*+3) \ LOGIC_LOOPEND_(6)
+0651+  0000             #define     NEEND_(z,y,x,w,v,u,t)			     	BEQR_(z,y,x,w,v,u,t,*+3) \ LOGIC_LOOPEND_(7)
+0652+  0000             #define     NEEND_(z,y,x,w,v,u,t,s)     			BEQR_(z,y,x,w,v,u,t,s,*+3) \ LOGIC_LOOPEND_(8)
+0653+  0000             #define     NEEND_(z,y,x,w,v,u,t,s,r)     		BEQR_(z,y,x,w,v,u,t,s,r,*+3) \ LOGIC_LOOPEND_(9)
+0654+  0000             #define     NEEND_(z,y,x,w,v,u,t,s,r,q)     		BEQR_(z,y,x,w,v,u,t,s,r,q,*+3) \ LOGIC_LOOPEND_(10)
+0655+  0000             #define     NEEND_(z,y,x,w,v,u,t,s,r,q,p)     		BEQR_(z,y,x,w,v,u,t,s,r,q,p,*+3) \ LOGIC_LOOPEND_(11)
+0656+  0000             #define     NEEND_(z,y,x,w,v,u,t,s,r,q,p,o)    		BEQR_(z,y,x,w,v,u,t,s,r,q,p,o,*+3) \ LOGIC_LOOPEND_(12)
+0657+  0000             #define     NEEND_(z,y,x,w,v,u,t,s,r,q,p,o,n)     	BEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n,*+3) \ LOGIC_LOOPEND_(13)
+0658+  0000             #define     NEEND_(z,y,x,w,v,u,t,s,r,q,p,o,n,m)     	BEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,*+3) \ LOGIC_LOOPEND_(14)
+0659+  0000             #define     NEEND_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,l)     BEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,*+3) \ LOGIC_LOOPEND_(15)
+0660+  0000             ;*******************************************************************
+0661+  0000             ;* IFxxx: These are the standard 'if' statements, they will always  
+0662+  0000             ;*        be of type FLAG_WML_IF                                           
+0663+  0000             ;*******************************************************************
+0664+  0000             #define     IFEQR_(z)                                 IFLOC_(FLAG_WML_IF,1)  \ BNER_(z,*+3)     
+0665+  0000             #define     IFEQR_(z,y)                               IFLOC_(FLAG_WML_IF,2)  \ BNER_(z,y,*+3)   
+0666+  0000             #define     IFEQR_(z,y,x)                             IFLOC_(FLAG_WML_IF,3)  \ BNER_(z,y,x,*+3) 
+0667+  0000             #define     IFEQR_(z,y,x,w)                           IFLOC_(FLAG_WML_IF,4)  \ BNER_(z,y,x,w,*+3)   
+0668+  0000             #define     IFEQR_(z,y,x,w,v)                         IFLOC_(FLAG_WML_IF,5)  \ BNER_(z,y,x,w,v,*+3) 
+0669+  0000             #define     IFEQR_(z,y,x,w,v,u)                       IFLOC_(FLAG_WML_IF,6)  \ BNER_(z,y,x,w,v,u,*+3) 
+0670+  0000             #define     IFEQR_(z,y,x,w,v,u,t)                     IFLOC_(FLAG_WML_IF,7)  \ BNER_(z,y,x,w,v,u,t,*+3) 
+0671+  0000             #define     IFEQR_(z,y,x,w,v,u,t,s)                   IFLOC_(FLAG_WML_IF,8)  \ BNER_(z,y,x,w,v,u,t,s,*+3) 
+0672+  0000             #define     IFEQR_(z,y,x,w,v,u,t,s,r)                 IFLOC_(FLAG_WML_IF,9)  \ BNER_(z,y,x,w,v,u,t,s,r,*+3)
+0673+  0000             #define     IFEQR_(z,y,x,w,v,u,t,s,r,q)               IFLOC_(FLAG_WML_IF,10) \ BNER_(z,y,x,w,v,u,t,s,r,q,*+3)
+0674+  0000             #define     IFEQR_(z,y,x,w,v,u,t,s,r,q,p)             IFLOC_(FLAG_WML_IF,11) \ BNER_(z,y,x,w,v,u,t,s,r,q,p,*+3)
+0675+  0000             #define     IFEQR_(z,y,x,w,v,u,t,s,r,q,p,o)           IFLOC_(FLAG_WML_IF,12) \ BNER_(z,y,x,w,v,u,t,s,r,q,p,o,*+3)
+0676+  0000             #define     IFEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n)         IFLOC_(FLAG_WML_IF,13) \ BNER_(z,y,x,w,v,u,t,s,r,q,p,o,n,*+3)
+0677+  0000             #define     IFEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n,m)       IFLOC_(FLAG_WML_IF,14) \ BNER_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,*+3)
+0678+  0000             #define     IFEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,l)     IFLOC_(FLAG_WML_IF,15) \ BNER_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,*+3)
+0679+  0000             
+0680+  0000             #define     IFNER_(z)                                 IFLOC_(FLAG_WML_IF,1)  \ BEQR_(z,*+3)     
+0681+  0000             #define     IFNER_(z,y)                               IFLOC_(FLAG_WML_IF,2)  \ BEQR_(z,y,*+3)   
+0682+  0000             #define     IFNER_(z,y,x)                             IFLOC_(FLAG_WML_IF,3)  \ BEQR_(z,y,x,*+3) 
+0683+  0000             #define     IFNER_(z,y,x,w)                           IFLOC_(FLAG_WML_IF,4)  \ BEQR_(z,y,x,w,*+3) 
+0684+  0000             #define     IFNER_(z,y,x,w,v)                         IFLOC_(FLAG_WML_IF,5)  \ BEQR_(z,y,x,w,v,*+3) 
+0685+  0000             #define     IFNER_(z,y,x,w,v,u)                       IFLOC_(FLAG_WML_IF,6)  \ BEQR_(z,y,x,w,v,u,*+3) 
+0686+  0000             #define     IFNER_(z,y,x,w,v,u,t)                     IFLOC_(FLAG_WML_IF,7)  \ BEQR_(z,y,x,w,v,u,t,*+3) 
+0687+  0000             #define     IFNER_(z,y,x,w,v,u,t,s)                   IFLOC_(FLAG_WML_IF,8)  \ BEQR_(z,y,x,w,v,u,t,s,*+3) 
+0688+  0000             #define     IFNER_(z,y,x,w,v,u,t,s,r)                 IFLOC_(FLAG_WML_IF,9)  \ BEQR_(z,y,x,w,v,u,t,s,r,*+3)
+0689+  0000             #define     IFNER_(z,y,x,w,v,u,t,s,r,q)               IFLOC_(FLAG_WML_IF,10) \ BEQR_(z,y,x,w,v,u,t,s,r,q,*+3)
+0690+  0000             #define     IFNER_(z,y,x,w,v,u,t,s,r,q,p)             IFLOC_(FLAG_WML_IF,11) \ BEQR_(z,y,x,w,v,u,t,s,r,q,p,*+3)
+0691+  0000             #define     IFNER_(z,y,x,w,v,u,t,s,r,q,p,o)           IFLOC_(FLAG_WML_IF,12) \ BEQR_(z,y,x,w,v,u,t,s,r,q,p,o,*+3)
+0692+  0000             #define     IFNER_(z,y,x,w,v,u,t,s,r,q,p,o,n)         IFLOC_(FLAG_WML_IF,13) \ BEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n,*+3)
+0693+  0000             #define     IFNER_(z,y,x,w,v,u,t,s,r,q,p,o,n,m)       IFLOC_(FLAG_WML_IF,14) \ BEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,*+3)
+0694+  0000             #define     IFNER_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,l)     IFLOC_(FLAG_WML_IF,15) \ BEQR_(z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,*+3)
+0695+  0000             
+0696+  0000             #define     ENDIF_ \wml1_ .set *
+0697+  0000             #defcont		 \ .pop wml3_, wml5_, wml4_
+0698+  0000             #defcont		 \#if (wml3_ & FLAG_WML_BEGIN)==0
+0699+  0000             #defcont			\#if (wml3_ & FLAG_WML_ELSE)==0
+0700+  0000             #defcont  			      \wml2_ .set wml1_-wml4_-wml5_-2
+0701+  0000             #defcont			      \#if wml2_+127 < 0
+0702+  0000             #defcont				      \ .error "Branch Range < -127"
+0703+  0000             #defcont			      \#else
+0704+  0000             #defcont				      \#if wml2_-128 > 0
+0705+  0000             #defcont					      \ .error "Branch Range > 128"
+0706+  0000             #defcont				      \#else
+0707+  0000             #defcont    				      \ .org wml4_+wml5_+1
+0708+  0000             #defcont					      \ .byte wml2_
+0709+  0000             #defcont				      \#endif
+0710+  0000             #defcont			      \#endif
+0711+  0000             #defcont                \#else
+0712+  0000             #defcont                      \ .org  wml4_-2	
+0713+  0000             #defcont				\ JMP_(wml1_)
+0714+  0000             #defcont                      \ .error "123: Not Tested"
+0715+  0000             #defcont                \#endif
+0716+  0000             #defcont			\ .org	wml1_
+0717+  0000             #defcont		 \#else
+0718+  0000             #defcont			\.error "Wrong Endtype for IFXXR_ block"
+0719+  0000             #defcont		 \#endif
+0720+  0000             
+0721+  0000             #define	ELSE_	\wml1_ .set $
+0722+  0000             #defcont		\ .pop wml3_, wml5_, wml4_
+0723+  0000             #defcont		\#if (wml3_ & FLAG_WML_BEGIN)==0
+0724+  0000             #defcont			\#if (wml3_ & FLAG_WML_ELSE)==0
+0725+  0000             #defcont				\ .org wml4_+wml5_+1
+0726+  0000             #defcont				\wml2_ .set wml1_-wml4_
+0727+  0000             #defcont					\#if wml2_+127 < 0
+0728+  0000             #defcont						\ .org wml1_
+0729+  0000             #defcont						\.push wml1_+3, wml5_, FLAG_WML_ELSE
+0730+  0000             #defcont						\ JMP_($)
+0731+  0000             #defcont                                  \ .error "(124)ELSE_: Not Tested with long JMP"
+0732+  0000             #defcont					\#else
+0733+  0000             #defcont						\#if wml2_-128>0
+0734+  0000             #defcont							\ .org wml1_
+0735+  0000             #defcont							\.push wml1_+3, wml5_, FLAG_WML_ELSE
+0736+  0000             #defcont							\ JMP_($)
+0737+  0000             #defcont                                  \ .error "(125)ELSE_: Not Tested with long JMP"
+0738+  0000             #defcont						\#else
+0739+  0000             #defcont							\.push wml1_-wml5_, wml5_, FLAG_WML_IF
+0740+  0000             #defcont							\ .byte wml2_-wml5_
+0741+  0000             #defcont							\ .org wml1_
+0742+  0000             #defcont							\ JMPR_($+1)
+0743+  0000             #defcont							\ .org wml1_+2
+0744+  0000             #defcont						\#endif
+0745+  0000             #defcont					\#endif
+0746+  0000             #defcont			\#else
+0747+  0000             #defcont				\.error "Duplicate ELSE Statement"
+0748+  0000             #defcont			\#endif
+0749+  0000             #defcont		\#else
+0750+  0000             #defcont			\ .error "Misplaced Else"
+0751+  0000             #defcont		\#endif
+0752+  0000             
+0753+  0000             #define     BEQR_(p1__,ba__)     \#if $+3-ba__ < 128
+0754+  0000             #defcont                                 \.db $5A,p1__,ba__-$-3
+0755+  0000             #defcont				\#else
+0756+  0000             #defcont					\#if ba__-$+3 < 127
+0757+  0000             #defcont                                 \.db $5A,p1__,$+3-ba__
+0758+  0000             #defcont					\#else
+0759+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0760+  0000             #defcont					\#endif
+0761+  0000             #defcont				\#endif
+0762+  0000             
+0763+  0000             #define     BEQR_(p1__,p2__,ba__)     \#if $+4-ba__ < 128
+0764+  0000             #defcont                                 \.db $5A,p1__,p2__,ba__-$-4
+0765+  0000             #defcont				\#else
+0766+  0000             #defcont					\#if ba__-$+4 < 127
+0767+  0000             #defcont                                 \.db $5A,p1__,p2__,$+4-ba__
+0768+  0000             #defcont					\#else
+0769+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0770+  0000             #defcont					\#endif
+0771+  0000             #defcont				\#endif
+0772+  0000             
+0773+  0000             #define     BEQR_(p1__,p2__,p3__,ba__)     \#if $+5-ba__ < 128
+0774+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,ba__-$-5
+0775+  0000             #defcont				\#else
+0776+  0000             #defcont					\#if ba__-$+5 < 127
+0777+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,$+5-ba__
+0778+  0000             #defcont					\#else
+0779+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0780+  0000             #defcont					\#endif
+0781+  0000             #defcont				\#endif
+0782+  0000             
+0783+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,ba__)     \#if $+6-ba__ < 128
+0784+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,ba__-$-6
+0785+  0000             #defcont				\#else
+0786+  0000             #defcont					\#if ba__-$+6 < 127
+0787+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,$+6-ba__
+0788+  0000             #defcont					\#else
+0789+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0790+  0000             #defcont					\#endif
+0791+  0000             #defcont				\#endif
+0792+  0000             
+0793+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,ba__)     \#if $+7-ba__ < 128
+0794+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,ba__-$-7
+0795+  0000             #defcont				\#else
+0796+  0000             #defcont					\#if ba__-$+7 < 127
+0797+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,$+7-ba__
+0798+  0000             #defcont					\#else
+0799+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0800+  0000             #defcont					\#endif
+0801+  0000             #defcont				\#endif
+0802+  0000             
+0803+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,ba__)     \#if $+8-ba__ < 128
+0804+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,ba__-$-8
+0805+  0000             #defcont				\#else
+0806+  0000             #defcont					\#if ba__-$+8 < 127
+0807+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,$+8-ba__
+0808+  0000             #defcont					\#else
+0809+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0810+  0000             #defcont					\#endif
+0811+  0000             #defcont				\#endif
+0812+  0000             
+0813+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,ba__)     \#if $+9-ba__ < 128
+0814+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,ba__-$-9
+0815+  0000             #defcont				\#else
+0816+  0000             #defcont					\#if ba__-$+9 < 127
+0817+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,$+9-ba__
+0818+  0000             #defcont					\#else
+0819+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0820+  0000             #defcont					\#endif
+0821+  0000             #defcont				\#endif
+0822+  0000             
+0823+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,ba__)     \#if $+10-ba__ < 128
+0824+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,ba__-$-10
+0825+  0000             #defcont				\#else
+0826+  0000             #defcont					\#if ba__-$+10 < 127
+0827+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,$+10-ba__
+0828+  0000             #defcont					\#else
+0829+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0830+  0000             #defcont					\#endif
+0831+  0000             #defcont				\#endif
+0832+  0000             
+0833+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,ba__)     \#if $+11-ba__ < 128
+0834+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,ba__-$-11
+0835+  0000             #defcont				\#else
+0836+  0000             #defcont					\#if ba__-$+11 < 127
+0837+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,$+11-ba__
+0838+  0000             #defcont					\#else
+0839+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0840+  0000             #defcont					\#endif
+0841+  0000             #defcont				\#endif
+0842+  0000             
+0843+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,ba__)     \#if $+12-ba__ < 128
+0844+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,ba__-$-12
+0845+  0000             #defcont				\#else
+0846+  0000             #defcont					\#if ba__-$+12 < 127
+0847+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,$+12-ba__
+0848+  0000             #defcont					\#else
+0849+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0850+  0000             #defcont					\#endif
+0851+  0000             #defcont				\#endif
+0852+  0000             
+0853+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,ba__)     \#if $+13-ba__ < 128
+0854+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,ba__-$-13
+0855+  0000             #defcont				\#else
+0856+  0000             #defcont					\#if ba__-$+13 < 127
+0857+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,$+13-ba__
+0858+  0000             #defcont					\#else
+0859+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0860+  0000             #defcont					\#endif
+0861+  0000             #defcont				\#endif
+0862+  0000             
+0863+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,ba__)     \#if $+14-ba__ < 128
+0864+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,ba__-$-14
+0865+  0000             #defcont				\#else
+0866+  0000             #defcont					\#if ba__-$+14 < 127
+0867+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,$+14-ba__
+0868+  0000             #defcont					\#else
+0869+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0870+  0000             #defcont					\#endif
+0871+  0000             #defcont				\#endif
+0872+  0000             
+0873+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,ba__)     \#if $+15-ba__ < 128
+0874+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,ba__-$-15
+0875+  0000             #defcont				\#else
+0876+  0000             #defcont					\#if ba__-$+15 < 127
+0877+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,$+15-ba__
+0878+  0000             #defcont					\#else
+0879+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0880+  0000             #defcont					\#endif
+0881+  0000             #defcont				\#endif
+0882+  0000             
+0883+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,ba__)     \#if $+16-ba__ < 128
+0884+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,ba__-$-16
+0885+  0000             #defcont				\#else
+0886+  0000             #defcont					\#if ba__-$+16 < 127
+0887+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,$+16-ba__
+0888+  0000             #defcont					\#else
+0889+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0890+  0000             #defcont					\#endif
+0891+  0000             #defcont				\#endif
+0892+  0000             
+0893+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,ba__)     \#if $+17-ba__ < 128
+0894+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,ba__-$-17
+0895+  0000             #defcont				\#else
+0896+  0000             #defcont					\#if ba__-$+17 < 127
+0897+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,$+17-ba__
+0898+  0000             #defcont					\#else
+0899+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0900+  0000             #defcont					\#endif
+0901+  0000             #defcont				\#endif
+0902+  0000             
+0903+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,ba__)     \#if $+18-ba__ < 128
+0904+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,ba__-$-18
+0905+  0000             #defcont				\#else
+0906+  0000             #defcont					\#if ba__-$+18 < 127
+0907+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,$+18-ba__
+0908+  0000             #defcont					\#else
+0909+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0910+  0000             #defcont					\#endif
+0911+  0000             #defcont				\#endif
+0912+  0000             
+0913+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,p17__,ba__)     \#if $+19-ba__ < 128
+0914+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,p17__,ba__-$-19
+0915+  0000             #defcont				\#else
+0916+  0000             #defcont					\#if ba__-$+19 < 127
+0917+  0000             #defcont                                 \.db $5A,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,p17__,$+19-ba__
+0918+  0000             #defcont					\#else
+0919+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0920+  0000             #defcont					\#endif
+0921+  0000             #defcont				\#endif
+0922+  0000             
+0923+  0000             #define     BEQA_(p1__,ba__)     \.db $58,p1__ \.dw ba__
+0924+  0000             #define     BEQA_(p1__,p2__,ba__)     \.db $58,p1__,p2__ \.dw ba__
+0925+  0000             #define     BEQA_(p1__,p2__,p3__,ba__)     \.db $58,p1__,p2__,p3__ \.dw ba__
+0926+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,ba__)     \.db $58,p1__,p2__,p3__,p4__ \.dw ba__
+0927+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,p5__,ba__)     \.db $58,p1__,p2__,p3__,p4__,p5__ \.dw ba__
+0928+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,p5__,p6__,ba__)     \.db $58,p1__,p2__,p3__,p4__,p5__,p6__ \.dw ba__
+0929+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,ba__)     \.db $58,p1__,p2__,p3__,p4__,p5__,p6__,p7__ \.dw ba__
+0930+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,ba__)     \.db $58,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__ \.dw ba__
+0931+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,ba__)     \.db $58,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__ \.dw ba__
+0932+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,ba__)     \.db $58,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__ \.dw ba__
+0933+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,ba__)     \.db $58,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__ \.dw ba__
+0934+  0000             #define     BEQA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,ba__)     \.db $58,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__ \.dw ba__
+0935+  0000             
+0936+  0000             #define     BNER_(p1__,ba__)     \#if $+3-ba__ < 128
+0937+  0000             #defcont                                 \.db $5B,p1__,ba__-$-3
+0938+  0000             #defcont				\#else
+0939+  0000             #defcont					\#if ba__-$+3 < 127
+0940+  0000             #defcont                                 \.db $5B,p1__,$+3-ba__
+0941+  0000             #defcont					\#else
+0942+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0943+  0000             #defcont					\#endif
+0944+  0000             #defcont				\#endif
+0945+  0000             
+0946+  0000             #define     BNER_(p1__,p2__,ba__)     \#if $+4-ba__ < 128
+0947+  0000             #defcont                                 \.db $5B,p1__,p2__,ba__-$-4
+0948+  0000             #defcont				\#else
+0949+  0000             #defcont					\#if ba__-$+4 < 127
+0950+  0000             #defcont                                 \.db $5B,p1__,p2__,$+4-ba__
+0951+  0000             #defcont					\#else
+0952+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0953+  0000             #defcont					\#endif
+0954+  0000             #defcont				\#endif
+0955+  0000             
+0956+  0000             #define     BNER_(p1__,p2__,p3__,ba__)     \#if $+5-ba__ < 128
+0957+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,ba__-$-5
+0958+  0000             #defcont				\#else
+0959+  0000             #defcont					\#if ba__-$+5 < 127
+0960+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,$+5-ba__
+0961+  0000             #defcont					\#else
+0962+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0963+  0000             #defcont					\#endif
+0964+  0000             #defcont				\#endif
+0965+  0000             
+0966+  0000             #define     BNER_(p1__,p2__,p3__,p4__,ba__)     \#if $+6-ba__ < 128
+0967+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,ba__-$-6
+0968+  0000             #defcont				\#else
+0969+  0000             #defcont					\#if ba__-$+6 < 127
+0970+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,$+6-ba__
+0971+  0000             #defcont					\#else
+0972+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0973+  0000             #defcont					\#endif
+0974+  0000             #defcont				\#endif
+0975+  0000             
+0976+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,ba__)     \#if $+7-ba__ < 128
+0977+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,ba__-$-7
+0978+  0000             #defcont				\#else
+0979+  0000             #defcont					\#if ba__-$+7 < 127
+0980+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,$+7-ba__
+0981+  0000             #defcont					\#else
+0982+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0983+  0000             #defcont					\#endif
+0984+  0000             #defcont				\#endif
+0985+  0000             
+0986+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,ba__)     \#if $+8-ba__ < 128
+0987+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,ba__-$-8
+0988+  0000             #defcont				\#else
+0989+  0000             #defcont					\#if ba__-$+8 < 127
+0990+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,$+8-ba__
+0991+  0000             #defcont					\#else
+0992+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+0993+  0000             #defcont					\#endif
+0994+  0000             #defcont				\#endif
+0995+  0000             
+0996+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,ba__)     \#if $+9-ba__ < 128
+0997+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,ba__-$-9
+0998+  0000             #defcont				\#else
+0999+  0000             #defcont					\#if ba__-$+9 < 127
+1000+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,$+9-ba__
+1001+  0000             #defcont					\#else
+1002+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1003+  0000             #defcont					\#endif
+1004+  0000             #defcont				\#endif
+1005+  0000             
+1006+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,ba__)     \#if $+10-ba__ < 128
+1007+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,ba__-$-10
+1008+  0000             #defcont				\#else
+1009+  0000             #defcont					\#if ba__-$+10 < 127
+1010+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,$+10-ba__
+1011+  0000             #defcont					\#else
+1012+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1013+  0000             #defcont					\#endif
+1014+  0000             #defcont				\#endif
+1015+  0000             
+1016+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,ba__)     \#if $+11-ba__ < 128
+1017+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,ba__-$-11
+1018+  0000             #defcont				\#else
+1019+  0000             #defcont					\#if ba__-$+11 < 127
+1020+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,$+11-ba__
+1021+  0000             #defcont					\#else
+1022+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1023+  0000             #defcont					\#endif
+1024+  0000             #defcont				\#endif
+1025+  0000             
+1026+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,ba__)     \#if $+12-ba__ < 128
+1027+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,ba__-$-12
+1028+  0000             #defcont				\#else
+1029+  0000             #defcont					\#if ba__-$+12 < 127
+1030+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,$+12-ba__
+1031+  0000             #defcont					\#else
+1032+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1033+  0000             #defcont					\#endif
+1034+  0000             #defcont				\#endif
+1035+  0000             
+1036+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,ba__)     \#if $+13-ba__ < 128
+1037+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,ba__-$-13
+1038+  0000             #defcont				\#else
+1039+  0000             #defcont					\#if ba__-$+13 < 127
+1040+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,$+13-ba__
+1041+  0000             #defcont					\#else
+1042+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1043+  0000             #defcont					\#endif
+1044+  0000             #defcont				\#endif
+1045+  0000             
+1046+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,ba__)     \#if $+14-ba__ < 128
+1047+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,ba__-$-14
+1048+  0000             #defcont				\#else
+1049+  0000             #defcont					\#if ba__-$+14 < 127
+1050+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,$+14-ba__
+1051+  0000             #defcont					\#else
+1052+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1053+  0000             #defcont					\#endif
+1054+  0000             #defcont				\#endif
+1055+  0000             
+1056+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,ba__)     \#if $+15-ba__ < 128
+1057+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,ba__-$-15
+1058+  0000             #defcont				\#else
+1059+  0000             #defcont					\#if ba__-$+15 < 127
+1060+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,$+15-ba__
+1061+  0000             #defcont					\#else
+1062+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1063+  0000             #defcont					\#endif
+1064+  0000             #defcont				\#endif
+1065+  0000             
+1066+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,ba__)     \#if $+16-ba__ < 128
+1067+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,ba__-$-16
+1068+  0000             #defcont				\#else
+1069+  0000             #defcont					\#if ba__-$+16 < 127
+1070+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,$+16-ba__
+1071+  0000             #defcont					\#else
+1072+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1073+  0000             #defcont					\#endif
+1074+  0000             #defcont				\#endif
+1075+  0000             
+1076+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,ba__)     \#if $+17-ba__ < 128
+1077+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,ba__-$-17
+1078+  0000             #defcont				\#else
+1079+  0000             #defcont					\#if ba__-$+17 < 127
+1080+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,$+17-ba__
+1081+  0000             #defcont					\#else
+1082+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1083+  0000             #defcont					\#endif
+1084+  0000             #defcont				\#endif
+1085+  0000             
+1086+  0000             #define     BNER_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,ba__)     \#if $+18-ba__ < 128
+1087+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,ba__-$-18
+1088+  0000             #defcont				\#else
+1089+  0000             #defcont					\#if ba__-$+18 < 127
+1090+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,$+18-ba__
+1091+  0000             #defcont					\#else
+1092+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1093+  0000             #defcont					\#endif
+1094+  0000             #defcont				\#endif
+1095+  0000             
+1096+  0000             #define     BEQR_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,p17__,ba__)     \#if $+19-ba__ < 128
+1097+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,p17__,ba__-$-19
+1098+  0000             #defcont				\#else
+1099+  0000             #defcont					\#if ba__-$+19 < 127
+1100+  0000             #defcont                                 \.db $5B,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,p13__,p14__,p15__,p16__,p17__,$+19-ba__
+1101+  0000             #defcont					\#else
+1102+  0000             #defcont    					 \ .error "WML7: Branch Macro Out Of Range."
+1103+  0000             #defcont					\#endif
+1104+  0000             #defcont				\#endif
+1105+  0000             
+1106+  0000             #define     BNEA_(p1__,ba__)     \.db $59,p1__ \.dw ba__
+1107+  0000             #define     BNEA_(p1__,p2__,ba__)     \.db $59,p1__,p2__ \.dw ba__
+1108+  0000             #define     BNEA_(p1__,p2__,p3__,ba__)     \.db $59,p1__,p2__,p3__ \.dw ba__
+1109+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,ba__)     \.db $59,p1__,p2__,p3__,p4__ \.dw ba__
+1110+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,p5__,ba__)     \.db $59,p1__,p2__,p3__,p4__,p5__ \.dw ba__
+1111+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,p5__,p6__,ba__)     \.db $59,p1__,p2__,p3__,p4__,p5__,p6__ \.dw ba__
+1112+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,ba__)     \.db $59,p1__,p2__,p3__,p4__,p5__,p6__,p7__ \.dw ba__
+1113+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,ba__)     \.db $59,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__ \.dw ba__
+1114+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,ba__)     \.db $59,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__ \.dw ba__
+1115+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,ba__)     \.db $59,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__ \.dw ba__
+1116+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,ba__)     \.db $59,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__ \.dw ba__
+1117+  0000             #define     BNEA_(p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__,ba__)     \.db $59,p1__,p2__,p3__,p4__,p5__,p6__,p7__,p8__,p9__,p10__,p11__,p12__ \.dw ba__
+1118+  0000             ;**********************************************************
+1119+  0000             ;* Macros 5C-5F
+1120+  0000             ;**********************************************************
+1121+  0000             #define	JMPD_(a)		.db $5c \.dw a
+1122+  0000             
+1123+  0000             #define	SWSET_(a)		      .db $5d,a
+1124+  0000             #define	SWSET_(a,b)		      .db $5d,((a&$7F)+$80),b
+1125+  0000             #define	SWSET_(a,b,c)	      .db $5d,((a&$7F)+$80),((b&$7F)+$80),c
+1126+  0000             #define	SWSET_(a,b,c,d)	      .db $5d,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),d
+1127+  0000             #define	SWSET_(a,b,c,d,e)	      .db $5d,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),e
+1128+  0000             #define	SWSET_(a,b,c,d,e,f)	.db $5d,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),((e&$7F)+$80),f
+1129+  0000             #define	SWSET_(a,b,c,d,e,f,g)	.db $5d,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),((e&$7F)+$80),((f&$7F)+$80),g
+1130+  0000             #define	SWSET_(a,b,c,d,e,f,g,h)	.db $5d,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),((e&$7F)+$80),((f&$7F)+$80),((g&$7F)+$80),h
+1131+  0000             
+1132+  0000             #define	SWCLR_(a)		      .db $5e,a
+1133+  0000             #define	SWCLR_(a,b)		      .db $5e,((a&$7F)+$80),b
+1134+  0000             #define	SWCLR_(a,b,c)	      .db $5e,((a&$7F)+$80),((b&$7F)+$80),c
+1135+  0000             #define	SWCLR_(a,b,c,d)	      .db $5e,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),d
+1136+  0000             #define	SWCLR_(a,b,c,d,e)	      .db $5e,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),e
+1137+  0000             #define	SWCLR_(a,b,c,d,e,f)	.db $5e,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),((e&$7F)+$80),f
+1138+  0000             #define	SWCLR_(a,b,c,d,e,f,g)	.db $5e,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),((e&$7F)+$80),((f&$7F)+$80),g
+1139+  0000             #define	SWCLR_(a,b,c,d,e,f,g,h)	.db $5e,((a&$7F)+$80),((b&$7F)+$80),((c&$7F)+$80),((d&$7F)+$80),((e&$7F)+$80),((f&$7F)+$80),((g&$7F)+$80),h
+1140+  0000             
+1141+  0000             #define	JMP_(a)		.db $5f \.dw a
+1142+  0000             
+1143+  0000             ;**********************************************************
+1144+  0000             ;* Macro 6X:
+1145+  0000             ;**********************************************************
+1146+  0000             #define	SLEEPI_(a)		.db ($60+(a&$0f))
+1147+  0000             
+1148+  0000             ;**********************************************************
+1149+  0000             ;* Macro 7X: 
+1150+  0000             ;**********************************************************
+1151+  0000             ;See SLEEP macro previous...
+1152+  0000             
+1153+  0000             ;**********************************************************
+1154+  0000             ;* Macro 8X:
+1155+  0000             ;**********************************************************
+1156+  0000             #define 	JMPR_(a)		\#if a-$ > $7ff
+1157+  0000             #defcont				\	.error "Macro JMPR_: Relative branch exceedes limit. Use JMP_ instead."
+1158+  0000             #defcont				\#else
+1159+  0000             #defcont				\	#if $-a > $7ff
+1160+  0000             #defcont				\		.error "Macro JMPR_: Relative branch exceedes limit. Use JMP_ instead."
+1161+  0000             #defcont				\	#endif
+1162+  0000             #defcont				\#endif
+1163+  0000             #defcont				\	.db ($80+(((a-($+1))>>8)&$0f)) \.db ((a-($+1))&$ff)
+1164+  0000             
+1165+  0000             ;**********************************************************
+1166+  0000             ;* Macro 9X:
+1167+  0000             ;**********************************************************
+1168+  0000             #define 	JSRR_(a)		\#if a-$ > $7ff
+1169+  0000             #defcont				\	.error "Macro JSRR_: Relative branch exceedes limit. Use JSR_ instead."
+1170+  0000             #defcont				\#else
+1171+  0000             #defcont				\	#if $-a > $7ff
+1172+  0000             #defcont				\		.error "Macro JSRR_: Relative branch exceedes limit. Use JSR_ instead."
+1173+  0000             #defcont				\	#endif
+1174+  0000             #defcont				\#endif
+1175+  0000             #defcont				\	.db ($90+(((a-($+1))>>8)&$0f)) \.db ((a-($+1))&$ff)
+1176+  0000             ;**********************************************************
+1177+  0000             ;* Macro AX:
+1178+  0000             ;**********************************************************
+1179+  0000             #define 	JSRDR_(a)		\#if a-$ > $7ff
+1180+  0000             #defcont				\	.error "Macro JSRDR_: Relative branch exceedes limit. Use JSRD_ instead."
+1181+  0000             #defcont				\#else
+1182+  0000             #defcont				\	#if $-a > $7ff
+1183+  0000             #defcont				\		.error "Macro JSRDR_: Relative branch exceedes limit. Use JSRD_ instead."
+1184+  0000             #defcont				\	#endif
+1185+  0000             #defcont				\#endif
+1186+  0000             #defcont				\	.db ($a0+(((a-($+1))>>8)&$0f)) \.db ((a-($+1))&$ff)
+1187+  0000             
+1188+  0000             
+1189+  0000             ;**********************************************************
+1190+  0000             ;* Macro BX: Add NextByte to RAM LSD(command) 
+1191+  0000             ;**********************************************************
+1192+  0000             #define 	ADDRAM_(ramloc,data)	\#if ramloc > $0f
+1193+  0000             #defcont					\	.error "Macro ADDRAM_: RAM Location must be between $00-$0F"
+1194+  0000             #defcont					\#endif
+1195+  0000             #defcont					\	.db ($b0+(ramloc&$0f)),data
+1196+  0000             
+1197+  0000             ;**********************************************************
+1198+  0000             ;* Macro CX: Set NextByte to RAM LSD(command) 
+1199+  0000             ;**********************************************************
+1200+  0000             #define 	SETRAM_(ramloc,data)	\#if ramloc > $0f
+1201+  0000             #defcont					\	.error "Macro SETRAM_: RAM Location must be between $00-$0F"
+1202+  0000             #defcont					\#endif
+1203+  0000             #defcont					\	.db ($c0+ramloc),data
+1204+  0000             
+1205+  0000             ;**********************************************************
+1206+  0000             ;* Macro DX: Play Index Sound (NextByte)Times  
+1207+  0000             ;**********************************************************
+1208+  0000             #define	RSND_(snd,times)		.db $d0+(snd&0F),times
+1209+  0000             
+1210+  0000             ;**********************************************************
+1211+  0000             ;* Macro EX,FX: Play Index Sound (NextByte)Times  
+1212+  0000             ;**********************************************************
+1213+  0000             #define	SSND_(a)		\#if (a<$20)
+1214+  0000             #defcont				\	.db $e0+a
+1215+  0000             #defcont				\#else
+1216+  0000             #defcont				\	.db $e0
+1217+  0000             #defcont				\	.error "Macro SSND_: Parameters must be less than $20"
+1218+  0000             #defcont				\#endif
+0025   0000             #include "7gen.asm"
+0001+  0000             ;*****************************************************************************
+0002+  0000             ;* Williams Level 7 General Macros
+0003+  0000             ;*****************************************************************************
+0004+  0000             ;* Code copyright Williams Electronic Games Inc.
+0005+  0000             ;* Written/Decoded by Jess M. Askey (jess@askey.org)
+0006+  0000             ;* For use with TASMx Assembler
+0007+  0000             ;* Visit http://www.gamearchive.com/pinball/manufacturer/williams/pinbuilder
+0008+  0000             ;* for more information.
+0009+  0000             ;* You may redistribute this file as long as this header remains intact.
+0010+  0000             ;*****************************************************************************
+0011+  0000             .module 7gen
+0012+  0000             .msfirst
+0013+  0000             ;*****************************************************************************
+0014+  0000             ;* This is where you should put general timesaving macros above and beyond
+0015+  0000             ;* the base logic and WML7 macros...
+0016+  0000             ;*
+0017+  0000             ;* An example is repetitive code such as...
+0018+  0000             ;*
+0019+  0000             ;* ldx	#gj_2B
+0020+  0000             ;* jsr	newthread_06
+0021+  0000             ;*
+0022+  0000             ;* Is both long and it is easy to forget to reference the label properly, it
+0023+  0000             ;* can be replaced with..
+0024+  0000             ;*
+0025+  0000             ;* NEWTHREAD(gj_2B) 
+0026+  0000             ;* 
+0027+  0000             ;* By using the macro defined below...
+0028+  0000             ;*****************************************************************************
+0029+  0000             
+0030+  0000             #define	NEWTHREAD(x)	\ ldx #x	\ jsr newthread_06
+0031+  0000             #define     NEWTHREAD_JMP(x)	\ ldx #x	\ jmp newthread_06
+0026   0000             
+0027   0000             
+0028   0000             ;*****************************************************************
+0029   0000             ;* Define Our Solenoids and the time they should be on for each
+0030   0000             ;* trigger. This is very handy for using the solenoid routines
+0031   0000             ;* later. This table is an example for Jungle Lord Solenoids.
+0032   0000             ;*****************************************************************
+0033   0000             outhole_on        .equ	$00+SOLENOID_ON_2_CYCLES
+0034   0000             outhole_off       .equ	$00+SOLENOID_OFF
+0035   0000             trough_on         .equ	$01+SOLENOID_ON_2_CYCLES
+0036   0000             trough_off        .equ	$01+SOLENOID_OFF
+0037   0000             gi_on	            .equ	$02+SOLENOID_ON_LATCH
+0038   0000             gi_off            .equ  $02+SOLENOID_OFF
+0039   0000             dtleft_on         .equ	$03+SOLENOID_ON_3_CYCLES
+0040   0000             dtleft_off        .equ	$03+SOLENOID_OFF
+0041   0000             dtright_on        .equ	$04+SOLENOID_ON_3_CYCLES
+0042   0000             dtright_off       .equ	$04+SOLENOID_OFF
+0043   0000             buzzer_on         .equ	$05+SOLENOID_ON_LATCH
+0044   0000             buzzer_off        .equ	$05+SOLENOID_OFF
+0045   0000             lowereject_on     .equ	$06+SOLENOID_ON_2_CYCLES
+0046   0000             lowereject_off    .equ	$06+SOLENOID_OFF
+0047   0000             uppereject_on     .equ	$07+SOLENOID_ON_2_CYCLES
+0048   0000             uppereject_off    .equ	$07+SOLENOID_OFF
+0049   0000             dt1_on	      .equ	$08+SOLENOID_ON_2_CYCLES
+0050   0000             dt1_off 	      .equ	$08+SOLENOID_OFF
+0051   0000             dt2_on            .equ	$09+SOLENOID_ON_2_CYCLES
+0052   0000             dt2_off           .equ	$09+SOLENOID_OFF
+0053   0000             dt3_on            .equ	$0A+SOLENOID_ON_2_CYCLES
+0054   0000             dt3_off    	      .equ	$0A+SOLENOID_OFF
+0055   0000             dt4_on	      .equ	$0B+SOLENOID_ON_2_CYCLES
+0056   0000             dt4_off	      .equ	$0B+SOLENOID_OFF
+0057   0000             dt5_on	      .equ	$0C+SOLENOID_ON_2_CYCLES
+0058   0000             dt5_off	      .equ	$0C+SOLENOID_OFF
+0059   0000             dtrelease_on	.equ	$0D+SOLENOID_ON_3_CYCLES
+0060   0000             dtrelease_off     .equ	$0D+SOLENOID_OFF
+0061   0000             bell_on_short     .equ	$0E+SOLENOID_ON_6_CYCLES
+0062   0000             bell_on	      .equ	$0E+SOLENOID_ON_LATCH
+0063   0000             bell_off	      .equ	$0E+SOLENOID_OFF
+0064   0000             minikick_on       .equ	$13+SOLENOID_ON_1_CYCLES
+0065   0000             minikick_on_hard  .equ	$13+SOLENOID_ON_2_CYCLES
+0066   0000             minikick_off      .equ	$13+SOLENOID_OFF
+0067   0000             leftmag_on        .equ	$14+SOLENOID_ON_LATCH
+0068   0000             leftmag_off       .equ	$14+SOLENOID_OFF
+0069   0000             rightmag_on       .equ	$15+SOLENOID_ON_LATCH
+0070   0000             rightmag_off      .equ	$15+SOLENOID_OFF
+0071   0000             flippers_on       .equ	$18+SOLENOID_ON_LATCH
+0072   0000             flippers_off      .equ	$18+SOLENOID_OFF
+0073   0000             
+0074   0000             ;***************************************************************************
+0075   0000             ;* Game ROM Required tables start at $E000. Keep in mind that you may also 
+0076   0000             ;* used the ROM space between $D000-$E000 with the correct jumper settings.
+0077   0000             ;* This data located here is required to begin at $E000. These data tables
+0078   0000             ;* define a basic setup for the game. Specific code needs to then be 
+0079   0000             ;* implemented for all system events and all switch inputs.
+0080   0000             ;*****************************************************************************
+0081   D800                   .org $d800
+      .nocodes		;So we dont have list file buffer overflows
+
+gr_low_start  .fill      gr_high_start-gr_low_start,$00
+
+
+;***********************************************
+;* Expanded Game ROM goes here, use only if you run out of space following 
+;* the data tables from $E0BF
+
+	.org $e000
+
+gr_high_start
+;*****************************************************************************
+;* GameNumber: This is the Williams assigned game number. From what I can tell
+;* 		   all games that had the possibility of being produced were 
+;*             assigned a game number. Some game numbers are skipped suggesting
+;*             that those games were scrapped along the way and didn't make
+;*             it to production. If you are planning on making a game with 
+;*             this source code, then please visit the pinbuilder website at
+;*
+;*             http://www.gamearchive.com/pinball/manufacturer/williams/pinbuild
+;*
+;*             I will assign you a game number, I want to keep a list of games
+;*             produced with this framework if possible. You will also be
+;*             given space on gamearchive.com to display info on your game and
+;*             any other info.
+;*             Williams game numbers used were as follows:
+;*
+;*			Game Name				Model 	Production Run
+;*                --------------------------------------------------------
+;*			Black Knight			#500		13075
+;*			Cosmic Gunfight (Dragonfly)	#502		1008
+;*			Jungle Lord				#503		6000
+;*			Pharaoh				#504		2500
+;*			Cyclone				#505		-
+;*			Black Knight Limited Edition	#506		600
+;*			Solar Fire				#507		782
+;*			Thunderball				#508		10
+;*			Hyperball				#509		??
+;*			Barracora				#510		2350
+;*			Varkon				#512		90
+;*			Spellbinder				#513		-
+;*			Reflex				#514		-
+;*			Time Fantasy			#515		608
+;*			Warlok				#516		412
+;*			Defender				#517		369
+;*			Joust					#519		402
+;*			Laser Cue				#520		2800
+;*			Firepower II			#521		3400
+;*			Guardian				#523		-
+;*			Star Fighter			#524		-
+;*			Pennant Fever (level 8)		#526		??
+;*			Rat Race				#527		10
+;*			Light Speed				#528		-
+;*			
+;*		   New games will start at game #900
+;*********************************************************************************
+;*
+;* ROM Revision:  This is the revision level of the game. The example below is set
+;*                to game number #900 and ROM revision level 1.
+;*********************************************************************************
+
+gr_gamenumber			.db $F9,$00
+gr_romrevision			.db $01
+
+;*********************************************************************************
+;* CMOS Checksum: These two bytes must always add up to equal $57, this is how
+;*                the system determines if the CMOS RAM data is valid. If they 
+;*                do not add up correctly, then factory settings are restors
+;*                and the audits are reset. These values are part of the default
+;*                data used when factory settings are restored. You should leave
+;*                them with the default values.
+;*********************************************************************************
+gr_cmoscsum				.db $B2,$A5
+
+;*********************************************************************************
+;* Factory Settings Data: This is the data the is used on a factory settings 
+;*                        restore. They are pretty self explanitory and match
+;*                        with functions 13-40 in the game adjustments.
+;*********************************************************************************
+gr_backuphstd			.db $25	; 2,500,000
+gr_replay1				.db $10	; 1,000,000
+gr_replay2				.db $20	; 2,000,000
+gr_replay3				.db $00	; 0,000,000 (disabled)
+gr_replay4				.db $00	; 0,000,000 (disabled)
+gr_matchenable			.db $00	; 00=match on, 01=match off
+gr_specialaward			.db $00	; 00=credit, 01=extraball, 02=points
+gr_replayaward			.db $00	; 00=credit, 01=extraball, 02=points
+gr_maxplumbbobtilts		.db $03	
+gr_numberofballs			.db $05	
+
+;*********************************************************************************
+;* Game Specific Adjustments: There are 9 placeholders that the GAME ROM is allowed
+;*                            to use for game specific adjustments. These are not
+;*                            for system variables but should be for your game
+;*                            specifically (ex.. Drop Target Reset Time, etc).
+;*********************************************************************************
+gr_gameadjust1			.db $00	
+gr_gameadjust2			.db $00
+gr_gameadjust3			.db $00
+gr_gameadjust4			.db $00
+gr_gameadjust5			.db $00
+gr_gameadjust6			.db $00
+gr_gameadjust7			.db $00
+gr_gameadjust8			.db $00
+gr_gameadjust9			.db $00
+
+
+gr_hstdcredits			.db $03
+gr_max_extraballs			.db $04
+gr_max_credits			.db $30
+
+;************************************************************************
+;* Pricing Data: These are the preset coin data that can be loaded via 
+;*               Game Function 19. You probably do not need to change these
+;*               as Williams has them working quite well as is. :-)
+;************************************************************************
+gr_pricingdata		
+	
+	;usa (1/25c,4/$1)
+	.db	$01		;Left Coin Slot Multiplier
+	.db	$04		;Center Coin Slot Multiplier
+	.db	$01		;Right Coin Slot Multiplier
+	.db	$01		;Coin Units Required for Coin
+	.db	$00		;Bonus Coins
+	.db	$00		;Unknown
+
+	;germany (1/1DM,3/2DM,10/5DM)
+	.db	$09		;Left Coin Slot Multiplier
+	.db	$45		;Center Coin Slot Multiplier
+	.db	$18		;Right Coin Slot Multiplier
+	.db	$05		;Coin Units Required for Coin
+	.db	$45		;Bonus Coins
+	.db	$00		;Unknown
+
+	;usa-alt (1/50c,3/$1,6/$2)
+	.db	$01		;Left Coin Slot Multiplier    
+	.db 	$04		;Center Coin Slot Multiplier  
+	.db 	$01		;Right Coin Slot Multiplier   
+	.db 	$02		;Coin Units Required for Coin 
+	.db 	$04		;Bonus Coins                  
+	.db 	$00		;Unknown                      
+	
+	;france (1/2F,3/5F only,8/10F only)
+	.db 	$01		;Left Coin Slot Multiplier    
+	.db 	$16		;Center Coin Slot Multiplier  
+	.db 	$06		;Right Coin Slot Multiplier   
+	.db 	$02		;Coin Units Required for Coin 
+	.db 	$00		;Bonus Coins                  
+	.db 	$00		;Unknown                      
+	
+	;usa-alt (1/50c,2/75c,3/4x25c,4/$1,4/5x25c)
+	.db 	$03		;Left Coin Slot Multiplier    
+	.db 	$15		;Center Coin Slot Multiplier  
+	.db 	$03		;Right Coin Slot Multiplier   
+	.db 	$04		;Coin Units Required for Coin 
+	.db 	$15		;Bonus Coins                  
+	.db 	$00		;Unknown                      
+	
+	;netherlands (1/25c,4/1G)
+	.db 	$01		;Left Coin Slot Multiplier    
+	.db 	$00		;Center Coin Slot Multiplier  
+	.db 	$04		;Right Coin Slot Multiplier   
+	.db 	$01		;Coin Units Required for Coin 
+	.db 	$00		;Bonus Coins                  
+	.db 	$00		;Unknown                      
+	
+	;france-alt (1/5F,2/10F)
+	.db 	$01		;Left Coin Slot Multiplier    
+	.db 	$00		;Center Coin Slot Multiplier  
+	.db 	$02		;Right Coin Slot Multiplier   
+	.db 	$01		;Coin Units Required for Coin 
+	.db 	$00		;Bonus Coins                  
+	.db 	$00		;Unknown                      
+	
+	;france-alt (1/10F)
+	.db 	$01		;Left Coin Slot Multiplier    
+	.db 	$00		;Center Coin Slot Multiplier  
+	.db 	$02		;Right Coin Slot Multiplier   
+	.db 	$02		;Coin Units Required for Coin 
+	.db 	$00		;Bonus Coins                  
+	.db 	$00		;Unknown                       
+	
+;********************************************************
+;* More Game Variables
+;********************************************************
+gr_maxthreads			.db $1d	;IMPORTANT: This is the size of the vm. It should be tweaked so that your vm 
+							;           and stack do not clobber each other. vm builds up from the bottom
+							;		and stack comes down from the top. I put in a safe value of $1d
+							;		for now. If the game gets overwhelmed with tasks, you may need to 
+							;		increase this value to give the vm more threads to work with.
+							
+gr_extendedromtest		.db $FF	;If this value is negative the self test procedure does not test for ROM 
+							;at location $D800-$DFFF. If the value is positive, then the Low GameROM 
+							;will be tested. 
+
+gr_lastswitch			.db (switchtable_end-switchtable)/3	;This is simply the length of the switchtable
+
+gr_numplayers			.db $03	;default 4 players possible to play in a single game.
+
+;********************************************************
+;* Table Pointers: This are pointers to the start of
+;* each table required by the system. Descriptions of the
+;* tables and their data are described with the tables. 
+;* You may put the actual tables anywhere in the GAME ROM,
+;* but they must exist and these pointers must contain
+;* their locations.
+;********************************************************
+gr_lamptable_ptr			.dw lampgrouptable
+gr_switchtable_ptr		.dw switchtable
+gr_soundtable_ptr			.dw soundtable
+
+
+gr_lampflashrate			.db $05	;This set the flash speed of all lamps
+
+;********************************************************
+;* Defines the system sound events for this game. The 
+;* value is the sound command sent when the event occurs.
+;* For initial simplicity, you may want to pick an existing
+;* games Sound ROM and then copy the default sound data
+;* for that game. Once you get gameplay rules defined and
+;* working, then concentrate on the sound implementation.
+;********************************************************
+gr_specialawardsound		.db $00
+gr_p1_startsound			.db $00
+gr_p2_startsound			.db $00
+gr_p3_startsound			.db $00
+gr_p4_startsound			.db $00
+gr_matchsound			.db $00
+gr_highscoresound 		.db $00
+gr_gameoversound			.db $00
+gr_creditsound			.db $00
+
+;********************************************************
+;* Defines the location for system lamps. These are all
+;* lamps that the system expects to exist since they 
+;* respond to system status. There are two Extra Ball lamps
+;* since there is typically a backbox lamp and a playfield
+;* lamp. Most of these are defaultly located in the same
+;* locations on the lamp matrix, so you probably don't need
+;* to change them.
+;********************************************************
+gr_eb_lamp_1      		.db $00	;default location
+gr_eb_lamp_2			.db $00	
+gr_lastlamp				.db $00	
+gr_hs_lamp				.db $05	;default location
+gr_match_lamp			.db $04	;default location
+gr_bip_lamp				.db $01	;default location
+gr_gameover_lamp			.db $03	;default location
+gr_tilt_lamp			.db $02	;default location
+
+
+;********************************************************
+;* Game Over Entry Point Pointer. This is the pointer to 
+;* the GAME ROM code that is to be run when a game is over.
+;* You should do things here like eject captured balls, or
+;* reset drop targets etc. This is basicaly the place to 
+;* do your post game cleanup.
+;********************************************************
+gr_gameoverthread_ptr		.dw gameover_entry
+
+;*******************************************************
+;* Switch Characteristics Table
+;*******************************************************
+;* Max Length = 7 Switch Types!!     *
+;*************************************
+;* This set of data describes the switch types installed
+;* on the game. You can have up to 7 switch types in which
+;* the switch table references. These types define how
+;* responsive a switch is and how it reacts. They seem
+;* to be pretty standard for most games and this table
+;* probably does not need to change. These switch types
+;* are part of the switch table so that every switch in
+;* your game is categorized into one of these. Each type 
+;* consists of two pieces of data...
+;* 
+;*	Trigger Time Down - byte 1
+;*	Trigger Time Up	- byte 2
+;*
+;* Examples:
+;*	$00,$02 (quick response, 10-point switches, slings)
+;*	$00,$09 (typical stand-up targets, ball-roll tilt)
+;*	$00,$04 (typical rollover lane)
+;*	$1A,$14 (kickout holes, plumb-bob tilt)
+;*	$02,$05 (drop target)
+;*	$08,$05 (outhole)
+;*	$00,$24 (ballshooter trough)
+;*	$00,$01 (spinner)
+;*
+;*********************************************************
+gr_switchtypetable		
+
+swtype0	.db 	$00,$02
+swtype1	.db 	$00,$09
+swtype2	.db 	$00,$04
+swtype3	.db 	$1A,$14
+swtype4	.db 	$02,$05
+swtype5	.db 	$08,$05
+swtype6	.db 	$00,$24
+
+;*******************************************************
+;* Player Initial Data:
+;* Each player has a section of RAM dedicated to their 
+;* specific game data. It is 20 bytes long for each 
+;* player and you may divide it up and define it however
+;* you want for your game. The data in this table is the
+;* data that is initially loaded into each players data
+;* area on their game start.
+;*******************************************************
+gr_playerstartdata		
+
+	.db $00,$00,$00,$00,$00
+	.db $00,$00,$00,$00,$00
+	.db $00,$00,$00,$00,$00
+	.db $00,$00,$00,$00,$00
+
+;*******************************************************
+;* Player Data Reset Flags:
+;* This is the mask that is applied to the player data
+;* at the start of every new ball. It allows you to reset
+;* specific bits of your game data at the start of every
+;* new ball. This mask is applied at the end of *every*
+;* ball, even extra balls. It is not applied on ball 
+;* captures (unless you want it to, but then you would
+;* have to code that yourself into the GAME ROM). If a 
+;* bit is set here, then that bit in the player data is 
+;* reset on next ball.
+;*
+;* It is an inverse mask. The defaults shown below will
+;* reset every bit.
+;*******************************************************
+gr_playerresetdata		
+
+	.db $FF,$FF,$FF,$FF,$FF
+	.db $FF,$FF,$FF,$FF,$FF
+	.db $FF,$FF,$FF,$FF,$FF
+	.db $FF,$FF,$FF,$FF,$FF
+
+;********************************************************
+;* Event Entry Points:
+;* These are locations that are jumped to on certain 
+;* events. Because they are only two bytes long each, 
+;* you have to branch to your code block or simply put
+;* an 'rts' for the unused ones plus a dummy byte.
+;* These event hooks allow you to add additional functionality
+;* at each of these events. For example, Jungle Lord rings
+;* the bell in a specific pattern when a credit is earned.
+;*
+;* These defaults all return without any additional actions.
+;********************************************************
+gr_switch_event			.db $39,$00
+gr_sound_event   			.db $39,$00
+gr_score_event			.db $39,$00
+gr_eb_event				.db $39,$00
+gr_special_event			.db $39,$00
+gr_macro_event			.db $39,$00
+gr_ready_event			.db $39,$00
+gr_addplayer_event		.db $39,$00
+gr_gameover_event 		.db $39,$00
+gr_hstdtoggle_event		.db $39,$00
+
+;********************************************************
+;* System Hooks:
+;* These are pointers to code blocks that can be run at
+;* certain times within the system. This allows the game
+;* to expand upon the system quite a bit in it's functionality.
+;* All hooks are pointers to code entry points. You cannot
+;* run code here like the event entry points above. If you
+;* want to return, then you have to point to an 'rts' 
+;* opcode somewhere else, like the sacrificial RTS above.
+;* You should leave these alone at first until you start
+;* getting more complex game rules that need to take 
+;* advantage of this flexibility.
+;********************************************************
+gr_reset_hook_ptr			.dw gr_rts
+gr_main_hook_ptr			.dw gr_rts
+gr_coin_hook_ptr			.dw gr_rts
+gr_game_hook_ptr			.dw gr_rts
+gr_player_hook_ptr		.dw gr_rts
+gr_outhole_hook_ptr		.dw gr_rts
+
+;********************************************************
+;* Game ROM IRQ Entry: Use this for game specific processing
+;*                     on the IRQ interrupt. Typicall there
+;* 			     is nothing here except a jump to the
+;*                     system irq entry. If you want to 
+;*                     run additional code, then jump to
+;*                     your code block here. 
+;*
+;* NOTE!!! You must jump to the 'sys_irq' when done with 
+;*         your code. If you dont you will find your game 
+;*         will not *do* anything since the system IRQ 
+;*         code never gets called.
+;********************************************************
+gr_irq_entry	
+		;Put your IRQ code (if any) here
+		
+		jmp sys_irq	
+
+;********************************************************
+;* Game ROM SWI Entry: This is the System Hook for the 
+;*                     CPU's SWI instruction. Unless you
+;*                     plan on using the SWI instruction
+;*                     This can be blank. I have the default
+;*                     set to go to the system reset.
+;********************************************************
+gr_swi_entry	jmp reset
+
+;********************************************************
+;********************************************************
+;* THIS IS THE END OF THE REQUIRED LENGTH GAME ROM TABLES.
+;* IF ALL IS SET UP CORRECTLY THEN THE FOLLOWING CODE 
+;* SHOULD BEGIN AT $E0C5. IF YOUR ADDRESS IS OFF, THEN
+;* YOUR GAME CODE IS MOST LIKELY GOING TO CRASH.
+;*
+;********************************************************
+;* This is the dummy return location that most of the
+;* above hooks use when 'not used' 
+;********************************************************
+;********************************************************
+gr_rts		.db $39,$00
+
+;********************************************************
+;* Game Lamp Group Table: This table defines the specific
+;*                        lamp grouping by index so that 
+;*                        effects can be performed on 
+;*                        those groups. Each entry has
+;*                        two bytes the first defines
+;*                        the first lamp in the group,
+;*                        the second defines the last
+;*                        lamp in the group. All lamps
+;*                        in between are part of the 
+;*                        group as well. This table is
+;*                        used for lamp effects. For 
+;*                        instance, you typically group
+;*                        lamps together in the way that
+;*                        you want to present your effects.
+;*
+;* Example: All multipler lamps are in a group. All lamps
+;*          that spell out words are typically in a group.
+;*
+;* NOTE: This table is limited to 32 entries or $1F hex
+;*       There are really no methods to check if you 
+;*       expand beyond the end of this table so be sure
+;*       you do not specify an index past the end of the
+;*       table else you may run into funky problems. The
+;*       index to each group is used in the lamp effect
+;*       macros to apply an effect to the group instaed
+;*       of manually having to change each lamp. The OS
+;*       is smart enought to do everything for you. Nice
+;*       ehhh? You proabaly need to define some basic
+;*       groups or at least one so you can fiddle with
+;*       the effects and learn how they work.
+;*
+;* WORKSHEET: Put your Lamp Matrix in Here
+;*
+;*    #     ROW   COL   DESCRIPTION
+;*    01    1     1     
+;*    02    2     1     
+;*    03    3     1
+;*    04    4     1
+;*    05    5     1
+;*    06    6     1
+;*    07    7     1
+;*    08    8     1
+;*    09    1     2
+;*    10    2     2
+;*    11    3     2
+;*    12    4     2
+;*    13    5     2
+;*    14    6     2
+;*    15    7     2
+;*    16    8     2
+;*    17    1     3
+;*    18    2     3
+;*    19    3     3
+;*    20    4     3
+;*    21    5     3
+;*    22    6     3
+;*    23    7     3
+;*    24    8     3
+;*    25    1     4
+;*    26    2     4
+;*    27    3     4
+;*    28    4     4
+;*    29    5     4
+;*    30    6     4
+;*    31    7     4
+;*    32    8     4
+;*    33    1     5
+;*    34    2     5
+;*    35    3     5
+;*    36    4     5
+;*    37    5     5
+;*    38    6     5
+;*    39    7     5
+;*    40    8     5
+;*    41    1     6
+;*    42    2     6
+;*    43    3     6
+;*    44    4     6
+;*    45    5     6
+;*    46    6     6
+;*    47    7     6
+;*    48    8     6
+;*    49    1     7
+;*    50    2     7
+;*    51    3     7
+;*    52    4     7
+;*    53    5     7
+;*    54    6     7
+;*    55    7     7
+;*    56    8     7
+;*    57    1     8
+;*    58    2     8
+;*    59    3     8
+;*    60    4     8
+;*    61    5     8
+;*    62    6     8
+;*    63    7     8
+;*    64    8     8
+;*
+;********************************************************
+lampgrouptable
+
+      ;here is an example lamp group that includes eight groups
+      ;of eight lamps that correspond to each column
+      
+      .db $00 ,$07	;(Lamp#01 - Lamp#08
+      .db $08 ,$1F	;(Lamp#09 - Lamp#16
+      .db $10 ,$17	;(Lamp#17 - Lamp#24
+      .db $18 ,$1F	;(Lamp#25 - Lamp#32
+      .db $20 ,$27	;(Lamp#33 - Lamp#40
+      .db $28 ,$2F	;(Lamp#41 - Lamp#48
+      .db $30 ,$37	;(Lamp#49 - Lamp#54
+      .db $38 ,$3F	;(Lamp#55 - Lamp#64
+
+
+;********************************************************
+;* Game Switch Table: Contains 3 bytes per switch.
+;*
+;* Byte 1 - Switch Flags
+;*          $80:	Entry Code Type (1=Macro 0=Native Code)
+;*          $40:	Active on Tilt Status
+;*          $20:	Active on Game Over Status
+;*          $10:	Switch Enabled
+;*          $08:	Instant Trigger 
+;*          
+;*          Mask $07: Defines switch type index
+;*
+;* Byte 2,3: Pointer to switch handing routine or Pointer
+;*           to custom switch type data followed by 
+;*           handler routine (see below)
+;*
+;* An important note is the switch type index. If this
+;* is equal to 1 thru 7, then the switch type is defined
+;* by the index 1-7 into the switch type table. If the
+;* value of the switch type index is equal to 0, then
+;* the following two bytes are a pointer to the handler
+;* PRECEEDED by two bytes defining the switch type.
+;* 
+;* EXAMPLE:
+;*
+;*  .db %10010011  \.dw mycustomswitchtype
+;*  <snip>
+;* 
+;*  mycustomswitchtype
+;*			  .db $01.$20
+;*                  <now handler code or WML7 follows>
+;*   
+;* You can also use some defines instead of binary if you want
+;* to organize the flags better. They are..
+;*
+;*    sf_wml7	      .equ	$80
+;*    sf_code 	      .equ 	$00
+;*    sf_tilt	      .equ	$40
+;*    sf_notilt         .equ  $00
+;*    sf_gameover	      .equ	$20
+;*    sf_nogameover     .equ  $00
+;*    sf_enabled	      .equ	$10
+;*    sf_disabled       .equ  $00
+;*    sf_instant	      .equ	$08
+;*    sf_delayed        .equ  $00
+;*
+;* The switch table contains one entry for every switch
+;* up to 'maxswitch'. Make sure that you get your table 
+;* row count correct (this should be done automatically
+;* actually). 
+;*
+;* Here are some example entries, the '%' percent character
+;* is my 'binary' number specifier in TASMx. Your assembler
+;* may be different. I put them in binary for ease of sight.
+;*
+;*  .db %10010011  \.dw gr_plumbtilt    ;(1) Plumb Bob Tilt
+;*  .db %10010001  \.dw gr_balltilt     ;(2) Ball Roll Tilt
+;*  .db %11110001  \.dw gr_creditbtn    ;(3) Credit Button
+;*  .db %11110010  \.dw gr_coin_r       ;(4) Right Coin
+;*  .db %11110010  \.dw gr_coin_c       ;(5) Center Coin
+;*  .db %11110010  \.dw gr_coin_l       ;(6) Left Coin
+;*  .db %01110001  \.dw reset          ;(7) Slam
+;*  .db %01110001  \.dw gr_hstd         ;(8) High Score Reset
+;*
+;* OR ALTERNATIVELY USING DEFINES
+;*
+;*  .db sf_wml7+sf_enabled+swtype3                          \.dw gr_plumbtilt    ;(1) Plumb Bob Tilt
+;*  .db sf_wml7+sf_enabled+swtype1                          \.dw gr_balltilt     ;(2) Ball Roll Tilt
+;*  .db sf_wml7+sf_tilt+sf_gameover+sf_enabled1+swtype1     \.dw gr_creditbtn    ;(3) Credit Button
+;*  .db sf_wml7+sf_tilt+sf_gameover+sf_enabled1+swtype2     \.dw gr_coin_r       ;(4) Right Coin
+;*  .db sf_wml7+sf_tilt+sf_gameover+sf_enabled1+swtype2     \.dw gr_coin_c       ;(5) Center Coin
+;*  .db sf_wml7+sf_tilt+sf_gameover+sf_enabled1+swtype2     \.dw gr_coin_l       ;(6) Left Coin
+;*  .db sf_code+sf_tilt+sf_gameover+sf_enabled1+swtype1     \.dw reset          ;(7) Slam
+;*  .db sf_code+sf_tilt+sf_gameover+sf_enabled1+swtype1     \.dw gr_hstd         ;(8) High Score Reset
+;*
+;* See how the Tilt switches are ignored if the game is already tilted.
+;* Coin and credit buttons aways work, so does the slam and HSTD reset.
+;* The last two bytes are the pointer to the code entry point
+;* when that switch is activated and it passes all of it's flags.
+;* Flag $80 is important to note as it defines which language the 
+;* code pointed to will be in. It can be either native 68XX code 
+;* or the VM Macro Language at entry. All switches above use WML 
+;* at the start of their code entry except for Slam and HSTD reset.
+;* 
+;* WORKSHEET: Put your Switch Matrix in Here
+;*
+;*    #     ROW   COL   DESCRIPTION
+;*    01    1     1     
+;*    02    2     1     
+;*    03    3     1
+;*    04    4     1
+;*    05    5     1
+;*    06    6     1
+;*    07    7     1
+;*    08    8     1
+;*    09    1     2
+;*    10    2     2
+;*    11    3     2
+;*    12    4     2
+;*    13    5     2
+;*    14    6     2
+;*    15    7     2
+;*    16    8     2
+;*    17    1     3
+;*    18    2     3
+;*    19    3     3
+;*    20    4     3
+;*    21    5     3
+;*    22    6     3
+;*    23    7     3
+;*    24    8     3
+;*    25    1     4
+;*    26    2     4
+;*    27    3     4
+;*    28    4     4
+;*    29    5     4
+;*    30    6     4
+;*    31    7     4
+;*    32    8     4
+;*    33    1     5
+;*    34    2     5
+;*    35    3     5
+;*    36    4     5
+;*    37    5     5
+;*    38    6     5
+;*    39    7     5
+;*    40    8     5
+;*    41    1     6
+;*    42    2     6
+;*    43    3     6
+;*    44    4     6
+;*    45    5     6
+;*    46    6     6
+;*    47    7     6
+;*    48    8     6
+;*    49    1     7
+;*    50    2     7
+;*    51    3     7
+;*    52    4     7
+;*    53    5     7
+;*    54    6     7
+;*    55    7     7
+;*    56    8     7
+;*    57    1     8
+;*    58    2     8
+;*    59    3     8
+;*    60    4     8
+;*    61    5     8
+;*    62    6     8
+;*    63    7     8
+;*    64    8     8
+;*
+;********************************************************
+switchtable
+
+      ; These are actually standard on level 7 games, so I will
+      ; leave them here.
+      .db %10010011  \.dw sw_plumbtilt    ;(1) Plumb Bob Tilt
+
+      .db %10010001  \.dw sw_balltilt     ;(2) Ball Roll Tilt
+
+      .db %11110001  \.dw credit_button    ;(3) Credit Button
+
+      .db %11110010  \.dw sw_coin_r       ;(4) Right Coin
+
+      .db %11110010  \.dw sw_coin_c       ;(5) Center Coin
+
+      .db %11110010  \.dw sw_coin_l       ;(6) Left Coin
+
+      .db %01110001  \.dw reset          ;(7) Slam
+
+      .db %01110001  \.dw sw_hstd_res     ;(8) High Score Reset
+
+
+
+
+switchtable_end
+
+;********************************************************
+;* Game Sound Table: 3 Bytes per entry
+;*
+;*   If sound is 'complex', then Byte 1-2 is a pointer to the entry
+;*   of the extended data
+;*
+;*        Byte 1 - Sound Flags
+;*        Byte 2 - Timer until next sound can be played
+;*        Byte 3 - Sound Command (or FF if 'extended intruction sound')
+;*
+;********************************************************	
+soundtable
+
+      ; example
+      .db $23, $06,	$3A;(05)	;(00) Credit Sound on most sound ROMS
+
+;********************************************************
+;* Complex Sound Data Format
+;*
+;* This is optional since it is only required if you 
+;* decide to use complex sounds. Sound effects are an
+;* art and I can't say Im that great at it yet. Use lables
+;* to your complex sound data streams as the first two
+;* bytes of the index sound table above, followed by $FF
+;* to flag it as a complex sound run.
+;*
+;* The format of the complex sound stream can be different
+;* lengths depending on the data.
+;*
+;* Byte 1: Timer Flags and Sound Command
+;*   
+;*         Format: LXSSSSSS
+;*
+;*         Where: L selects high or low resolution timer (0=low 1=high)
+;*                X enables a sound timer if length is word (1=enabled 0=disabled)
+;*                SSSSSS is the sound command sent to the sound board.
+;*
+;* No matter which resolution is selected, the timer is a word length. If 
+;* low resolution is selected, then the value in SSSSS is stored in the
+;* low byte of the counter and the high byte is zeroed. If high res is
+;* selected, then there will be two databytes to follow in the stream.
+;* First byte is MSB and second is LSB.
+;*		
+;* Byte 2 and possibly 3:
+;*         Contains a time value to allow this sound to play before 
+;*         continuing on to the next entry in the complex sound stream.
+;*         
+;* The complex sound stream continues until the Byte 1 value is $3F.
+;* NOTE: No count values can be negative, sign bit is always dropped 
+;*       and set to positive.
+;*
+;* Example:
+;* 
+;* my_sound	.byte $C3,$91,$29,$88,$29,$3F
+;*
+;* First Sound: Sends a sound command of $29 and waits $0311 
+;*              IRQ's before sending the next. 
+;*              of $29. 
+;* Second Snd : Sends a sound command of $29 and waits $08 
+;*              IRQ's before sending the next. 
+;* Third Sound: None, finished.
+;********************************************************
+; You can put your complex sound stream data anywhere
+;********************************************************
+
+;********************************************************
+;* Game Over Entry: This is the required code that we 
+;* talked about above for Game Over cleanup. It can exist
+;* anywhere but it has to at least exist.
+;********************************************************
+gameover_entry	rts
+					
+;**********************************************************
+;* HSTD Reset Switch: 
+;**********************************************************
+sw_hstd_res		JSRD_(restore_hstd)		
+
+
+			KILL_					;Remove This Thread
+
+								
+;************************************************************
+;* Coin Routines, this simply plays sound $00 and jumps to 
+;* the system coin routine which does all the coin code and
+;* then plays sound $00 again.
+;************************************************************	
+sw_coin_c
+sw_coin_l
+sw_coin_r		SSND_($00)				;Credit Sound
+
+
+sw_coin_r		SSND_($00)				;Credit Sound
+sw_coin_r		SSND_($00)				;Credit Sound
+sw_coin_r		SSND_($00)				;Credit Sound
+
+			JMP_(coin_accepted)		
+
+
+;************************************************************
+;* Tilt Routines:
+;************************************************************
+sw_pf_tilt
+sw_plumbtilt	EXE_
+
+
+			      NEWTHREAD(min_tilt)
+
+
+			EXEEND_
+
+
+
+
+			EXEEND_
+			EXEEND_
+
+
+
+
+
+			EXEEND_
+			EXEEND_
+
+			IFNER_($FB,$40,$F0)	      ;BEQR_(TILT || BIT#00)
+
+
+
+
+			IFNER_($FB,$40,$F0)	      ;BEQR_(TILT || BIT#00)
+			IFNER_($FB,$40,$F0)	      ;BEQR_(TILT || BIT#00)
+			IFNER_($FB,$40,$F0)	      ;BEQR_(TILT || BIT#00)
+			IFNER_($FB,$40,$F0)	      ;BEQR_(TILT || BIT#00)
+			IFNER_($FB,$40,$F0)	      ;BEQR_(TILT || BIT#00)
+			IFNER_($FB,$40,$F0)	      ;BEQR_(TILT || BIT#00)
+
+      			SSND_($08)				;Sound #08
+
+
+      			SSND_($08)				;Sound #08
+      			SSND_($08)				;Sound #08
+      			SSND_($08)				;Sound #08
+
+      			JSRD_(tilt_warning)		
+
+
+      			BEQR_($F0,you_tilted)		;BEQR_TILT to you_tilted
+
+
+      			BEQR_($F0,you_tilted)		;BEQR_TILT to you_tilted
+      			BEQR_($F0,you_tilted)		;BEQR_TILT to you_tilted
+      			BEQR_($F0,you_tilted)		;BEQR_TILT to you_tilted
+      			BEQR_($F0,you_tilted)		;BEQR_TILT to you_tilted
+      			BEQR_($F0,you_tilted)		;BEQR_TILT to you_tilted
+      			BEQR_($F0,you_tilted)		;BEQR_TILT to you_tilted
+
+      			JSRR_(gi_off_inc)			
+      			JSRR_(gi_off_inc)			
+      			JSRR_(gi_off_inc)			
+
+      			JSRR_(gi_off_inc)			
+      			JSRR_(gi_off_inc)			
+
+
+
+
+      			SLEEP_(2)
+
+
+      			SLEEP_(2)
+      			SLEEP_(2)
+
+      			JSRR_(gi_on_dec)
+      			JSRR_(gi_on_dec)
+      			JSRR_(gi_on_dec)
+
+      			JSRR_(gi_on_dec)
+      			JSRR_(gi_on_dec)
+
+
+
+
+      	      ENDIF_			
+
+
+
+
+
+      	      ENDIF_			
+      	      ENDIF_			
+
+      	      ENDIF_			
+      	      ENDIF_			
+
+
+
+
+
+      	      ENDIF_			
+      	      ENDIF_			
+      	      ENDIF_			
+      	      ENDIF_			
+      	      ENDIF_			
+
+
+      	      ENDIF_			
+      	      ENDIF_			
+
+			KILL_					;Remove This Thread
+
+
+sw_balltilt		IFNER_($40)			      ;BEQR_BIT#00
+
+
+
+
+sw_balltilt		IFNER_($40)			      ;BEQR_BIT#00
+sw_balltilt		IFNER_($40)			      ;BEQR_BIT#00
+sw_balltilt		IFNER_($40)			      ;BEQR_BIT#00
+sw_balltilt		IFNER_($40)			      ;BEQR_BIT#00
+sw_balltilt		IFNER_($40)			      ;BEQR_BIT#00
+sw_balltilt		IFNER_($40)			      ;BEQR_BIT#00
+
+      			SSND_($08)				;Sound #08
+
+
+      			SSND_($08)				;Sound #08
+      			SSND_($08)				;Sound #08
+      			SSND_($08)				;Sound #08
+
+      			JSRD_(do_tilt)			
+
+
+you_tilted      		JSR_(gi_off_inc)
+
+
+			
+			      ;insert any game specific tilt cleanup code here
+			      ;   clear switches for kickout holes so they will eject
+			      ;   set any game specific flags
+			      
+      			SLEEP_(156)
+      			SLEEP_(156)
+      			SLEEP_(156)
+
+
+
+      			SSND_($1C)				;Sound #1C
+
+
+      			SSND_($1C)				;Sound #1C
+      			SSND_($1C)				;Sound #1C
+      			SSND_($1C)				;Sound #1C
+
+      	      ENDIF_
+
+
+
+
+
+      	      ENDIF_
+      	      ENDIF_
+
+      	      ENDIF_
+      	      ENDIF_
+
+
+
+
+
+      	      ENDIF_
+      	      ENDIF_
+      	      ENDIF_
+      	      ENDIF_
+      	      ENDIF_
+
+
+      	      ENDIF_
+      	      ENDIF_
+
+			KILL_					;Remove This Thread
+
+
+;**********************************************************
+;* This thread runs for 160 irq's and makes sure that 
+;* tilts can only happen every 2.5 seconds at a minimum.
+;**********************************************************
+min_tilt		jsr	macro_start
+			REMTHREADS_($F8,$A0)		;Remove Multiple Threads Based on Priority
+
+			PRI_($A6)				;Priority=#A6
+
+			BITON_($51)				;Turn ON: Bit#11
+
+
+			SLEEP_(160)
+			SLEEP_(160)
+			SLEEP_(160)
+
+
+
+			BITOFF_($51)			;Turn OFF: Bit#11
+
+
+			KILL_					;Remove This Thread
+
+			
+			
+;************************************************************		
+;* General Illumination Routines
+;************************************************************
+gi_on_dec		IFNER_($FC,$EC,$00)	      ;BEQR_RAM$0C==#0
+
+
+
+
+gi_on_dec		IFNER_($FC,$EC,$00)	      ;BEQR_RAM$0C==#0
+gi_on_dec		IFNER_($FC,$EC,$00)	      ;BEQR_RAM$0C==#0
+gi_on_dec		IFNER_($FC,$EC,$00)	      ;BEQR_RAM$0C==#0
+gi_on_dec		IFNER_($FC,$EC,$00)	      ;BEQR_RAM$0C==#0
+gi_on_dec		IFNER_($FC,$EC,$00)	      ;BEQR_RAM$0C==#0
+gi_on_dec		IFNER_($FC,$EC,$00)	      ;BEQR_RAM$0C==#0
+
+			      ADDRAM_($0C,-1)			;RAM$0C-=1
+			      ADDRAM_($0C,-1)			;RAM$0C-=1
+			      ADDRAM_($0C,-1)			;RAM$0C-=1
+
+
+			      BNER_($FC,$EC,$00,gi_on_dec_end)	;BNER_RAM$0C==#0 to gi_on_dec_end
+			      BNER_($FC,$EC,$00,gi_on_dec_end)	;BNER_RAM$0C==#0 to gi_on_dec_end
+			      BNER_($FC,$EC,$00,gi_on_dec_end)	;BNER_RAM$0C==#0 to gi_on_dec_end
+
+
+
+			      BNER_($FC,$EC,$00,gi_on_dec_end)	;BNER_RAM$0C==#0 to gi_on_dec_end
+			      BNER_($FC,$EC,$00,gi_on_dec_end)	;BNER_RAM$0C==#0 to gi_on_dec_end
+
+
+			ENDIF_
+
+
+
+
+
+			ENDIF_
+			ENDIF_
+
+			ENDIF_
+			ENDIF_
+
+
+
+
+
+			ENDIF_
+			ENDIF_
+			ENDIF_
+			ENDIF_
+			ENDIF_
+
+
+			ENDIF_
+			ENDIF_
+
+			SOL_(gi_off)			;Turn OFF Sol#3:gi
+
+gi_on_dec_end	MRTS_					;Macro RTS, Save MRA,MRB
+
+
+
+gi_off_inc		ADDRAM_($0C,$01)			;RAM$0C+=$01
+gi_off_inc		ADDRAM_($0C,$01)			;RAM$0C+=$01
+gi_off_inc		ADDRAM_($0C,$01)			;RAM$0C+=$01
+
+
+			SOL_(gi_on)			      ;Turn ON Sol#3:gi
+
+			MRTS_					;Macro RTS, Save MRA,MRB					
+
+					
+					
+					
+					
+					
+					
+.end
+	
+
+;***********************************************************************************************************
+;* Define Exports: You dont need these, they are here for tesing on my end. You may delete them if you wish
+;***********************************************************************************************************
+.export	gr_gamenumber,gr_romrevision,gr_cmoscsum,gr_backuphstd,gr_replay1,gr_replay2,gr_replay3,gr_replay4
+.export	gr_matchenable,gr_specialaward,gr_replayaward,gr_maxplumbbobtilts,gr_numberofballs,gr_gameadjust1
+.export 	gr_gameadjust2,gr_gameadjust3,gr_gameadjust4,gr_gameadjust5,gr_gameadjust6,gr_gameadjust7
+.export 	gr_gameadjust8,gr_gameadjust9,gr_hstdcredits,gr_max_extraballs,gr_max_credits,gr_pricingdata
+.export 	gr_maxthreads,gr_extendedromtest,gr_lastswitch,gr_numplayers,gr_lamptable_ptr,gr_switchtable_ptr
+.export	gr_soundtable_ptr,gr_lampflashrate,gr_specialawardsound,gr_p1_startsound,gr_p2_startsound
+.export	gr_p3_startsound,gr_p4_startsound,gr_matchsound,gr_highscoresound,gr_gameoversound,gr_creditsound
+.export	gr_eb_lamp_1,gr_eb_lamp_2,gr_lastlamp,gr_hs_lamp,gr_match_lamp,gr_bip_lamp,gr_gameover_lamp
+.export	gr_tilt_lamp,gr_gameoverthread_ptr,gr_switchtypetable,gr_playerstartdata,gr_playerresetdata
+.export	gr_switch_event,gr_sound_event,gr_score_event,gr_eb_event,gr_special_event,gr_macro_event
+.export	gr_ready_event,gr_addplayer_event,gr_gameover_event,gr_rts,gr_reset_hook_ptr,gr_main_hook_ptr
+.export	gr_coin_hook_ptr,gr_game_hook_ptr,gr_player_hook_ptr,gr_outhole_hook_ptr,gr_irq_entry,gr_swi_entry
+.export	gr_hstdtoggle_event,gameover_entry,lampgrouptable,switchtable,switchtable_end,soundtable
+tasm: Number of errors = 0

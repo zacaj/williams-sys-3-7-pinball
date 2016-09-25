@@ -1,0 +1,56 @@
+PIA1: 0x2800-2803 access to 6 digit displays
+PIA2: 0x3000-3003 access to switch matrix
+PIA3: 0x2400-2403 access to lamp matrix
+PIA4: 0x2200-2203 access solenoids directly
+PIA5: 0x2100-2103 access seventh digit and commas
+IC13 RAM: 0x0000-007F
+IC16 RAM: 0x0080-00FF
+IC19 RAM: 0x0100-01FF
+System 7 RAM: to 13FF?
+Eproms vary by system.. but system 6;
+IC14 EPROM: 0x6000 (not Firepower)
+IC17 EPROM: 0x7800
+IC20 EPROM: 0x7000
+IC21 EPROM: 0x6000 (Firepower)
+IC22 EPROM: 0x6200 (Firepower)
+IC26 EPROM: 0x6400 (Firepower)
+
+
+PIA:
+0: A
+1: CA
+2: B
+3: CB
+
+C: irq1 | irq2 | 0=irq or out  | irq on rise or fall | 1=enable irq/out high | 0=direction, 1=data | fall/rise | irq enabled
+
+data direction 1 = output
+
+# = number
+
+tasmx -68 -s test.asm
+
+07F7 : 00 7F D4 7F 	"    "		db	$00, $7F, $D4, $7F
+07FB : D4 7F D4 78 	"   x"		db	$D4, $7F, $D4, $78
+07FF : 00 		" "		db	$00
+
+RTI return from interrupt
+RTS return from subroutine
+BSR branch subroutine
+JSR jump subroutine
+pshA/pulA stack
+CBA - compare A and B
+CMPa - compare
+CLRa - = 0
+COMa - invert
+DECax - --
+INCax - ++
+EORA M - xor
+LDAA/X M - load from memory
+ROL/Ra - rotate left/right (does this leave one empty?)
+SBA - A = A - B
+SBCA M - A = A - M -C 
+SUBA M = A = A - M
+STAA/X M- store A/X to memory
+TAB - B = A
+TBA - A = B
