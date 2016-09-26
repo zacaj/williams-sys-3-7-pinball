@@ -1,162 +1,513 @@
-0001   0000             displayStrobe: 	.equ $2800
-0002   0000             displayBcd: 	.equ $2802
-0003   0000             displayStrobeC:	.equ $2801
-0004   0000             displayBcdC:	.equ $2803
-0005   0000             lampRow:		.equ $2400
-0006   0000             lampRowC:		.equ $2401
-0007   0000             lampStrobe:		.equ $2402
-0008   0000             lampStrobeC:	.equ $2403
-0009   0000             switchStrobe:	.equ $3002
-0010   0000             switchStrobeC:	.equ $3003
-0011   0000             switchRow:		.equ $3000
-0012   0000             switchRowC:		.equ $3001
-0013   0000             
-0014   0000             RAM:			.equ $0000
-0015   0000             cRAM:			.equ $0100
-0016   0000             displayColumn:			.equ RAM + $00
-0017   0000             counter:		.equ RAM + $01
-0018   0000             temp:			.equ RAM + $02
-0019   0000             counter2:		.equ RAM + $03
-0020   0000             strobe:		.equ RAM + $07
-0021   0000             lampRow1:		.equ RAM + $08
-0022   0000             
-0023   0000             displayBcd1:	.equ RAM + $10
-0024   0000             
-0025   0000             switchRow1:		.equ RAM + $1F
-0026   0000             
-0027   7800             main:		.org $7800
-0028   7800             	
-0029   7800             piaSetup:
-0030   7800 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0031   7802 B7 28 01    	staA 	displayStrobeC
-0032   7805 86 3F       	ldaA 	#00111111b	;set LED pins to outputs
-0033   7807 B7 28 00    	staA 	displayStrobe
-0034   780A 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0035   780C B7 28 01    	staA 	displayStrobeC
-0036   780F             	
-0037   780F 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0038   7811 B7 28 03    	staA 	displayBcdC
-0039   7814 86 FF       	ldaA 	#11111111b	;set display BCD to output
-0040   7816 B7 28 02    	staA 	displayBcd
-0041   7819 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0042   781B B7 28 03    	staA 	displayBcdC
-0043   781E             	
-0044   781E 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0045   7820 B7 24 01    	staA 	lampRowC
-0046   7823 86 FF       	ldaA 	#11111111b	;set to output
-0047   7825 B7 24 00    	staA 	lampRow
-0048   7828 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0049   782A B7 24 01    	staA 	lampRowC
-0050   782D             	
-0051   782D 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0052   782F B7 24 03    	staA 	lampStrobeC
-0053   7832 86 FF       	ldaA 	#11111111b	;set to output
-0054   7834 B7 24 02    	staA 	lampStrobe
-0055   7837 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0056   7839 B7 24 03    	staA 	lampStrobeC
-0057   783C             	
-0058   783C 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0059   783E B7 30 03    	staA 	switchStrobeC
-0060   7841 86 FF       	ldaA 	#11111111b	;set to output
-0061   7843 B7 30 02    	staA 	switchStrobe
-0062   7846 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0063   7848 B7 30 03    	staA 	switchStrobeC
-0064   784B             	
-0065   784B 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0066   784D B7 30 01    	staA 	switchRowC
-0067   7850 86 00       	ldaA 	#00000000b	;set to input
-0068   7852 B7 30 00    	staA 	switchRow
-0069   7855 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0070   7857 B7 30 01    	staA 	switchRowC
-0071   785A             	
-0072   785A 86 00       	ldaA	#00
-0073   785C D7 10       	staB	displayBcd1
-0074   785E             	
-0075   785E 86 FF       	ldaA	#$FF	
-0076   7860 B7 28 00    	staA 	displayStrobe
-0077   7863             
-0078   7863 86 00       	ldaA	#00
-0079   7865 97 07       	staA	strobe
-0080   7867             	
-0081   7867 86 F0       	ldaA	#$F0
-0082   7869 97 08       	staA	lampRow1
-0083   786B             	
-0084   786B             loop:
-0085   786B 7C 00 01    	inc		counter
-0086   786E 86 00       	ldaA	#0
-0087   7870 91 01       	cmpA	counter
-0088   7872 26 1F       	bne		counterHandled
-0089   7874 7C 00 03    	inc 	counter2
-0090   7877 91 03       	cmpA	counter2
-0091   7879 26 18       	bne		counterHandled
-0092   787B             	
-0093   787B 86 F0       	ldaA	#$F0
-0094   787D 91 08       	cmpA	lampRow1
-0095   787F 27 0A       	beq		on
-0096   7881             	
-0097   7881 86 F0       	ldaA	#$F0
-0098   7883 97 08       	staA	lampRow1
-0099   7885 86 77       	ldaA	#01110111b
-0100   7887 97 10       	staA	displayBcd1	
-0101   7889 20 08       	bra		counterHandled
-0102   788B             on:
-0103   788B 86 0F       	ldaA	#$0F
-0104   788D 97 08       	staA	lampRow1
-0105   788F 86 33       	ldaA	#00110011b
-0106   7891 97 10       	staA	displayBcd1	
-0107   7893             
-0108   7893             counterHandled:
-0109   7893             ; move switch column
-0110   7893 96 07       	ldaA	strobe
-0111   7895 B7 30 02    	staA	switchStrobe
-0112   7898             	
-0113   7898             ; update display 
-0114   7898 86 F0       	ldaA	#11110000b	
-0115   789A 9A 00       	oraA	displayColumn	
-0116   789C C6 FF       	ldaB 	#$FF
-0117   789E F7 28 02    	staB	displayBcd
-0118   78A1 B7 28 00    	staA	displayStrobe
-0119   78A4 D6 10       	ldaB	displayBcd1
-0120   78A6 F7 28 02    	staB	displayBcd
-0121   78A9 7C 00 00    	inc 	displayColumn
-0122   78AC             	
-0123   78AC             ; read switches
-0124   78AC B6 30 00    	ldaA	switchRow
-0125   78AF 43          	comA
-0126   78B0 97 08       	staA	lampRow1 ; for debugging
-0127   78B2 97 1F       	staA 	switchRow1
-0128   78B4             	
-0129   78B4             ; update lamps
-0130   78B4 86 FF       	ldaA	#$FF
-0131   78B6 B7 24 00    	staA	lampRow
-0132   78B9 96 07       	ldaA	strobe
-0133   78BB B7 24 02    	staA	lampStrobe
-0134   78BE 96 08       	ldaA	lampRow1
-0135   78C0 B7 24 00    	staA	lampRow
-0136   78C3 86 00       	ldaA	#00
-0137   78C5             
-0138   78C5             	
-0139   78C5 78 00 07    	asl		strobe
-0140   78C8 91 07       	cmpA	strobe ; strobe done?  reset
-0141   78CA 26 04       	bne		sNotZero
-0142   78CC 86 01       		ldaA	#00000001b
-0143   78CE 97 07       		staA	strobe
-0144   78D0             sNotZero:
-0145   78D0 20 99       		bra		loop
-0146   78D2             	
-0147   78D2             end:
-0148   78D2 20 FE       	bra		end
-0149   78D4             	
-0150   78D4             interrupt:	
-0151   78D4 3B          	rti
-0152   78D5             
-0153   78D5             
-0154   7FF8             pointers: 	.org $7FF8  	; is this right?
-0155   7FF8             	.msfirst
-0156   7FF8 78 D4       	.dw interrupt			
-0157   7FFA 78 D4       	.dw interrupt			
-0158   7FFC 78 D4       	.dw interrupt			
-0159   7FFE 78 00       	.dw main
-0160   8000             	
-0161   8000             	
-0162   8000             	.endtasm: Number of errors = 0
+0001   0000             #include "680xlogic.asm"
+0001+  0000             ;***********************************************
+0002+  0000             ;* 680X Style Logical Instruction Macros       *
+0003+  0000             ;* For use with TASMx Assembler                *
+0004+  0000             ;* Written by Jess M. Askey 2001 jess@askey.org*
+0005+  0000             ;***********************************************
+0006+  0000             .module logic
+0007+  0000             
+0008+  0000             var1_		.equ	$00
+0009+  0000             var2_		.equ	$00
+0010+  0000             var3_		.equ	$00
+0011+  0000             var4_		.equ	$00
+0012+  0000             
+0013+  0000             #define     FLAG_IF    	0
+0014+  0000             #define     FLAG_ELSE 	1
+0015+  0000             #define	FLAG_BEGIN 	2
+0016+  0000             
+0017+  0000             ;*******************************************************************
+0018+  0000             ;* Locate: Pushes two Words                                        *
+0019+  0000             ;*                                                                 *
+0020+  0000             ;*            Word 1 - address of branch location                  *
+0021+  0000             ;*            Word 2 - Type of Operation                           *
+0022+  0000             ;*                     0 - Standard ENDIF                          *
+0023+  0000             ;*                     1 - ELSE or Logical ELSE                    *
+0024+  0000             ;*                     2 - Loop                                    *
+0025+  0000             ;*******************************************************************
+0026+  0000             #define	logic_loc(type)	     \ .push  *, type
+0027+  0000             
+0028+  0000             ;*******************************************************************
+0029+  0000             ;* Ifxx: These are the standard 'if' statements, they will always  *
+0030+  0000             ;*       be of type 0.                                             *
+0031+  0000             ;*******************************************************************
+0032+  0000             #define	logic_ifxx(x)	     logic_loc(FLAG_IF) \ x  * 
+0033+  0000             
+0034+  0000             ;*******************************************************************
+0035+  0000             ;* Begin: The start marker for logical loops, must terminate with  *
+0036+  0000             ;*        an 'xxend' statement.                                    *
+0037+  0000             ;******************************************************************* 
+0038+  0000             #define     begin(x)		     logic_loc(FLAG_BEGIN)
+0039+  0000             
+0040+  0000             ;*******************************************************************
+0041+  0000             ;* Logic End: This is the end macro for the 'begin' statement. It  *
+0042+  0000             ;*            pulls the pc location of the beginning of the loop   *
+0043+  0000             ;*            and verifies that the 'type' is correct.             *
+0044+  0000             ;*******************************************************************
+0045+  0000             #define logic_loopend(x,y)	\ .pop var1_, var2_
+0046+  0000             #defcont				\#if (var1_ & FLAG_BEGIN)
+0047+  0000             #defcont					\#if ((var2_-*-2+127) <= 0)
+0048+  0000             #defcont						\ y	*+5
+0049+  0000             #defcont						\ jmp	var2_
+0050+  0000             #defcont					\#else
+0051+  0000             #defcont						\ x	var2_
+0052+  0000             #defcont					\#endif
+0053+  0000             #defcont				\#else
+0054+  0000             #defcont					\ .error "Inappropriate End for BEGIN Loop."
+0055+  0000             #defcont				\#endif
+0056+  0000             
+0057+  0000             ;*******************************************************************
+0058+  0000             ;* Logic Find: Used for ENDIF statement. Will find the pc for the  *
+0059+  0000             ;*             previous IF (or ELSE) and update the branch or jump *
+0060+  0000             ;*             at that address to point to the current address.    *
+0061+  0000             ;*******************************************************************
+0062+  0000             #define logic_end \var1_ .set *
+0063+  0000             #defcont		\ .pop var3_, var4_
+0064+  0000             #defcont		\#if (var3_ & FLAG_BEGIN)==0 
+0065+  0000             #defcont			\#if (var3_ & FLAG_ELSE)==0	
+0066+  0000             #defcont  				\var2_ .set var1_-var4_-2
+0067+  0000             #defcont				\#if var2_+127 < 0
+0068+  0000             #defcont					\ .error "Branch Range < -127"
+0069+  0000             #defcont				\#else
+0070+  0000             #defcont					\#if var2_-128 > 0
+0071+  0000             #defcont						\ .error "Branch Range > 128"
+0072+  0000             #defcont					\#else
+0073+  0000             #defcont    					\ .org var4_+1
+0074+  0000             #defcont						\ .byte var2_
+0075+  0000             #defcont					\#endif
+0076+  0000             #defcont				\#endif
+0077+  0000             #defcont			\#else	
+0078+  0000             #defcont    			\ .org  var4_-2	
+0079+  0000             #defcont				\ .word var1_
+0080+  0000             #defcont			\#endif
+0081+  0000             #defcont			\ .org	var1_
+0082+  0000             #defcont		\#else
+0083+  0000             #defcont			\.error "Wrong Endtype for IF block"
+0084+  0000             #defcont		\#endif
+0085+  0000             
+0086+  0000             ;*******************************************************************
+0087+  0000             ;* Logic Else: Can act as a standard else or a complex else        *
+0088+  0000             ;*             (ie. with additional logic as defined below). The   *
+0089+  0000             ;*             ELSE block will resove how to terminate the current *
+0090+  0000             ;*             code and then set the owning IF statement's data    *
+0091+  0000             ;*             byte.                                               *
+0092+  0000             ;*******************************************************************
+0093+  0000             #define	logic_else(x,y)	\var1_ .set $
+0094+  0000             #defcont		\ .pop var3_, var4_
+0095+  0000             #defcont		\#if (var3_ & FLAG_BEGIN)==0
+0096+  0000             #defcont			\#if (var3_ & FLAG_ELSE)==0
+0097+  0000             #defcont				\ .org var4_+1
+0098+  0000             #defcont	      		\#if x==0
+0099+  0000             #defcont					\var2_ .set var1_-var4_-2+2
+0100+  0000             #defcont					\#if var2_+127 < 0
+0101+  0000             #defcont						\ .org var1_
+0102+  0000             #defcont						\.push $+3, 1
+0103+  0000             #defcont						\ jmp $
+0104+  0000             #defcont					\#else
+0105+  0000             #defcont						\#if var2_-128>0
+0106+  0000             #defcont							\ .org var1_
+0107+  0000             #defcont							\.push $+3, 1
+0108+  0000             #defcont							\ jmp $
+0109+  0000             #defcont						\#else
+0110+  0000             #defcont							\.push var1_, 0
+0111+  0000             #defcont							\ .byte var2_
+0112+  0000             #defcont							\ .org var1_
+0113+  0000             #defcont							\ BRA $
+0114+  0000             #defcont							\ .org var1_+2
+0115+  0000             #defcont						\#endif
+0116+  0000             #defcont					\#endif
+0117+  0000             #defcont				\#else
+0118+  0000             #defcont					\ .byte var1_-var4_-2+2
+0119+  0000             #defcont					\ .org var1_
+0120+  0000             #defcont					\.push $, 0
+0121+  0000             #defcont					\ y $		
+0122+  0000             #defcont				\#endif
+0123+  0000             #defcont			\#else
+0124+  0000             #defcont				\.error "Duplicate ELSE Statement"
+0125+  0000             #defcont			\#endif
+0126+  0000             #defcont		\#else
+0127+  0000             #defcont			\ .error "Misplaced Else"
+0128+  0000             #defcont		\#endif
+0129+  0000             
+0130+  0000             
+0131+  0000             ;*******************************************************************
+0132+  0000             ;* Defines how to use the various logic macros defined above.      *
+0133+  0000             ;*******************************************************************
+0134+  0000             #define	ifeq	logic_ifxx(BNE)		
+0135+  0000             #define	ifne	logic_ifxx(BEQ)
+0136+  0000             #define	ifpl	logic_ifxx(BMI)
+0137+  0000             #define	ifhi	logic_ifxx(BLO)
+0138+  0000             #define	ifmi	logic_ifxx(BPL)
+0139+  0000             #define	iflo	logic_ifxx(BHI)
+0140+  0000             #define	ifcs	logic_ifxx(BCC)
+0141+  0000             #define	ifcc	logic_ifxx(BCS)
+0142+  0000             #define 	ifvc	logic_ifxx(BVS)
+0143+  0000             #define 	ifvs	logic_ifxx(BVC)
+0144+  0000             #define	ifge	logic_ifxx(BLO)
+0145+  0000             #define	ifgt	logic_ifxx(BLS)
+0146+  0000             
+0147+  0000             #define	else  	logic_else(0,0)
+0148+  0000             #define	else_eq	logic_else(1,BEQ)
+0149+  0000             #define	else_ne	logic_else(1,BNE)
+0150+  0000             #define	else_pl	logic_else(1,BPL)
+0151+  0000             #define	else_mi	logic_else(1,BMI)
+0152+  0000             #define	else_cc	logic_else(1,BCC)
+0153+  0000             #define	else_cs	logic_else(1,BCS)
+0154+  0000             
+0155+  0000             #define 	endif		logic_end
+0156+  0000             
+0157+  0000             #define	eqend	logic_loopend(BNE,BEQ)		
+0158+  0000             #define	neend	logic_loopend(BEQ,BNE)		
+0159+  0000             #define	plend	logic_loopend(BMI,BPL)
+0160+  0000             #define	miend	logic_loopend(BPL,BMI)
+0161+  0000             #define	csend	logic_loopend(BCC,BCS)
+0162+  0000             #define	ccend	logic_loopend(BCS,BCC)
+0163+  0000             #define	vcend	logic_loopend(BVS,BVC)
+0164+  0000             #define	vsend	logic_loopend(BVC,BVS)
+0165+  0000             
+0166+  0000             #define	loopend	logic_loopend(BRA,BRA)
+0167+  0000             
+0168+  0000             #define	lsb(x)	x&$FF
+0169+  0000             
+0170+  0000             #define	msb(x)	(x>>8)&$FF0002   0000             
+0003   0000             displayStrobe: 	.equ $2800
+0004   0000             displayBcd: 	.equ $2802
+0005   0000             displayStrobeC:	.equ $2801
+0006   0000             displayBcdC:	.equ $2803
+0007   0000             lampRow:		.equ $2400
+0008   0000             lampRowC:		.equ $2401
+0009   0000             lampStrobe:		.equ $2402
+0010   0000             lampStrobeC:	.equ $2403
+0011   0000             switchStrobe:	.equ $3002
+0012   0000             switchStrobeC:	.equ $3003
+0013   0000             switchRow:		.equ $3000
+0014   0000             switchRowC:		.equ $3001
+0015   0000             solenoidA:		.equ $2200
+0016   0000             solenoidAC		.equ $2201
+0017   0000             solenoidB:		.equ $2202
+0018   0000             solenoidBC:		.equ $2203
+0019   0000             
+0020   0000             RAM:			.equ $0000
+0021   0000             cRAM:			.equ $0100
+0022   0000             colNum:			.equ RAM + $00
+0023   0000             counter:		.equ RAM + $01
+0024   0000             temp:			.equ RAM + $02
+0025   0000             counter2:		.equ RAM + $03
+0026   0000             strobe:			.equ RAM + $07
+0027   0000             lampRow1:		.equ RAM + $08
+0028   0000             lampRow8:		.equ lampRow1 + 7 
+0029   0000             displayBcd1:	.equ RAM + $10
+0030   0000             
+0031   0000             switchRow1:		.equ RAM + $20
+0032   0000             switchRow8:		.equ switchRow1 + 7 
+0033   0000             solenoid1:		.equ RAM + $30
+0034   0000             solenoid8:		.equ solenoid1 + 7
+0035   0000             solenoid16:		.equ solenoid1 + 15
+0036   0000             curLampRow:		.equ RAM + $50
+0037   0000             curSwitchRow:	.equ RAM + $52
+0038   0000             
+0039   0000             
+0040   7800             main:		.org $7800
+0041   7800             	
+0042   7800             piaSetup:
+0043   7800 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0044   7802 B7 28 01    	staA 	displayStrobeC
+0045   7805 86 3F       	ldaA 	#00111111b	;set LED pins to outputs
+0046   7807 B7 28 00    	staA 	displayStrobe
+0047   780A 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0048   780C B7 28 01    	staA 	displayStrobeC
+0049   780F             	
+0050   780F 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0051   7811 B7 28 03    	staA 	displayBcdC
+0052   7814 86 FF       	ldaA 	#11111111b	;set display BCD to output
+0053   7816 B7 28 02    	staA 	displayBcd
+0054   7819 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0055   781B B7 28 03    	staA 	displayBcdC
+0056   781E             	
+0057   781E 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0058   7820 B7 24 01    	staA 	lampRowC
+0059   7823 86 FF       	ldaA 	#11111111b	;set to output
+0060   7825 B7 24 00    	staA 	lampRow
+0061   7828 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0062   782A B7 24 01    	staA 	lampRowC
+0063   782D             	
+0064   782D 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0065   782F B7 24 03    	staA 	lampStrobeC
+0066   7832 86 FF       	ldaA 	#11111111b	;set to output
+0067   7834 B7 24 02    	staA 	lampStrobe
+0068   7837 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0069   7839 B7 24 03    	staA 	lampStrobeC
+0070   783C             	
+0071   783C 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0072   783E B7 30 03    	staA 	switchStrobeC
+0073   7841 86 FF       	ldaA 	#11111111b	;set to output
+0074   7843 B7 30 02    	staA 	switchStrobe
+0075   7846 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0076   7848 B7 30 03    	staA 	switchStrobeC
+0077   784B             	
+0078   784B 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0079   784D B7 30 01    	staA 	switchRowC
+0080   7850 86 00       	ldaA 	#00000000b	;set to input
+0081   7852 B7 30 00    	staA 	switchRow
+0082   7855 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0083   7857 B7 30 01    	staA 	switchRowC
+0084   785A             	
+0085   785A 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0086   785C B7 22 01    	staA 	solenoidAC
+0087   785F B7 22 03    	staA	solenoidBC
+0088   7862 86 FF       	ldaA 	#11111111b	;set to output
+0089   7864 B7 22 00    	staA 	solenoidA
+0090   7867 B7 22 02    	staA 	solenoidB
+0091   786A 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0092   786C B7 22 01    	staA 	solenoidAC
+0093   786F B7 22 03    	staA 	solenoidBC
+0094   7872             	
+0095   7872             ;
+0096   7872             
+0097   7872 86 00       	ldaA	#00
+0098   7874 D7 10       	staB	displayBcd1
+0099   7876             	
+0100   7876 86 FF       	ldaA	#$FF	
+0101   7878 B7 28 00    	staA 	displayStrobe
+0102   787B             
+0103   787B 86 00       	ldaA	#00
+0104   787D 97 07       	staA	strobe
+0105   787F             	
+0106   787F 86 F0       	ldaA	#$F0
+0107   7881 97 08       	staA	lampRow1
+0108   7883             	
+0109   7883 CE 00 08    	ldX 	#lampRow1
+0110   7886 DF 50       	stX		curLampRow
+0111   7888             	
+0112   7888 CE 00 20    	ldX		#switchRow1
+0113   788B DF 52       	stX		curSwitchRow
+0114   788D             	
+0115   788D             ; fill solenoid status with off
+0116   788D 86 FF       	ldaA		#255
+0117   788F CE 00 30    	ldX		#solenoid1
+0118   7892             lSolDefault:
+0119   7892 A7 00       	staA	0, X
+0120   7894 08          	inX
+0121   7895 8C 00 3F    	cpX		#solenoid16
+0122   7898 2F F8       	ble		lSolDefault
+0123   789A             	
+0124   789A             ; setup complete
+0125   789A             	
+0126   789A             loop:
+0127   789A 7C 00 01    	inc		counter
+0128   789D 86 00       	ldaA	#0
+0129   789F 91 01       	cmpA	counter
+0130   78A1 26 1F       	bne		counterHandled
+0131   78A3 7C 00 03    	inc 	counter2
+0132   78A6 91 03       	cmpA	counter2
+0133   78A8 26 18       	bne		counterHandled
+0134   78AA             	
+0135   78AA 86 F0       	ldaA	#$F0
+0136   78AC 91 08       	cmpA	lampRow1
+0137   78AE 27 0A       	beq		on
+0138   78B0             	
+0139   78B0 86 F0       	ldaA	#$F0
+0140   78B2 97 08       	staA	lampRow1
+0141   78B4 86 77       	ldaA	#01110111b
+0142   78B6 97 10       	staA	displayBcd1	
+0143   78B8 20 08       	bra		counterHandled
+0144   78BA             on:
+0145   78BA 86 0F       	ldaA	#$0F
+0146   78BC 97 08       	staA	lampRow1
+0147   78BE 86 33       	ldaA	#00110011b
+0148   78C0 97 10       	staA	displayBcd1	
+0149   78C2             
+0150   78C2             counterHandled:
+0151   78C2             ; move switch column
+0152   78C2 96 07       	ldaA	strobe
+0153   78C4 B7 30 02    	staA	switchStrobe
+0154   78C7             	
+0155   78C7             ; update display 
+0156   78C7 86 F0       	ldaA	#11110000b	
+0157   78C9 9A 00       	oraA	colNum	
+0158   78CB C6 FF       	ldaB 	#$FF
+0159   78CD F7 28 02    	staB	displayBcd
+0160   78D0 B7 28 00    	staA	displayStrobe
+0161   78D3 D6 10       	ldaB	displayBcd1
+0162   78D5 F7 28 02    	staB	displayBcd
+0163   78D8             	
+0164   78D8             ; read switches
+0165   78D8 B6 30 00    	ldaA	switchRow
+0166   78DB DE 52       	ldX		curSwitchRow
+0167   78DD A7 00       	staA	0, x
+0168   78DF             	
+0169   78DF 43          	comA
+0170   78E0 97 08       	staA	lampRow1 ; for debugging
+0171   78E2             	
+0172   78E2             ; update lamps
+0173   78E2 86 FF       	ldaA	#$FF
+0174   78E4 B7 24 00    	staA	lampRow
+0175   78E7 96 07       	ldaA	strobe
+0176   78E9 B7 24 02    	staA	lampStrobe
+0177   78EC 96 08       	ldaA	lampRow1
+0178   78EE B7 24 00    	staA	lampRow
+0179   78F1 86 00       	ldaA	#00
+0180   78F3             
+0181   78F3             ; update solenoids
+0182   78F3             	; if a solenoid is set to <254, --
+0183   78F3             	; if =255, off, otherwise on
+0184   78F3             	; leave it at 254
+0185   78F3 CE 00 30    	ldX		#solenoid1
+0186   78F6             	
+0187   78F6 C6 00       	ldaB	#00000000b ; new solenoid state
+0188   78F8             lSolUpdate:
+0189   78F8 54          	lsrB	
+0190   78F9 86 FE       	ldaA	#254
+0191   78FB A1 00       	cmpA	0, X
+0192   78FD             	ifgt
+0192   78FD             
+0192   78FD 23 FE       
+0193   78FF 6A 00       		dec 0, X
+0194   7901             	endif
+0194   7901             
+0194   7901             
+0194   7901             
+0194   7901             
+0194   7901             
+0194   7901~            	endif
+0194   7901~            	endif
+0194   7901             
+0194   7901~            	endif
+0194   7901~            	endif
+0194   7901             
+0194   78FE             
+0194   78FE 02          
+0194   78FF             
+0194   78FF             
+0194   78FF~            	endif
+0194   78FF~            	endif
+0194   78FF~            	endif
+0194   78FF             
+0194   7901             
+0194   7901~            	endif
+0194   7901~            	endif
+0194   7901             
+0195   7901 A1 00       	cmpA	0, X
+0196   7903             	ifge ; turn on solenoid
+0196   7903             
+0196   7903 25 FE       
+0197   7905 CB 80       		addB	#10000000b;
+0198   7907             	endif
+0198   7907             
+0198   7907             
+0198   7907             
+0198   7907             
+0198   7907             
+0198   7907~            	endif
+0198   7907~            	endif
+0198   7907             
+0198   7907~            	endif
+0198   7907~            	endif
+0198   7907             
+0198   7904             
+0198   7904 02          
+0198   7905             
+0198   7905             
+0198   7905~            	endif
+0198   7905~            	endif
+0198   7905~            	endif
+0198   7905             
+0198   7907             
+0198   7907~            	endif
+0198   7907~            	endif
+0198   7907             
+0199   7907 8C 00 37    	cpX		#solenoid8
+0200   790A             	ifeq ;save first bank, reset for second
+0200   790A             
+0200   790A 26 FE       
+0201   790C F7 22 00    		staB	solenoidA
+0202   790F C6 00       		ldaB	#00000000b ; new solenoid state
+0203   7911             	endif
+0203   7911             
+0203   7911             
+0203   7911             
+0203   7911             
+0203   7911             
+0203   7911~            	endif
+0203   7911~            	endif
+0203   7911             
+0203   7911~            	endif
+0203   7911~            	endif
+0203   7911             
+0203   790B             
+0203   790B 05          
+0203   790C             
+0203   790C             
+0203   790C~            	endif
+0203   790C~            	endif
+0203   790C~            	endif
+0203   790C             
+0203   7911             
+0203   7911~            	endif
+0203   7911~            	endif
+0203   7911             
+0204   7911             	
+0205   7911 08          	inX
+0206   7912 8C 00 3F    	cpX		#solenoid16
+0207   7915 2F E1       	ble		lSolUpdate ; end loop
+0208   7917 F7 22 02    	staB	solenoidB
+0209   791A             	
+0210   791A             ; update strobe	
+0211   791A 7C 00 00    	inc 	colNum
+0212   791D 7C 00 51    	inc		curLampRow+1
+0213   7920 7C 00 53    	inc		curSwitchRow+1
+0214   7923 86 00       	ldaA	#0
+0215   7925 78 00 07    	asl		strobe
+0216   7928 91 07       	cmpA	strobe ; strobe done?  reset
+0217   792A             	ifeq		
+0217   792A             
+0217   792A 26 FE       
+0218   792C 86 01       		ldaA	#00000001b
+0219   792E 97 07       		staA	strobe
+0220   7930             		
+0221   7930 CE 00 08    		ldX 	#lampRow1
+0222   7933 DF 50       		stX		curLampRow
+0223   7935             		
+0224   7935 CE 00 20    		ldX		#switchRow1
+0225   7938 DF 52       		stX		curSwitchRow
+0226   793A             	endif
+0226   793A             
+0226   793A             
+0226   793A             
+0226   793A             
+0226   793A             
+0226   793A~            	endif
+0226   793A~            	endif
+0226   793A             
+0226   793A~            	endif
+0226   793A~            	endif
+0226   793A             
+0226   792B             
+0226   792B 0E          
+0226   792C             
+0226   792C             
+0226   792C~            	endif
+0226   792C~            	endif
+0226   792C~            	endif
+0226   792C             
+0226   793A             
+0226   793A~            	endif
+0226   793A~            	endif
+0226   793A             
+0227   793A 7E 78 9A    	jmp		loop
+0228   793D             	
+0229   793D             end:
+0230   793D 20 FE       	bra		end
+0231   793F             	
+0232   793F             	
+0233   793F             interrupt:	
+0234   793F 3B          	rti
+0235   7940             
+0236   7FF8             pointers: 	.org $7FF8  	; is this right?
+0237   7FF8             	.msfirst
+0238   7FF8 79 3F       	.dw interrupt			
+0239   7FFA 79 3F       	.dw interrupt			
+0240   7FFC 79 3F       	.dw interrupt			
+0241   7FFE 78 00       	.dw main
+0242   8000             	
+0243   8000             	
+0244   8000             	.endtasm: Number of errors = 0
