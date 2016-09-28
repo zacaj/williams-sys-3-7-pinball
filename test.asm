@@ -19,9 +19,8 @@ solenoidBC:		.equ $2203
 
 RAM:			.equ $0000
 cRAM:			.equ $0100
-colNum:			.equ RAM + $00
-counter:		.equ RAM + $01
-temp:			.equ RAM + $02
+temp:			.equ RAM + $00
+counter:		.equ RAM + $02
 counter2:		.equ RAM + $03
 strobe:			.equ RAM + $07
 lampRow1:		.equ RAM + $08
@@ -30,14 +29,37 @@ displayBcd1:	.equ RAM + $10
 
 switchRow1:		.equ RAM + $20
 switchRow8:		.equ switchRow1 + 7 
-solenoid1:		.equ RAM + $30
+solAStatus:		.equ RAM + $28
+solBStatus:		.equ RAM + $29
+solenoid1:		.equ cRAM + $00
 solenoid8:		.equ solenoid1 + 7
+solenoid9:		.equ solenoid1 + 8
 solenoid16:		.equ solenoid1 + 15
-curLampRow:		.equ RAM + $50
-curSwitchRow:	.equ RAM + $52
+curCol:			.equ RAM + $50
+curSwitchRowLsb	.equ RAM + $52
 
-
+none:	.org $6000 + 128
+	rts
+	
+	.msfirst
+switchTable: 	.org $6000
+	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
+	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
+	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
+	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
+	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
+	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
+	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
+	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
 main:		.org $7800
+	
+	ldaA 	#0
+	staA	temp
+	ldaA	#$FF
+	staA	temp + 1
+	ldS		temp
+
+test:
 	
 piaSetup:
 	ldaA	#00000000b	;select direction (3rd bit = 0)
@@ -103,17 +125,14 @@ piaSetup:
 	ldaA	#00
 	staA	strobe
 	
-	ldaA	#$F0
-	staA	lampRow1
+	ldX 	#0
 	
-	ldX 	#lampRow1
-	stX		curLampRow
-	
-	ldX		#switchRow1
-	stX		curSwitchRow
+	ldaA	#0
+	staA	curSwitchRowLsb
 	
 ; fill solenoid status with off
-	ldaA		#255
+	ldaA	#$FF
+	stX		curCol	;save old X
 	ldX		#solenoid1
 lSolDefault:
 	staA	0, X
@@ -121,19 +140,35 @@ lSolDefault:
 	cpX		#solenoid16
 	ble		lSolDefault
 	
-; setup complete
+	ldX		curCol ; restore X
 	
-loop:
+; setup complete
+	clI		; enable timer interrupt
+	
+	
+end:
+	jmp		end
+	.dw 0
+	.dw 0
+	.dw 0
+	.dw 0
+	.dw 0
+		
+interrupt:	
+	ldX		curCol
 	inc		counter
 	ldaA	#0
 	cmpA	counter
 	bne		counterHandled
 	inc 	counter2
+	ldaA	#4
 	cmpA	counter2
 	bne		counterHandled
 	
-	ldaA	#$F0
-	cmpA	lampRow1
+	ldaA	#0
+	staA	counter2
+	ldaA	#01110111b
+	cmpA	displayBcd1
 	beq		on
 	
 	ldaA	#$F0
@@ -154,7 +189,7 @@ counterHandled:
 	
 ; update display 
 	ldaA	#11110000b	
-	oraA	colNum	
+	oraA	counter
 	ldaB 	#$FF
 	staB	displayBcd
 	staA	displayStrobe
@@ -163,18 +198,45 @@ counterHandled:
 	
 ; read switches
 	ldaA	switchRow
-	ldX		curSwitchRow
-	staA	0, x
+	tab
+	eorA	switchRow1, X ; A contains any switches that have changed state
+	staB	switchRow1, X
+	staB	temp
+	andA	temp	; A contains any switches that have turned on
 	
-	comA
-	staA	lampRow1 ; for debugging
+	;stX		curCol	
+	;ldaA	curCol + 1
+	;bne		swNext		; skip add if A = 0
+	;ldaB	#0
+;swAddRow:
+	;addB	#16
+	;decA
+	;bne		swAddRow	; loop will A = 0
+	ldaB	curSwitchRowLsb 	;	B now contains LSB of switchTable row addr
+	staB	temp + 1
+	ldaB	#switchTable >> 8
+	staB	temp
+	; temp now contains the beginning of the row in the switchTable
+swNext:
+	bitA	#00000001b ; Z set if switch not turned on
+	ifne		; if bit set, switch turned on
+		ldX		temp	
+		ldX		0, X
+		jsr		0, X
+	endif
+	inc temp + 1
+	inc temp + 1
+	asrA			; pop lowest bit off, set Z if A is empty
+	bne		swNext 	; more on bits, keep processing 
+	
+	ldX		curCol
 	
 ; update lamps
-	ldaA	#$FF
+	ldaA	#$FF	;lamp row is inverted
 	staA	lampRow
 	ldaA	strobe
 	staA	lampStrobe
-	ldaA	lampRow1
+	ldaA	lampRow1, X
 	staA	lampRow
 	ldaA	#00
 
@@ -182,58 +244,63 @@ counterHandled:
 	; if a solenoid is set to <254, --
 	; if =255, off, otherwise on
 	; leave it at 254
-	ldX		#solenoid1
 	
-	ldaB	#00000000b ; new solenoid state
-lSolUpdate:
-	lsrB	
+	inc		curCol
+	ldX		curCol
 	ldaA	#254
-	cmpA	0, X
-	ifgt
-		dec 0, X
+	ldaB	solenoid1 - cRAM, X
+	cmpA	solenoid1 - cRAM, X
+	ifge 	; solenoid <=254, turn on
+		ifgt	; solenoid < 254, decrement
+			dec		solenoid1 - cRAM, X
+		endif
+		sec
+	else
+		clc
 	endif
-	cmpA	0, X
-	ifge ; turn on solenoid
-		addB	#10000000b;
+	ror		solAStatus
+	cmpA	solenoid9 - cRAM, X
+	ifge 	; solenoid <=254, turn on
+		ifgt	; solenoid < 254, decrement
+			dec		solenoid9 - cRAM, X
+		endif
+		sec
+	else
+		clc
 	endif
-	cpX		#solenoid8
-	ifeq ;save first bank, reset for second
-		staB	solenoidA
-		ldaB	#00000000b ; new solenoid state
-	endif
-	
-	inX
-	cpX		#solenoid16
-	ble		lSolUpdate ; end loop
-	staB	solenoidB
+	ror		solBStatus
+	dec		curCol
+	ldX		curCol
 	
 ; update strobe	
-	inc 	colNum
-	inc		curLampRow+1
-	inc		curSwitchRow+1
-	ldaA	#0
+	inX 	
+	ldaA	#16
+	addA	curSwitchRowLsb
+	staA	curSwitchRowLsb
 	asl		strobe
+	ldaA	#0
 	cmpA	strobe ; strobe done?  reset
 	ifeq		
+		ldaA	solAStatus
+		staA	solenoidA
+		ldaA	solBStatus
+		staA	solenoidB
+	
 		ldaA	#00000001b
 		staA	strobe
 		
-		ldX 	#lampRow1
-		stX		curLampRow
+		ldX 	#0
 		
-		ldX		#switchRow1
-		stX		curSwitchRow
+		ldaA	#0
+		staA	curSwitchRowLsb
+		staA	solAStatus
+		staA	solBStatus
 	endif
-	jmp		loop
 	
-end:
-	bra		end
-	
-	
-interrupt:	
+	stX		curCol
 	rti
 
-pointers: 	.org $7FF8  	; is this right?
+pointers: 	.org $7FF8  	
 	.msfirst
 	.dw interrupt			
 	.dw interrupt			
