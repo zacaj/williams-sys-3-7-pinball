@@ -31,26 +31,57 @@ switchRow1:		.equ RAM + $20
 switchRow8:		.equ switchRow1 + 7 
 solAStatus:		.equ RAM + $28
 solBStatus:		.equ RAM + $29
-solenoid1:		.equ cRAM + $00
+curCol:			.equ RAM + $50
+curSwitchRowLsb	.equ RAM + $52
+tempX:			.equ RAM + $53
+
+settleRow1:		.equ cRAM + $00
+settleRow8:		.equ settleRow1+  8*8-1
+solenoid1:		.equ cRAM + $40
 solenoid8:		.equ solenoid1 + 7
 solenoid9:		.equ solenoid1 + 8
 solenoid16:		.equ solenoid1 + 15
-curCol:			.equ RAM + $50
-curSwitchRowLsb	.equ RAM + $52
+pA_10:			.equ cRAM + $50
+pA_1m:			.equ pA_10 + 5
+pB_10:			.equ pA_1m + 1
+pB_1m:			.equ pB_10 + 5
+pC_10:			.equ pB_1m + 1
+pC_1m:			.equ pC_10 + 5
+pD_10:			.equ pC_1m + 1
+pD_1m:			.equ pD_10 + 5  
 
-none:	.org $6000 + 128
+instant:		.equ 4
+debounce:		.equ 1
+slow:			.equ 2
+
+switchSettle:	.equ cRAM + $30
+; through $7F ?
+
+none:	.org $6000 + 256
 	rts
 	
 	.msfirst
+#define SW(y,x) .db x \ .dw y 
+
 switchTable: 	.org $6000
-	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
-	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
-	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
-	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
-	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
-	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
-	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
-	.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none \.dw none
+	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+settleTable:
+	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
+	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
+	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
+	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
+	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
+	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
+	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
+	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 0
+	
 main:		.org $7800
 	
 	ldaA 	#0
@@ -126,13 +157,13 @@ piaSetup:
 	staA	strobe
 	
 	ldX 	#0
+	stX		curCol
 	
 	ldaA	#0
 	staA	curSwitchRowLsb
 	
 ; fill solenoid status with off
 	ldaA	#$FF
-	stX		curCol	;save old X
 	ldX		#solenoid1
 lSolDefault:
 	staA	0, X
@@ -140,7 +171,14 @@ lSolDefault:
 	cpX		#solenoid16
 	ble		lSolDefault
 	
-	ldX		curCol ; restore X
+; empty settle
+	ldaA	#$00
+	ldX		#settleRow1
+lSettleDefault:
+	staA		0, X
+	inX
+	cpX		#settleRow8 + 7
+	ble		lSettleDefault
 	
 ; setup complete
 	clI		; enable timer interrupt
@@ -155,7 +193,6 @@ end:
 	.dw 0
 		
 interrupt:	
-	ldX		curCol
 	inc		counter
 	ldaA	#0
 	cmpA	counter
@@ -197,46 +234,68 @@ counterHandled:
 	staB	displayBcd
 	
 ; read switches
+	ldX		curCol
 	ldaA	switchRow
 	tab
 	eorA	switchRow1, X ; A contains any switches that have changed state
-	staB	switchRow1, X
-	staB	temp
-	andA	temp	; A contains any switches that have turned on
 	
-	;stX		curCol	
-	;ldaA	curCol + 1
-	;bne		swNext		; skip add if A = 0
-	;ldaB	#0
-;swAddRow:
-	;addB	#16
-	;decA
-	;bne		swAddRow	; loop will A = 0
 	ldaB	curSwitchRowLsb 	;	B now contains LSB of switchTable row addr
-	staB	temp + 1
+	staB	temp + 1 			; temp = switch
+	staB	tempX + 1			; tempX = cRAM
 	ldaB	#switchTable >> 8
 	staB	temp
+	ldaB	#cRAM >> 8
+	staB	tempX
+	
+	ldaB	#00000001b
+	
 	; temp now contains the beginning of the row in the switchTable
 swNext:
-	bitA	#00000001b ; Z set if switch not turned on
-	ifne		; if bit set, switch turned on
-		ldX		temp	
-		ldX		0, X
-		jsr		0, X
+	bitA	#00000001b	 ; Z set if switch not different
+	ifne		; if bit set, switch different
+		pshA
+		ldX		tempX
+		ldaA	0, X
+		andA	#00001111b ; need to remove upper F ( sets Z if A = 0)
+		ifne 	; >0 -> settling
+			decA
+			staA	0, X	; sets Z if now A = 0
+			ifeq ; now settled, fire event
+settled:		ldX		curCol
+				tBA
+				eorA	switchRow1, X ; toggle bit in row
+				staA	switchRow1, X
+				; todo somehow actually fire it here
+				;ldX		temp	
+				;ldX		0, X
+				;jsr		0, X
+			endif
+		else ; =0 -> was settled, so now it's not
+			; get the settle time
+			ldaA	tempX + 1
+			staA	temp + 1 ;get temp in sync with tempX LSB
+			ldX		temp
+			ldaA	settleTable - switchTable, X ; A has settle settings
+			ldX		tempX
+			staA	0, X		; start settling	
+			beq		settled		; quick out for 0 settle
+		endif
+			
+		pulA
 	endif
-	inc temp + 1
-	inc temp + 1
-	asrA			; pop lowest bit off, set Z if A is empty
+	inc tempX + 1
+	aslB
+	lsrA			; pop lowest bit off, set Z if A is empty
 	bne		swNext 	; more on bits, keep processing 
 	
-	ldX		curCol
 	
 ; update lamps
+	ldX		curCol
 	ldaA	#$FF	;lamp row is inverted
 	staA	lampRow
 	ldaA	strobe
 	staA	lampStrobe
-	ldaA	lampRow1, X
+	ldaA	switchRow1, X
 	staA	lampRow
 	ldaA	#00
 
@@ -245,9 +304,9 @@ swNext:
 	; if =255, off, otherwise on
 	; leave it at 254
 	
-	inc		curCol
-	ldX		curCol
+	inc		curCol	; indexed can't use base >255, so temp inc X by 255 (1 MSB)
 	ldaA	#254
+	ldX		curCol
 	ldaB	solenoid1 - cRAM, X
 	cmpA	solenoid1 - cRAM, X
 	ifge 	; solenoid <=254, turn on
@@ -270,11 +329,11 @@ swNext:
 	endif
 	ror		solBStatus
 	dec		curCol
-	ldX		curCol
 	
 ; update strobe	
+	ldX		curCol
 	inX 	
-	ldaA	#16
+	ldaA	#8 	; pitch
 	addA	curSwitchRowLsb
 	staA	curSwitchRowLsb
 	asl		strobe
