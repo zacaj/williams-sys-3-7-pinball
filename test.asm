@@ -26,7 +26,7 @@ strobe:			.equ RAM + $07
 lampRow1:		.equ RAM + $08
 lampRow8:		.equ lampRow1 + 7 
 displayBcd1:	.equ RAM + $10
-
+displayBcd16:	.equ RAM + $1F
 switchRow1:		.equ RAM + $20
 switchRow8:		.equ switchRow1 + 7 
 solAStatus:		.equ RAM + $28
@@ -49,6 +49,7 @@ pC_10:			.equ pB_1m + 1
 pC_1m:			.equ pC_10 + 5
 pD_10:			.equ pC_1m + 1
 pD_1m:			.equ pD_10 + 5  
+displayCol:		.equ cRAM + $68
 
 instant:		.equ 4
 debounce:		.equ 1
@@ -155,6 +156,7 @@ piaSetup:
 
 	ldaA	#00
 	staA	strobe
+	staA	displayCol
 	
 	ldX 	#0
 	stX		curCol
@@ -179,6 +181,18 @@ lSettleDefault:
 	inX
 	cpX		#settleRow8 + 7
 	ble		lSettleDefault
+	
+; test numbers
+	ldX		#displayBcd1 + 1
+	ldaA	#0
+lTestNumbers:
+	staA	0, X
+	inX
+	incA
+	andA	#00000111b
+	cpX		#displayBcd16
+	ble		lTestNumbers
+	
 	
 ; setup complete
 	clI		; enable timer interrupt
@@ -225,12 +239,17 @@ counterHandled:
 	staA	switchStrobe
 	
 ; update display 
-	ldaA	#11110000b	
-	oraA	counter
+	ldX		curCol
+	ldaA	displayCol
 	ldaB 	#$FF
 	staB	displayBcd
 	staA	displayStrobe
-	ldaB	displayBcd1
+	bitA	#00001000b
+	ifeq
+		ldaB	displayBcd1, X
+	else
+		ldaB	displayBcd1 + 8, X
+	endif
 	staB	displayBcd
 	
 ; read switches
@@ -337,6 +356,7 @@ settled:		ldX		curCol
 	addA	curSwitchRowLsb
 	staA	curSwitchRowLsb
 	asl		strobe
+	inc		displayCol
 	ldaA	#0
 	cmpA	strobe ; strobe done?  reset
 	ifeq		
@@ -354,6 +374,12 @@ settled:		ldX		curCol
 		staA	curSwitchRowLsb
 		staA	solAStatus
 		staA	solBStatus
+		
+		ldaB	displayCol	; reset display col only if it's > 7 
+		cmpB	#$F8	; since it needs to count to 15 instead of 7
+		ifgt
+			staA	displayCol
+		endif
 	endif
 	
 	stX		curCol
