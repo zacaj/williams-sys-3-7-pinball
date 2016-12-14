@@ -34,6 +34,10 @@ solBStatus:		.equ RAM + $29
 curCol:			.equ RAM + $50
 curSwitchRowLsb	.equ RAM + $52
 tempX:			.equ RAM + $53
+tempQ:			.equ RAM + $54 ; 55
+
+queue:			.equ RAM + $60	; closed | switch? | number#6
+queueLast:		.equ RAM + $6F
 
 settleRow1:		.equ cRAM + $00
 settleRow8:		.equ settleRow1+  8*8-1
@@ -50,6 +54,9 @@ pC_1m:			.equ pC_10 + 5
 pD_10:			.equ pC_1m + 1
 pD_1m:			.equ pD_10 + 5  
 displayCol:		.equ cRAM + $68
+state:			.equ cRAM + $69	; gameover | ? | ? | ?
+queueStart:		.equ cRAM + $70
+queueEnd:		.equ cRAM + $71
 
 instant:		.equ 4
 debounce:		.equ 1
@@ -62,9 +69,7 @@ none:	.org $6000 + 256
 	rts
 	
 	.msfirst
-#define SW(y,x) .db x \ .dw y 
-
-switchTable: 	.org $6000
+callbackTable: 	.org $6000
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
@@ -73,15 +78,20 @@ switchTable: 	.org $6000
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-settleTable:
-	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
-	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
-	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
-	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
-	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
-	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
-	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13
-	.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 13\.db 0
+; on = how many cycles it must be on for before registering (1 cycle = 16ms (?)) (max 7)
+; off = how many cycles it must be off for
+; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
+; gameover = whether the switch is active in gameover mode (these callbacks must check whether in game over when triggered)
+#define SW(on,off,onOnly,gameover) .db (gameover<<7)(onOnly<<6)|(on<<3)|(off) 
+settleTable: ; must be right after callbackTable
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	
 main:		.org $7800
 	
@@ -182,6 +192,19 @@ lSettleDefault:
 	cpX		#settleRow8 + 7
 	ble		lSettleDefault
 	
+; empty queue
+	ldaA	#$FF
+	ldX		#queue
+lEmptyQueue:
+	staA		0, X
+	inX
+	cpX		#queueLast
+	ble		lEmptyQueue
+	
+	ldaA	#0
+	staA	queueStart
+	staA	queueEnd
+	
 ; test numbers
 	ldX		#displayBcd1 + 1
 	ldaA	#0
@@ -199,6 +222,21 @@ lTestNumbers:
 	
 	
 end:
+	ldaA	#00001111b
+	andA	queueStart
+	
+	
+				ldaA	#1000b	; gameover
+				bitA	state
+				ifne	; in gameover
+					ldaA #10000000b; 
+					bitA
+				endif
+				
+skipSwitch:
+				
+	
+				
 	jmp		end
 	.dw 0
 	.dw 0
@@ -258,33 +296,38 @@ counterHandled:
 	tab
 	eorA	switchRow1, X ; A contains any switches that have changed state
 	
-	ldaB	curSwitchRowLsb 	;	B now contains LSB of switchTable row addr
-	staB	temp + 1 			; temp = switch
+	ldaB	curSwitchRowLsb 	;	B now contains LSB of callbackTable row addr
+	staB	temp + 1 			; temp = switch / 2
 	staB	tempX + 1			; tempX = cRAM
-	ldaB	#switchTable >> 8
+	ldaB	#callbackTable >> 8
 	staB	temp
 	ldaB	#cRAM >> 8
 	staB	tempX
 	
-	ldaB	#00000001b
+	ldaB	#00000001b ; B is the bit of the current switch in row
 	
-	; temp now contains the beginning of the row in the switchTable
+	; temp now contains the beginning of the row in the callbackTable
 swNext:
 	bitA	#00000001b	 ; Z set if switch not different
 	ifne		; if bit set, switch different
-		pshA
+		pshA ; store changed switches left
 		ldX		tempX
-		ldaA	0, X
+		ldaA	0, X ; A now how long the switch has left to settle
 		andA	#00001111b ; need to remove upper F ( sets Z if A = 0)
-		ifne 	; >0 -> settling
+		ifne 	; A>0 -> settling
 			decA
 			staA	0, X	; sets Z if now A = 0
-			ifeq ; now settled, fire event
-settled:		ldX		curCol
-				tBA
+			ifeq ; A=0 -> now settled, fire event
+settled:		
+				ldX		curCol
+				tBA	; A now the bit in row
 				eorA	switchRow1, X ; toggle bit in row
-				staA	switchRow1, X
+				staA	switchRow1, X ; A now state of row
+				
+				
+				
 				; todo somehow actually fire it here
+				;asl		temp + 1
 				;ldX		temp	
 				;ldX		0, X
 				;jsr		0, X
@@ -292,9 +335,22 @@ settled:		ldX		curCol
 		else ; =0 -> was settled, so now it's not
 			; get the settle time
 			ldaA	tempX + 1
-			staA	temp + 1 ;get temp in sync with tempX LSB
+			staA	temp + 1 	; get temp in sync with tempX LSB
 			ldX		temp
-			ldaA	settleTable - switchTable, X ; A has settle settings
+			
+			; temp contains half the address of the callback, so add diff between settleTable and callbackTable
+			ldaA	settleTable - callbackTable, X ; A has settle settings
+			
+			; need to get correct 3 bits from switch settings
+			bitB	switchRow
+			ifne ; switch just turned on
+				lsrA
+				lsrA
+			else
+				aslA
+			endif
+			andA	#1110b ; A now has 3 bit settle time * 2
+						
 			ldX		tempX
 			staA	0, X		; start settling	
 			beq		settled		; quick out for 0 settle
@@ -305,7 +361,7 @@ settled:		ldX		curCol
 	inc tempX + 1
 	aslB
 	lsrA			; pop lowest bit off, set Z if A is empty
-	bne		swNext 	; more on bits, keep processing 
+	bne		swNext 	; more 'switched' bits, keep processing 
 	
 	
 ; update lamps
