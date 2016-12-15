@@ -244,37 +244,363 @@
 0004+  7B00             copyScores:
 0005+  7B00             copyScores13:
 0006+  7B00 CE 00 70    	ldX		#displayBcd1
-0007+  7B03             copy13Loop:
-0008+  7B03 A6 E0       	ldaA	pA_1m - displayBcd1, X
-0009+  7B05 48          	aslA
-0010+  7B06 48          	aslA
-0011+  7B07 48          	aslA
-0012+  7B08 48          	aslA
-0013+  7B09 8A 0F       	oraA	#00001111b
-0014+  7B0B A4 EC       	andA	pC_1m - displayBcd1, X
-0015+  7B0D A7 00       	staA	0, X
-0016+  7B0F             	
-0017+  7B0F 08          	inX
-0018+  7B10 8C 00 76    	cpX		#displayBcd1 + 6
-0019+  7B13 2F EE       	ble copy13Loop
-0020+  7B15             copyScores24:
-0021+  7B15 CE 00 78    	ldX		#displayBcd1 + 8
-0022+  7B18             copy24Loop:
-0023+  7B18 A6 DE       	ldaA	pB_1m - (displayBcd1 + 8), X
-0024+  7B1A 48          	aslA
-0025+  7B1B 48          	aslA
-0026+  7B1C 48          	aslA
-0027+  7B1D 48          	aslA
-0028+  7B1E 8A 0F       	oraA	#00001111b
-0029+  7B20 A4 EA       	andA	pD_1m - (displayBcd1 + 8), X
-0030+  7B22 A7 00       	staA	0, X
-0031+  7B24             	
-0032+  7B24 08          	inX
-0033+  7B25 8C 00 7E    	cpX		#displayBcd1 + 14
-0034+  7B28 2F EE       	ble copy24Loop	
-0035+  7B2A 39          	rts0006   7B2B             
-0007   7B2B             #include "game.asm"
-0001+  7B2B             
+0007+  7B03 C6 FF       	ldaB	#$FF	; blank(F) until a number >0 is found then 0
+0008+  7B05             copy13Loop:
+0009+  7B05 A6 E0       	ldaA	pA_1m - displayBcd1, X
+0010+  7B07 81 F0       	cmpA	#$F0 ; is pA score 0?
+0011+  7B09             	ifeq
+0011+  7B09             
+0011+  7B09 26 FE       
+0012+  7B0B 17          		tBA	; replace 0 with blank/0
+0013+  7B0C             	else
+0013+  7B0C             
+0013+  7B0C             
+0013+  7B0C             
+0013+  7B0C             
+0013+  7B0A             
+0013+  7B0A             
+0013+  7B0A             
+0013+  7B0A~            	else
+0013+  7B0A~            	else
+0013+  7B0A~            	else
+0013+  7B0A~            	else
+0013+  7B0A             
+0013+  7B0A~            	else
+0013+  7B0A~            	else
+0013+  7B0A~            	else
+0013+  7B0A~            	else
+0013+  7B0A             
+0013+  7B0A             
+0013+  7B0A 03          
+0013+  7B0C             
+0013+  7B0C 20 FE       
+0013+  7B0E             
+0013+  7B0E             
+0013+  7B0E             
+0013+  7B0E~            	else
+0013+  7B0E~            	else
+0013+  7B0E~            	else
+0013+  7B0E~            	else
+0013+  7B0E~            	else
+0013+  7B0E             
+0013+  7B0E~            	else
+0013+  7B0E~            	else
+0013+  7B0E             
+0013+  7B0E~            	else
+0013+  7B0E~            	else
+0013+  7B0E             
+0014+  7B0E 48          		aslA
+0015+  7B0F 48          		aslA
+0016+  7B10 48          		aslA
+0017+  7B11 48          		aslA
+0018+  7B12 C4 0F       		andB	#00001111b ; mark upper half of B as 0 since number found
+0019+  7B14 8A 0F       		oraA	#00001111b
+0020+  7B16             	endif
+0020+  7B16             
+0020+  7B16             
+0020+  7B16             
+0020+  7B16             
+0020+  7B16             
+0020+  7B16~            	endif
+0020+  7B16~            	endif
+0020+  7B16             
+0020+  7B16~            	endif
+0020+  7B16~            	endif
+0020+  7B16             
+0020+  7B0D             
+0020+  7B0D 08          
+0020+  7B0E             
+0020+  7B0E             
+0020+  7B0E~            	endif
+0020+  7B0E~            	endif
+0020+  7B0E~            	endif
+0020+  7B0E             
+0020+  7B16             
+0020+  7B16~            	endif
+0020+  7B16~            	endif
+0020+  7B16             
+0021+  7B16 A4 EC       	andA	pC_1m - displayBcd1, X
+0022+  7B18 85 0F       	bitA	#00001111b
+0023+  7B1A             	ifeq ; pC is 0
+0023+  7B1A             
+0023+  7B1A 26 FE       
+0024+  7B1C C5 0F       		bitB	#1111b
+0025+  7B1E             		ifne
+0025+  7B1E             
+0025+  7B1E 27 FE       
+0026+  7B20 8A 0F       			oraA	#$F
+0027+  7B22             		endif
+0027+  7B22             
+0027+  7B22             
+0027+  7B22             
+0027+  7B22             
+0027+  7B22             
+0027+  7B22~            		endif
+0027+  7B22~            		endif
+0027+  7B22             
+0027+  7B22~            		endif
+0027+  7B22~            		endif
+0027+  7B22             
+0027+  7B1F             
+0027+  7B1F 02          
+0027+  7B20             
+0027+  7B20             
+0027+  7B20~            		endif
+0027+  7B20~            		endif
+0027+  7B20~            		endif
+0027+  7B20             
+0027+  7B22             
+0027+  7B22~            		endif
+0027+  7B22~            		endif
+0027+  7B22             
+0028+  7B22             	else
+0028+  7B22             
+0028+  7B22             
+0028+  7B22             
+0028+  7B22             
+0028+  7B1B             
+0028+  7B1B             
+0028+  7B1B             
+0028+  7B1B~            	else
+0028+  7B1B~            	else
+0028+  7B1B~            	else
+0028+  7B1B~            	else
+0028+  7B1B             
+0028+  7B1B~            	else
+0028+  7B1B~            	else
+0028+  7B1B~            	else
+0028+  7B1B~            	else
+0028+  7B1B             
+0028+  7B1B             
+0028+  7B1B 08          
+0028+  7B22             
+0028+  7B22 20 FE       
+0028+  7B24             
+0028+  7B24             
+0028+  7B24             
+0028+  7B24~            	else
+0028+  7B24~            	else
+0028+  7B24~            	else
+0028+  7B24~            	else
+0028+  7B24~            	else
+0028+  7B24             
+0028+  7B24~            	else
+0028+  7B24~            	else
+0028+  7B24             
+0028+  7B24~            	else
+0028+  7B24~            	else
+0028+  7B24             
+0029+  7B24 C4 F0       		andB	#11110000b
+0030+  7B26             	endif
+0030+  7B26             
+0030+  7B26             
+0030+  7B26             
+0030+  7B26             
+0030+  7B26             
+0030+  7B26~            	endif
+0030+  7B26~            	endif
+0030+  7B26             
+0030+  7B26~            	endif
+0030+  7B26~            	endif
+0030+  7B26             
+0030+  7B23             
+0030+  7B23 02          
+0030+  7B24             
+0030+  7B24             
+0030+  7B24~            	endif
+0030+  7B24~            	endif
+0030+  7B24~            	endif
+0030+  7B24             
+0030+  7B26             
+0030+  7B26~            	endif
+0030+  7B26~            	endif
+0030+  7B26             
+0031+  7B26 A7 00       	staA	0, X
+0032+  7B28             	
+0033+  7B28 08          	inX
+0034+  7B29 8C 00 76    	cpX		#displayBcd1 + 6
+0035+  7B2C 2F D7       	ble copy13Loop
+0036+  7B2E             copyScores24:
+0037+  7B2E CE 00 78    	ldX		#displayBcd1 + 8
+0038+  7B31 C6 FF       	ldaB	#$FF	; blank(F) until a number >0 is found then 0
+0039+  7B33             copy24Loop:
+0040+  7B33 A6 DE       	ldaA	pB_1m - (displayBcd1 + 8), X
+0041+  7B35 81 F0       	cmpA	#$F0 ; is pA score 0?
+0042+  7B37             	ifeq
+0042+  7B37             
+0042+  7B37 26 FE       
+0043+  7B39 17          		tBA	; replace 0 with blank/0
+0044+  7B3A             	else
+0044+  7B3A             
+0044+  7B3A             
+0044+  7B3A             
+0044+  7B3A             
+0044+  7B38             
+0044+  7B38             
+0044+  7B38             
+0044+  7B38~            	else
+0044+  7B38~            	else
+0044+  7B38~            	else
+0044+  7B38~            	else
+0044+  7B38             
+0044+  7B38~            	else
+0044+  7B38~            	else
+0044+  7B38~            	else
+0044+  7B38~            	else
+0044+  7B38             
+0044+  7B38             
+0044+  7B38 03          
+0044+  7B3A             
+0044+  7B3A 20 FE       
+0044+  7B3C             
+0044+  7B3C             
+0044+  7B3C             
+0044+  7B3C~            	else
+0044+  7B3C~            	else
+0044+  7B3C~            	else
+0044+  7B3C~            	else
+0044+  7B3C~            	else
+0044+  7B3C             
+0044+  7B3C~            	else
+0044+  7B3C~            	else
+0044+  7B3C             
+0044+  7B3C~            	else
+0044+  7B3C~            	else
+0044+  7B3C             
+0045+  7B3C 48          		aslA
+0046+  7B3D 48          		aslA
+0047+  7B3E 48          		aslA
+0048+  7B3F 48          		aslA
+0049+  7B40 C4 0F       		andB	#00001111b ; mark upper half of B as 0 since number found
+0050+  7B42 8A 0F       		oraA	#00001111b
+0051+  7B44             	endif
+0051+  7B44             
+0051+  7B44             
+0051+  7B44             
+0051+  7B44             
+0051+  7B44             
+0051+  7B44~            	endif
+0051+  7B44~            	endif
+0051+  7B44             
+0051+  7B44~            	endif
+0051+  7B44~            	endif
+0051+  7B44             
+0051+  7B3B             
+0051+  7B3B 08          
+0051+  7B3C             
+0051+  7B3C             
+0051+  7B3C~            	endif
+0051+  7B3C~            	endif
+0051+  7B3C~            	endif
+0051+  7B3C             
+0051+  7B44             
+0051+  7B44~            	endif
+0051+  7B44~            	endif
+0051+  7B44             
+0052+  7B44 A4 EA       	andA	pD_1m - (displayBcd1 + 8), X
+0053+  7B46 85 0F       	bitA	#00001111b
+0054+  7B48             	ifeq ; pC is 0
+0054+  7B48             
+0054+  7B48 26 FE       
+0055+  7B4A C5 0F       		bitB	#1111b
+0056+  7B4C             		ifne
+0056+  7B4C             
+0056+  7B4C 27 FE       
+0057+  7B4E 8A 0F       			oraA	#$F
+0058+  7B50             		endif
+0058+  7B50             
+0058+  7B50             
+0058+  7B50             
+0058+  7B50             
+0058+  7B50             
+0058+  7B50~            		endif
+0058+  7B50~            		endif
+0058+  7B50             
+0058+  7B50~            		endif
+0058+  7B50~            		endif
+0058+  7B50             
+0058+  7B4D             
+0058+  7B4D 02          
+0058+  7B4E             
+0058+  7B4E             
+0058+  7B4E~            		endif
+0058+  7B4E~            		endif
+0058+  7B4E~            		endif
+0058+  7B4E             
+0058+  7B50             
+0058+  7B50~            		endif
+0058+  7B50~            		endif
+0058+  7B50             
+0059+  7B50             	else
+0059+  7B50             
+0059+  7B50             
+0059+  7B50             
+0059+  7B50             
+0059+  7B49             
+0059+  7B49             
+0059+  7B49             
+0059+  7B49~            	else
+0059+  7B49~            	else
+0059+  7B49~            	else
+0059+  7B49~            	else
+0059+  7B49             
+0059+  7B49~            	else
+0059+  7B49~            	else
+0059+  7B49~            	else
+0059+  7B49~            	else
+0059+  7B49             
+0059+  7B49             
+0059+  7B49 08          
+0059+  7B50             
+0059+  7B50 20 FE       
+0059+  7B52             
+0059+  7B52             
+0059+  7B52             
+0059+  7B52~            	else
+0059+  7B52~            	else
+0059+  7B52~            	else
+0059+  7B52~            	else
+0059+  7B52~            	else
+0059+  7B52             
+0059+  7B52~            	else
+0059+  7B52~            	else
+0059+  7B52             
+0059+  7B52~            	else
+0059+  7B52~            	else
+0059+  7B52             
+0060+  7B52 C4 F0       		andB	#11110000b
+0061+  7B54             	endif
+0061+  7B54             
+0061+  7B54             
+0061+  7B54             
+0061+  7B54             
+0061+  7B54             
+0061+  7B54~            	endif
+0061+  7B54~            	endif
+0061+  7B54             
+0061+  7B54~            	endif
+0061+  7B54~            	endif
+0061+  7B54             
+0061+  7B51             
+0061+  7B51 02          
+0061+  7B52             
+0061+  7B52             
+0061+  7B52~            	endif
+0061+  7B52~            	endif
+0061+  7B52~            	endif
+0061+  7B52             
+0061+  7B54             
+0061+  7B54~            	endif
+0061+  7B54~            	endif
+0061+  7B54             
+0062+  7B54 A7 00       	staA  0, X 
+0063+  7B56             	
+0064+  7B56 08          	inX
+0065+  7B57 8C 00 7E    	cpX		#displayBcd1 + 14
+0066+  7B5A 2F D7       	ble copy24Loop	
+0067+  7B5C 39          	rts0006   7B5D             
+0007   7B5D             #include "game.asm"
+0001+  7B5D             
 0002+  6100             none:	.org $6000 + 256
 0003+  6100 39          	rts
 0004+  6101             sw32:

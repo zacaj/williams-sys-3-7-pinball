@@ -7,9 +7,9 @@ curSwitchRowLsb   0010
 curCol            0050
 copyScores        7b00
 copyScores13      7b00
-copy13Loop        7b03
-copyScores24      7b15
-copy24Loop        7b18
+copy13Loop        7b05
+copyScores24      7b2e
+copy24Loop        7b33
 callbackTable     6000
 counterHandled    7974
 displayStrobe     2800
