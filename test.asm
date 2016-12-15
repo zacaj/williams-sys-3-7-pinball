@@ -19,7 +19,7 @@ solenoidBC:		.equ $2203
 
 RAM:			.equ $0000
 cRAM:			.equ $0100
-temp:			.equ RAM + $00
+temp:			.equ RAM + $00 ; 01
 counter:		.equ RAM + $02
 counter2:		.equ RAM + $03
 strobe:			.equ RAM + $07
@@ -36,9 +36,10 @@ curSwitchRowLsb	.equ RAM + $52
 tempX:			.equ RAM + $53 ; 54
 queueHead:		.equ RAM + $55 ; 56
 queueTail:		.equ RAM + $57 ; 58
+tempQ:			.equ RAM + $59 ; 60
 
-queue:			.equ RAM + $60	; closed | switch? | number#6
-queueLast:		.equ RAM + $6F
+queue:			.equ RAM + $60	; opened | switch? | number#6
+queueEnd:		.equ RAM + $6F
 
 settleRow1:		.equ cRAM + $00 ;must be at 0
 settleRow8:		.equ settleRow1+  8*8-1
@@ -55,7 +56,7 @@ pC_1m:			.equ pC_10 + 5
 pD_10:			.equ pC_1m + 1
 pD_1m:			.equ pD_10 + 5  
 displayCol:		.equ cRAM + $68
-state:			.equ cRAM + $69	; gameover | ? | ? | ?
+state:			.equ cRAM + $69	; !gameover | ? | ? | ?
 
 instant:		.equ 4
 debounce:		.equ 1
@@ -66,11 +67,13 @@ switchSettle:	.equ cRAM + $30
 
 none:	.org $6000 + 256
 	rts
+sw32:
+	rts
 	
 	.msfirst
-callbackTable: 	.org $6000
+callbackTable: 	.org $6000 ; note: TRANSPOSED
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw none\.dw sw32\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
@@ -81,10 +84,10 @@ callbackTable: 	.org $6000
 ; off = how many cycles it must be off for
 ; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
 ; gameover = whether the switch is active in gameover mode (these callbacks must check whether in game over when triggered)
-#define SW(on,off,onOnly,gameover) .db (gameover<<7)(onOnly<<6)|(on<<3)|(off) 
+#define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
 settleTable: ; must be right after callbackTable
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(7,0,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
@@ -197,7 +200,7 @@ lSettleDefault:
 lEmptyQueue:
 	staA		0, X
 	inX
-	cpX		#queueLast
+	cpX		#queueEnd
 	ble		lEmptyQueue
 	
 	ldaA	#0
@@ -224,21 +227,46 @@ lTestNumbers:
 	
 	
 end:
-	jmp		end ;disable queue emptying
+	ldaB	queueTail + 1
+	cmpB	queueHead + 1
+	beq 	skipQueue
 	
+	ldX		queueHead
+	ldaA	0, X	; A now contains the first queue item
 	
-	ldaA	#00001111b
-	;andA	queueStart
+	tAB
+	andB	#00111111b ; B = callback index
 	
+	staB	tempQ + 1
+	ldaB	#callbackTable >> 8
+	staB	tempQ + 0	; callback address LSB / 2
+	ldX		tempQ
 	
-				ldaA	#1000b	; gameover
-				bitA	state
-				ifne	; in gameover
-					ldaA #10000000b; 
-					bitA
-				endif
+	ldaB	settleTable - callbackTable, X ; B has settle settings
+	andB 	#10000000b ; B set if switch limited to closures
+	ifne
+		ldX		queueHead
+		andB	0, X	; B set if switch limited to closures and event was not a closure
+		bne		skipEvent
+	endif
+	
+	ldaB	#1000b	; gameover mask
+	bitB	state
+	ifeq	; not in gameover
+		bitA 	#01000000b
+		beq		skipEvent	; skip if callback not active in game over
+	endif
+	
+	; checked passed, do callback
+	lsl		tempQ + 1 ; double LSB because callback table is 2b wide
+	ldX		tempQ
+	ldX		0, X
+	jsr		0, X
 				
-skipSwitch:
+skipEvent:
+	inc		queueHead + 1
+				
+skipQueue:
 				
 	
 				
@@ -331,16 +359,23 @@ settled:
 				
 				bitB	switchRow
 				ifne ; switch now on
-					ldaA	#11000000b
-				else
 					ldaA	#01000000b
+				else
+					ldaA	#11000000b
 				endif
 				oraA	tempX + 1 ; A now contains the event per queue schema
 				
+				; store event
 				ldX		queueTail
 				staA	0, X
-				
 				inc		queueTail + 1
+				
+				; wrap queueTail if necessary
+				cpX		queueEnd 
+				ifeq
+					ldaA	#queue 
+					staA	queueTail + 1
+				endif
 				
 				; todo somehow actually fire it here
 				;asl		temp + 1
