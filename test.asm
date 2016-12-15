@@ -33,13 +33,14 @@ solAStatus:		.equ RAM + $28
 solBStatus:		.equ RAM + $29
 curCol:			.equ RAM + $50
 curSwitchRowLsb	.equ RAM + $52
-tempX:			.equ RAM + $53
-tempQ:			.equ RAM + $54 ; 55
+tempX:			.equ RAM + $53 ; 54
+queueHead:		.equ RAM + $55 ; 56
+queueTail:		.equ RAM + $57 ; 58
 
 queue:			.equ RAM + $60	; closed | switch? | number#6
 queueLast:		.equ RAM + $6F
 
-settleRow1:		.equ cRAM + $00
+settleRow1:		.equ cRAM + $00 ;must be at 0
 settleRow8:		.equ settleRow1+  8*8-1
 solenoid1:		.equ cRAM + $40
 solenoid8:		.equ solenoid1 + 7
@@ -55,8 +56,6 @@ pD_10:			.equ pC_1m + 1
 pD_1m:			.equ pD_10 + 5  
 displayCol:		.equ cRAM + $68
 state:			.equ cRAM + $69	; gameover | ? | ? | ?
-queueStart:		.equ cRAM + $70
-queueEnd:		.equ cRAM + $71
 
 instant:		.equ 4
 debounce:		.equ 1
@@ -175,7 +174,7 @@ piaSetup:
 	staA	curSwitchRowLsb
 	
 ; fill solenoid status with off
-	ldaA	#$FF
+	ldaA	#0
 	ldX		#solenoid1
 lSolDefault:
 	staA	0, X
@@ -202,8 +201,11 @@ lEmptyQueue:
 	ble		lEmptyQueue
 	
 	ldaA	#0
-	staA	queueStart
-	staA	queueEnd
+	staA	queueHead + 0
+	staA	queueTail + 0
+	ldaA	#queue
+	staA	queueHead + 1
+	staA	queueTail + 1
 	
 ; test numbers
 	ldX		#displayBcd1 + 1
@@ -222,8 +224,11 @@ lTestNumbers:
 	
 	
 end:
+	jmp		end ;disable queue emptying
+	
+	
 	ldaA	#00001111b
-	andA	queueStart
+	;andA	queueStart
 	
 	
 				ldaA	#1000b	; gameover
@@ -324,7 +329,18 @@ settled:
 				eorA	switchRow1, X ; toggle bit in row
 				staA	switchRow1, X ; A now state of row
 				
+				bitB	switchRow
+				ifne ; switch now on
+					ldaA	#11000000b
+				else
+					ldaA	#01000000b
+				endif
+				oraA	tempX + 1 ; A now contains the event per queue schema
 				
+				ldX		queueTail
+				staA	0, X
+				
+				inc		queueTail + 1
 				
 				; todo somehow actually fire it here
 				;asl		temp + 1
