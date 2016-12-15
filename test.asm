@@ -1,99 +1,10 @@
 #include "680xlogic.asm"
 
-displayStrobe: 	.equ $2800
-displayBcd: 	.equ $2802
-displayStrobeC:	.equ $2801
-displayBcdC:	.equ $2803
-lampRow:		.equ $2400
-lampRowC:		.equ $2401
-lampStrobe:		.equ $2402
-lampStrobeC:	.equ $2403
-switchStrobe:	.equ $3002
-switchStrobeC:	.equ $3003
-switchRow:		.equ $3000
-switchRowC:		.equ $3001
-solenoidA:		.equ $2200
-solenoidAC		.equ $2201
-solenoidB:		.equ $2202
-solenoidBC:		.equ $2203
+#include "decls.asm"
 
-RAM:			.equ $0000
-cRAM:			.equ $0100
-temp:			.equ RAM + $00 ; 01
-counter:		.equ RAM + $02
-counter2:		.equ RAM + $03
-strobe:			.equ RAM + $07
-lampRow1:		.equ RAM + $08
-lampRow8:		.equ lampRow1 + 7 
-displayBcd1:	.equ RAM + $10
-displayBcd16:	.equ RAM + $1F
-switchRow1:		.equ RAM + $20
-switchRow8:		.equ switchRow1 + 7 
-solAStatus:		.equ RAM + $28
-solBStatus:		.equ RAM + $29
-curCol:			.equ RAM + $50
-curSwitchRowLsb	.equ RAM + $52
-tempX:			.equ RAM + $53 ; 54
-queueHead:		.equ RAM + $55 ; 56
-queueTail:		.equ RAM + $57 ; 58
-tempQ:			.equ RAM + $59 ; 60
+#include "util.asm"
 
-queue:			.equ RAM + $60	; opened | switch? | number#6
-queueEnd:		.equ RAM + $6F
-
-settleRow1:		.equ cRAM + $00 ;must be at 0
-settleRow8:		.equ settleRow1+  8*8-1
-solenoid1:		.equ cRAM + $40
-solenoid8:		.equ solenoid1 + 7
-solenoid9:		.equ solenoid1 + 8
-solenoid16:		.equ solenoid1 + 15
-pA_10:			.equ cRAM + $50
-pA_1m:			.equ pA_10 + 5
-pB_10:			.equ pA_1m + 1
-pB_1m:			.equ pB_10 + 5
-pC_10:			.equ pB_1m + 1
-pC_1m:			.equ pC_10 + 5
-pD_10:			.equ pC_1m + 1
-pD_1m:			.equ pD_10 + 5  
-displayCol:		.equ cRAM + $68
-state:			.equ cRAM + $69	; !gameover | ? | ? | ?
-
-instant:		.equ 4
-debounce:		.equ 1
-slow:			.equ 2
-
-switchSettle:	.equ cRAM + $30
-; through $7F ?
-
-none:	.org $6000 + 256
-	rts
-sw32:
-	rts
-	
-	.msfirst
-callbackTable: 	.org $6000 ; note: TRANSPOSED
-	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw sw32\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-; on = how many cycles it must be on for before registering (1 cycle = 16ms (?)) (max 7)
-; off = how many cycles it must be off for
-; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
-; gameover = whether the switch is active in gameover mode (these callbacks must check whether in game over when triggered)
-#define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
-settleTable: ; must be right after callbackTable
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(7,0,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+#include "game.asm"
 	
 main:		.org $7800
 	
@@ -220,6 +131,28 @@ lTestNumbers:
 	andA	#00000111b
 	cpX		#displayBcd16
 	ble		lTestNumbers
+	
+	ldaA	#2
+	staA	ballCount
+	
+	ldaA	#0
+	ldX		#pA_10
+zeroScores:
+	staA	0, X
+	inX
+	cpX		#pD_1m
+	ble		zeroScores
+	
+	ldaA	#1
+	staA	pA_10 - 1
+	ldaA	#2
+	staA	pB_10 - 2
+	ldaA	#3
+	staA	pC_10 - 3
+	ldaA	#4
+	staA	pD_10 - 4
+	
+	jsr		copyScores
 	
 	
 ; setup complete

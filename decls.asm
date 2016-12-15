@@ -1,0 +1,67 @@
+
+displayStrobe: 	.equ $2800
+displayBcd: 	.equ $2802
+displayStrobeC:	.equ $2801
+displayBcdC:	.equ $2803
+lampRow:		.equ $2400
+lampRowC:		.equ $2401
+lampStrobe:		.equ $2402
+lampStrobeC:	.equ $2403
+switchStrobe:	.equ $3002
+switchStrobeC:	.equ $3003
+switchRow:		.equ $3000
+switchRowC:		.equ $3001
+solenoidA:		.equ $2200
+solenoidAC		.equ $2201
+solenoidB:		.equ $2202
+solenoidBC:		.equ $2203
+
+RAM:			.equ $0000
+cRAM:			.equ $0100
+temp:			.equ RAM + $00 ; 01
+counter:		.equ RAM + $02
+counter2:		.equ RAM + $03
+strobe:			.equ RAM + $07
+lampRow1:		.equ RAM + $08
+lampRow8:		.equ lampRow1 + 7 
+curSwitchRowLsb	.equ RAM + $10
+; 10 - 1F
+switchRow1:		.equ RAM + $20
+switchRow8:		.equ switchRow1 + 7 
+solAStatus:		.equ RAM + $28
+solBStatus:		.equ RAM + $29
+curCol:			.equ RAM + $50 ; +
+tempX:			.equ RAM + $52 ; +
+queueHead:		.equ RAM + $54 ; +
+queueTail:		.equ RAM + $56 ; +
+tempQ:			.equ RAM + $58 ; +
+queue:			.equ RAM + $60	; opened | switch? | number#6
+queueEnd:		.equ RAM + $6F
+displayBcd1:	.equ RAM + $70
+displayBcd16:	.equ RAM + $7F
+ballCount:		.equ displayBcd1 + 7
+
+
+settleRow1:		.equ cRAM + $00 ;must be at 0
+settleRow8:		.equ settleRow1+  8*8-1
+solenoid1:		.equ cRAM + $40
+solenoid8:		.equ solenoid1 + 7
+solenoid9:		.equ solenoid1 + 8
+solenoid16:		.equ solenoid1 + 15
+pA_1m:			.equ cRAM + $50
+pA_10:			.equ pA_1m + 5
+pB_1m:			.equ pA_10 + 1
+pB_10:			.equ pB_1m + 5
+pC_1m:			.equ pB_10 + 1
+pC_10:			.equ pC_1m + 5
+pD_1m:			.equ pC_10 + 1
+pD_10:			.equ pD_1m + 5  
+displayCol:		.equ cRAM + $68
+state:			.equ cRAM + $69	; !gameover | ? | ? | ?
+
+instant:		.equ 4
+debounce:		.equ 1
+slow:			.equ 2
+
+switchSettle:	.equ cRAM + $30
+; through $7F ?
