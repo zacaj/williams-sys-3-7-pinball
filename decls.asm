@@ -48,7 +48,7 @@ solenoid1:		.equ cRAM + $40
 solenoid8:		.equ solenoid1 + 7
 solenoid9:		.equ solenoid1 + 8
 solenoid16:		.equ solenoid1 + 15
-pA_1m:			.equ cRAM + $50
+pA_1m:			.equ cRAM + $50	; note reverse order to match displays
 pA_10:			.equ pA_1m + 5
 pB_1m:			.equ pA_10 + 1
 pB_10:			.equ pB_1m + 5
@@ -58,6 +58,8 @@ pD_1m:			.equ pC_10 + 1
 pD_10:			.equ pD_1m + 5  
 displayCol:		.equ cRAM + $68
 state:			.equ cRAM + $69	; !gameover | ? | ? | ?
+playerCount:	.equ cRAM + $70
+curPlayer:		.equ cRAM + $71
 
 instant:		.equ 4
 debounce:		.equ 1

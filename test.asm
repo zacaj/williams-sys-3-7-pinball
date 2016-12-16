@@ -144,17 +144,21 @@ zeroScores:
 	ble		zeroScores
 	
 	ldaA	#1
-	staA	pA_10 - 1
+	;staA	pA_10 - 1
 	ldaA	#2
 	staA	pB_10 - 2
 	ldaA	#3
-	staA	pC_10 - 3
+	;staA	pC_10 - 3
 	ldaA	#4
-	staA	pD_10 - 4
+	;staA	pD_10 - 4
 	
-	jsr		copyScores
+	jsr		copyScores13
+	jsr		copyScores24
 	
-	
+	ldaA	#0
+	staA	curPlayer
+	ldaA	#3
+	staA	playerCount
 ; setup complete
 	clI		; enable timer interrupt
 	
