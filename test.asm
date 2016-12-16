@@ -145,8 +145,11 @@ zeroScores:
 	
 	ldaA	#1
 	;staA	pA_10 - 1
-	ldaA	#2
+	ldaA	#9
+	staA	pB_10 - 0
+	staA	pB_10 - 1
 	staA	pB_10 - 2
+	staA	pB_10 - 3
 	ldaA	#3
 	;staA	pC_10 - 3
 	ldaA	#4
@@ -307,17 +310,11 @@ settled:
 				inc		queueTail + 1
 				
 				; wrap queueTail if necessary
-				cpX		queueEnd 
+				cpX		#queueEnd 
 				ifeq
 					ldaA	#queue 
 					staA	queueTail + 1
 				endif
-				
-				; todo somehow actually fire it here
-				;asl		temp + 1
-				;ldX		temp	
-				;ldX		0, X
-				;jsr		0, X
 			endif
 		else ; =0 -> was settled, so now it's not
 			; get the settle time

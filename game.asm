@@ -4,10 +4,15 @@ none:	.org $6000 + 256
 sw32:
 	rts
 	
+addP2_10:
+	ldX		#pB_10
+	ldaA	#9
+	jmp 	addScore
+	
 	.msfirst
 callbackTable: 	.org $6000 ; note: TRANSPOSED
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none\.dw none\.dw sw32\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none\.dw addP2_10\.dw sw32\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
@@ -21,7 +26,7 @@ callbackTable: 	.org $6000 ; note: TRANSPOSED
 #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
 settleTable: ; must be right after callbackTable
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(7,0,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,0,1)\SW(0,0,1,1)\SW(7,0,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)

@@ -138,3 +138,42 @@ refreshPlayerScores:
 	jsr copyScores24
 	jsr blankNonPlayerScores
 	rts
+	
+; X = place in p*_1* to add the score to
+; A = amount to add (max 9)
+addScore:
+	addA	0, X
+	ifcs ; overflowed, need to increment next number
+		addA	#6	; adjust A back into BCD
+		staA	0, X
+addScore_carryOver:		; loop to propagate carry
+		deX				; go to next decimal place
+		ldaA	0, X	
+		cmpA	#$F9
+		ifeq			; if it's already a 9, reset it and carry again
+			clr	0, X
+			beq addScore_carryOver
+		else			; otherwise ++ it and done
+			inc	0, X
+		endif	
+	else
+		cmpA	#$F9
+		ifgt ; >9 -> need to adjust back into BCD
+			addA	#6
+			staA	0, X
+addScore_carryDa:
+			deX
+			ldaA	0, X
+			cmpA	#$F9
+			ifeq
+				clr	0, X
+				beq addScore_carryDa
+			else
+				inc	0, X
+			endif	
+		else
+			staA	0, X
+		endif
+	endif
+
+	jmp refreshPlayerScores
