@@ -90,3 +90,51 @@ copy24Loop:
 	ble copy24Loop	
 	
 	rts
+	
+blankNonPlayerScores:
+	ldaB	playerCount
+	cmpB	#$F0
+	beq		blankP1
+	cmpB	#$F1
+	beq		blankP2
+	cmpB 	#$F2
+	beq 	blankP3
+	cmpB	#$F3
+	beq 	blankP4
+	bra		blankDone	
+blankP1:
+	ldaA	#$F0
+	oraA	displayBcd1 + 4
+	staA	displayBcd1 + 4
+	ldaA	#$F0
+	oraA	displayBcd1 + 5
+	staA	displayBcd1 + 5
+blankP2:
+	ldaA	#$F0
+	oraA	displayBcd1 + 12
+	staA	displayBcd1 + 12
+	ldaA	#$F0
+	oraA	displayBcd1 + 13
+	staA	displayBcd1 + 13
+blankP3:
+	ldaA	#$0F
+	oraA	displayBcd1 + 4
+	staA	displayBcd1 + 4
+	ldaA	#$0F
+	oraA	displayBcd1 + 5
+	staA	displayBcd1 + 5
+blankP4:
+	ldaA	#$0F
+	oraA	displayBcd1 + 12
+	staA	displayBcd1 + 12
+	ldaA	#$0F
+	oraA	displayBcd1 + 13
+	staA	displayBcd1 + 13
+blankDone:
+	rts
+	
+refreshPlayerScores:
+	jsr copyScores13
+	jsr copyScores24
+	jsr blankNonPlayerScores
+	rts

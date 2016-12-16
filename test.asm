@@ -151,14 +151,13 @@ zeroScores:
 	;staA	pC_10 - 3
 	ldaA	#4
 	;staA	pD_10 - 4
-	
-	jsr		copyScores13
-	jsr		copyScores24
-	
 	ldaA	#0
 	staA	curPlayer
 	ldaA	#3
 	staA	playerCount
+	
+	jsr		refreshPlayerScores
+	
 ; setup complete
 	clI		; enable timer interrupt
 	
