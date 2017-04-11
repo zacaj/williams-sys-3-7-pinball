@@ -18,6 +18,7 @@ solenoidBC:		.equ $2203
 
 RAM:			.equ $0000
 cRAM:			.equ $0100
+RAMEnd:			.equ $01FF
 temp:			.equ RAM + $00 ; 01
 counter:		.equ RAM + $02
 counter2:		.equ RAM + $03

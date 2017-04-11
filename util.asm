@@ -6,7 +6,8 @@ copyScores13:
 	ldaB	#$FF	; blank(F) until a number >0 is found then 0
 copy13Loop:
 	ldaA	pA_1m - displayBcd1, X
-	cmpA	#$F0 
+	andA	#$0F
+	cmpA	#$00 
 	ifeq ; if pA score = 0?
 		cpX		#displayBcd1 + 4
 		ifeq
@@ -23,7 +24,9 @@ copy13Loop:
 		andB	#00001111b ; mark upper half of B as 0 since number found
 		oraA	#00001111b
 	endif
-	andA	pC_1m - displayBcd1, X
+	;andA	pC_1m - displayBcd1, X
+	
+	andA	#$F0
 	bitA	#00001111b
 	ifeq ; pC is 0
 		bitB	#1111b
@@ -51,7 +54,8 @@ copyScores24:
 	ldaB	#$FF	; blank(F) until a number >0 is found then 0
 copy24Loop:
 	ldaA	pB_1m - (displayBcd1 + 8), X
-	cmpA	#$F0 ; is pA score 0?
+	andA	#$0F
+	cmpA	#$00 ; is pA score 0?
 	ifeq ; if pA score = 0?
 		cpX		#displayBcd1 + 8 + 4
 		ifeq
@@ -68,7 +72,8 @@ copy24Loop:
 		andB	#00001111b ; mark upper half of B as 0 since number found
 		oraA	#00001111b
 	endif
-	andA	pD_1m - (displayBcd1 + 8), X
+	;andA	pD_1m - (displayBcd1 + 8), X
+	andA	#$F0
 	bitA	#00001111b
 	ifeq ; pC is 0
 		bitB	#1111b
@@ -93,6 +98,7 @@ copy24Loop:
 	
 blankNonPlayerScores:
 	ldaB	playerCount
+	oraB	#$F0	
 	cmpB	#$F0
 	beq		blankP1
 	cmpB	#$F1

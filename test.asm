@@ -5,8 +5,20 @@
 #include "util.asm"
 
 #include "game.asm"
+
+.org	$6000
+	nop
 	
 main:		.org $7800
+resetRam:
+	ldX		#RAM
+	ldaA	#0
+resetRamLoop:
+	staA	0, X
+	inX
+	cpX		#RAMEnd + 1
+	bne		resetRamLoop
+	
 	
 	ldaA 	#0
 	staA	temp
@@ -135,7 +147,7 @@ lTestNumbers:
 	ldaA	#2
 	staA	ballCount
 	
-	ldaA	#0
+	ldaA	#00
 	ldX		#pA_10
 zeroScores:
 	staA	0, X
@@ -149,7 +161,7 @@ zeroScores:
 	staA	pB_10 - 0
 	staA	pB_10 - 1
 	staA	pB_10 - 2
-	staA	pB_10 - 3
+	;staA	pB_10 - 3
 	ldaA	#3
 	;staA	pC_10 - 3
 	ldaA	#4
