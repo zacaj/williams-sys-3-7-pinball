@@ -147,7 +147,8 @@ refreshPlayerScores:
 	
 ; X = place in p*_1* to add the score to
 ; A = amount to add (max 9)
-addScore:
+; tail call
+_addScore:
 	addA	0, X
 	ifcs ; overflowed, need to increment next number
 		addA	#6	; adjust A back into BCD
@@ -183,3 +184,14 @@ addScore_carryDa:
 	endif
 
 	jmp refreshPlayerScores
+	
+	
+; trashes B
+#DEFINE fireSolenoidFor(n,ms)	ldaB (ms/8)\ staB solenoid1+n-1
+#DEFINE fireSolenoid(n)			fireSolenoidFor(n, 40)
+
+; trashes AX
+; place: 1-5 = 10s thru 100ks
+; amount: 1-9
+#DEFINE addScore(place,amount)		ldX #pB_10-place+1\ ldaA 0+amount\ jsr _addScore
+#DEFINE addScore_T(place,amount)	ldX #pB_10-place+1\ ldaA 0+amount\ jmp _addScore

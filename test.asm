@@ -79,6 +79,7 @@ piaSetup:
 	staA 	solenoidB
 	ldaA 	#00000100b 	;select data (3rb bit = 1)
 	staA 	solenoidAC
+	ldaA 	#00110100b 	;select data (3rb bit = 1), enable CB2 output low
 	staA 	solenoidBC
 	
 ;
@@ -373,12 +374,13 @@ settled:
 ; update solenoids
 	; if a solenoid is set to <254, --
 	; if =255, off, otherwise on
-	; leave it at 254
+	; else leave it at 254
 	
 	inc		curCol	; indexed can't use base >255, so temp inc X by 255 (1 MSB)
 	ldaA	#254
 	ldX		curCol
 	ldaB	solenoid1 - cRAM, X
+	; update solenoid in current 'column' (1-8) 
 	cmpA	solenoid1 - cRAM, X
 	ifge 	; solenoid <=254, turn on
 		ifgt	; solenoid < 254, decrement
@@ -388,7 +390,8 @@ settled:
 	else
 		clc
 	endif
-	ror		solAStatus
+	ror		solAStatus ; pushes carry bit (set prev) onto status
+	; repeat above for second bank
 	cmpA	solenoid9 - cRAM, X
 	ifge 	; solenoid <=254, turn on
 		ifgt	; solenoid < 254, decrement
@@ -398,8 +401,8 @@ settled:
 	else
 		clc
 	endif
-	ror		solBStatus
-	dec		curCol
+	ror		solBStatus	
+	dec		curCol ; undo inc
 	
 ; update strobe	
 	ldX		curCol
