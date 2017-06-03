@@ -45,7 +45,7 @@ copy13Loop:
 	
 	inX
 	cpX		#displayBcd1 + 6
-	ble copy13Loop
+	bne copy13Loop
 	
 	rts
 
@@ -92,7 +92,7 @@ copy24Loop:
 	
 	inX
 	cpX		#displayBcd1 + 14
-	ble copy24Loop	
+	bne copy24Loop	
 	
 	rts
 	
@@ -186,12 +186,12 @@ addScore_carryDa:
 	jmp refreshPlayerScores
 	
 	
-; trashes B
-#DEFINE fireSolenoidFor(n,ms)	ldaB (ms/8)\ staB solenoid1+n-1
-#DEFINE fireSolenoid(n)			fireSolenoidFor(n, 40)
+; trashes B (max 104ms)
+#DEFINE fireSolenoidFor(n,ms)	ldaB #(ms/8)\ staB solenoid1+n-1 
+#DEFINE fireSolenoid(n)			fireSolenoidFor(n, 32)
 
 ; trashes AX
 ; place: 1-5 = 10s thru 100ks
 ; amount: 1-9
-#DEFINE addScore(place,amount)		ldX #pB_10-place+1\ ldaA 0+amount\ jsr _addScore
-#DEFINE addScore_T(place,amount)	ldX #pB_10-place+1\ ldaA 0+amount\ jmp _addScore
+#DEFINE addScore(place,amount)		ldX #pB_10-place+1\ ldaA #0+amount\ jsr _addScore
+#DEFINE addScore_T(place,amount)	ldX #pB_10-place+1\ ldaA #0+amount\ jmp _addScore

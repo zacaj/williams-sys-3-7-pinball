@@ -45,9 +45,9 @@ ballCount:		.equ displayBcd1 + 7
 
 settleRow1:		.equ cRAM + $00 ;must be at 0
 settleRow8:		.equ settleRow1+  8*8-1
-solenoid1:		.equ cRAM + $40		; set to 254 to turn solenoid on permanently
-solenoid8:		.equ solenoid1 + 7	; otherwise, decremented every 8ms till reaches 0
-solenoid9:		.equ solenoid1 + 8	; 0 = solenoid off, otherwise on
+solenoid1:		.equ cRAM + $40		; set to E to turn solenoid on permanently
+solenoid8:		.equ solenoid1 + 7	; otherwise (<E), decremented every 8ms till reaches 0
+solenoid9:		.equ solenoid1 + 8	; F = solenoid off, otherwise on
 solenoid16:		.equ solenoid1 + 15 ; set to pulse time / 8ms to fire solenoid (5-7 reccomended)
 pA_1m:			.equ cRAM + $50	; note reverse order to match displays
 pA_10:			.equ pA_1m + 5

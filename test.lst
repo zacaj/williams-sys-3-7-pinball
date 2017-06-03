@@ -171,2200 +171,2278 @@
 0170+  0000             #define	msb(x)	(x>>8)&$FF0002   0000             
 0003   0000             #include "decls.asm"
 0001+  0000             
-0002+  0000             displayStrobe: 	.equ $2800
+0002+  0000             displayStrobe: 	.equ $2800 ;		CB2=1 special solenoid 6
 0003+  0000             displayBcd: 	.equ $2802
 0004+  0000             displayStrobeC:	.equ $2801
 0005+  0000             displayBcdC:	.equ $2803
-0006+  0000             lampRow:		.equ $2400
-0007+  0000             lampRowC:		.equ $2401
+0006+  0000             lampRow:		.equ $2400 ;		CA2=1 special solenoid 2
+0007+  0000             lampRowC:		.equ $2401 ; 		CB2=1 special solenoid 1
 0008+  0000             lampStrobe:		.equ $2402
 0009+  0000             lampStrobeC:	.equ $2403
 0010+  0000             switchStrobe:	.equ $3002
 0011+  0000             switchStrobeC:	.equ $3003
-0012+  0000             switchRow:		.equ $3000
-0013+  0000             switchRowC:		.equ $3001
-0014+  0000             solenoidA:		.equ $2200
-0015+  0000             solenoidAC		.equ $2201
+0012+  0000             switchRow:		.equ $3000 ; 		CB2=1 special solenoid 3
+0013+  0000             switchRowC:		.equ $3001 ;		CA2=1 special solenoid 4
+0014+  0000             solenoidA:		.equ $2200 ; todo: 	CB2=1 enable special solenoids, flippers
+0015+  0000             solenoidAC		.equ $2201 ;      	CA2=1 special solenoid 5
 0016+  0000             solenoidB:		.equ $2202
 0017+  0000             solenoidBC:		.equ $2203
 0018+  0000             
 0019+  0000             RAM:			.equ $0000
 0020+  0000             cRAM:			.equ $0100
-0021+  0000             temp:			.equ RAM + $00 ; 01
-0022+  0000             counter:		.equ RAM + $02
-0023+  0000             counter2:		.equ RAM + $03
-0024+  0000             strobe:			.equ RAM + $07
-0025+  0000             lampRow1:		.equ RAM + $08
-0026+  0000             lampRow8:		.equ lampRow1 + 7 
-0027+  0000             curSwitchRowLsb	.equ RAM + $10
-0028+  0000             ; 10 - 1F
-0029+  0000             switchRow1:		.equ RAM + $20
-0030+  0000             switchRow8:		.equ switchRow1 + 7 
-0031+  0000             solAStatus:		.equ RAM + $28
-0032+  0000             solBStatus:		.equ RAM + $29
-0033+  0000             curCol:			.equ RAM + $50 ; +
-0034+  0000             tempX:			.equ RAM + $52 ; +
-0035+  0000             queueHead:		.equ RAM + $54 ; +
-0036+  0000             queueTail:		.equ RAM + $56 ; +
-0037+  0000             tempQ:			.equ RAM + $58 ; +
-0038+  0000             queue:			.equ RAM + $60	; opened | switch? | number#6
-0039+  0000             queueEnd:		.equ RAM + $6F
-0040+  0000             displayBcd1:	.equ RAM + $70
-0041+  0000             displayBcd16:	.equ RAM + $7F
-0042+  0000             ballCount:		.equ displayBcd1 + 7
-0043+  0000             
+0021+  0000             RAMEnd:			.equ $01FF
+0022+  0000             temp:			.equ RAM + $00 ; 01
+0023+  0000             counter:		.equ RAM + $02
+0024+  0000             counter2:		.equ RAM + $03
+0025+  0000             strobe:			.equ RAM + $07
+0026+  0000             lampRow1:		.equ RAM + $08
+0027+  0000             lampRow8:		.equ lampRow1 + 7 
+0028+  0000             curSwitchRowLsb	.equ RAM + $10
+0029+  0000             ; 10 - 1F
+0030+  0000             switchRow1:		.equ RAM + $20
+0031+  0000             switchRow8:		.equ switchRow1 + 7 
+0032+  0000             solAStatus:		.equ RAM + $28 ; solenoid PIA is updated once every 8 IRQ
+0033+  0000             solBStatus:		.equ RAM + $29 ; one solenoid bit is generated per IRQ and pushed on
+0034+  0000             curCol:			.equ RAM + $50 ; +
+0035+  0000             tempX:			.equ RAM + $52 ; +
+0036+  0000             queueHead:		.equ RAM + $54 ; +
+0037+  0000             queueTail:		.equ RAM + $56 ; +
+0038+  0000             tempQ:			.equ RAM + $58 ; +
+0039+  0000             displayBcd1:	.equ RAM + $60
+0040+  0000             displayBcd16:	.equ RAM + $6F
+0041+  0000             queue:			.equ RAM + $70	; opened | switch? | number#6
+0042+  0000             queueEnd:		.equ RAM + $7F
+0043+  0000             ballCount:		.equ displayBcd1 + 7
 0044+  0000             
-0045+  0000             settleRow1:		.equ cRAM + $00 ;must be at 0
-0046+  0000             settleRow8:		.equ settleRow1+  8*8-1
-0047+  0000             solenoid1:		.equ cRAM + $40
-0048+  0000             solenoid8:		.equ solenoid1 + 7
-0049+  0000             solenoid9:		.equ solenoid1 + 8
-0050+  0000             solenoid16:		.equ solenoid1 + 15
-0051+  0000             pA_1m:			.equ cRAM + $50	; note reverse order to match displays
-0052+  0000             pA_10:			.equ pA_1m + 5
-0053+  0000             pB_1m:			.equ pA_10 + 1
-0054+  0000             pB_10:			.equ pB_1m + 5
-0055+  0000             pC_1m:			.equ pB_10 + 1
-0056+  0000             pC_10:			.equ pC_1m + 5
-0057+  0000             pD_1m:			.equ pC_10 + 1
-0058+  0000             pD_10:			.equ pD_1m + 5  
-0059+  0000             displayCol:		.equ cRAM + $68
-0060+  0000             state:			.equ cRAM + $69	; !gameover | ? | ? | ?
-0061+  0000             playerCount:	.equ cRAM + $70
-0062+  0000             curPlayer:		.equ cRAM + $71
-0063+  0000             
-0064+  0000             instant:		.equ 4
-0065+  0000             debounce:		.equ 1
-0066+  0000             slow:			.equ 2
-0067+  0000             
-0068+  0000             switchSettle:	.equ cRAM + $30
-0069+  0000             ; through $7F ?0004   0000             
+0045+  0000             
+0046+  0000             settleRow1:		.equ cRAM + $00 ;must be at 0
+0047+  0000             settleRow8:		.equ settleRow1+  8*8-1
+0048+  0000             solenoid1:		.equ cRAM + $40		; set to E to turn solenoid on permanently
+0049+  0000             solenoid8:		.equ solenoid1 + 7	; otherwise (<E), decremented every 8ms till reaches 0
+0050+  0000             solenoid9:		.equ solenoid1 + 8	; F = solenoid off, otherwise on
+0051+  0000             solenoid16:		.equ solenoid1 + 15 ; set to pulse time / 8ms to fire solenoid (5-7 reccomended)
+0052+  0000             pA_1m:			.equ cRAM + $50	; note reverse order to match displays
+0053+  0000             pA_10:			.equ pA_1m + 5
+0054+  0000             pB_1m:			.equ pA_10 + 1
+0055+  0000             pB_10:			.equ pB_1m + 5
+0056+  0000             pC_1m:			.equ pB_10 + 1
+0057+  0000             pC_10:			.equ pC_1m + 5
+0058+  0000             pD_1m:			.equ pC_10 + 1
+0059+  0000             pD_10:			.equ pD_1m + 5  
+0060+  0000             displayCol:		.equ cRAM + $68
+0061+  0000             state:			.equ cRAM + $69	; !gameover | ? | ? | ?
+0062+  0000             playerCount:	.equ cRAM + $70
+0063+  0000             curPlayer:		.equ cRAM + $71
+0064+  0000             
+0065+  0000             instant:		.equ 4
+0066+  0000             debounce:		.equ 1
+0067+  0000             slow:			.equ 2
+0068+  0000             
+0069+  0000             switchSettle:	.equ cRAM + $30
+0070+  0000             ; through $7F ?0004   0000             
 0005   0000             #include "util.asm"
 0001+  7B00             utils:	.org $7B00
 0002+  7B00             
 0003+  7B00             ; copy players' scores to display 
 0004+  7B00             copyScores13:
-0005+  7B00 CE 00 70    	ldX		#displayBcd1
+0005+  7B00 CE 00 60    	ldX		#displayBcd1
 0006+  7B03 C6 FF       	ldaB	#$FF	; blank(F) until a number >0 is found then 0
 0007+  7B05             copy13Loop:
-0008+  7B05 A6 E0       	ldaA	pA_1m - displayBcd1, X
-0009+  7B07 81 F0       	cmpA	#$F0 
-0010+  7B09             	ifeq ; if pA score = 0?
-0010+  7B09             
-0010+  7B09 26 FE       
-0011+  7B0B 8C 00 74    		cpX		#displayBcd1 + 4
-0012+  7B0E             		ifeq
-0012+  7B0E             
-0012+  7B0E 26 FE       
-0013+  7B10 C4 0F       			andB	#00001111b 
-0014+  7B12 86 0F       			ldaA	#$0F
-0015+  7B14             		else
-0015+  7B14             
-0015+  7B14             
-0015+  7B14             
-0015+  7B14             
-0015+  7B0F             
-0015+  7B0F             
-0015+  7B0F             
-0015+  7B0F~            		else
-0015+  7B0F~            		else
-0015+  7B0F~            		else
-0015+  7B0F~            		else
-0015+  7B0F             
-0015+  7B0F~            		else
-0015+  7B0F~            		else
-0015+  7B0F~            		else
-0015+  7B0F~            		else
-0015+  7B0F             
-0015+  7B0F             
-0015+  7B0F 06          
-0015+  7B14             
-0015+  7B14 20 FE       
-0015+  7B16             
-0015+  7B16             
-0015+  7B16             
-0015+  7B16~            		else
-0015+  7B16~            		else
-0015+  7B16~            		else
-0015+  7B16~            		else
-0015+  7B16~            		else
-0015+  7B16             
-0015+  7B16~            		else
-0015+  7B16~            		else
-0015+  7B16             
-0015+  7B16~            		else
-0015+  7B16~            		else
-0015+  7B16             
-0016+  7B16 17          			tBA	; replace 0 with blank/0
-0017+  7B17             		endif
-0017+  7B17             
-0017+  7B17             
-0017+  7B17             
-0017+  7B17             
-0017+  7B17             
-0017+  7B17~            		endif
-0017+  7B17~            		endif
-0017+  7B17             
-0017+  7B17~            		endif
-0017+  7B17~            		endif
-0017+  7B17             
-0017+  7B15             
-0017+  7B15 01          
-0017+  7B16             
-0017+  7B16             
-0017+  7B16~            		endif
-0017+  7B16~            		endif
-0017+  7B16~            		endif
-0017+  7B16             
-0017+  7B17             
-0017+  7B17~            		endif
-0017+  7B17~            		endif
-0017+  7B17             
-0018+  7B17             	else
+0008+  7B05 A6 F0       	ldaA	pA_1m - displayBcd1, X
+0009+  7B07 84 0F       	andA	#$0F
+0010+  7B09 81 00       	cmpA	#$00 
+0011+  7B0B             	ifeq ; if pA score = 0?
+0011+  7B0B             
+0011+  7B0B 26 FE       
+0012+  7B0D 8C 00 64    		cpX		#displayBcd1 + 4
+0013+  7B10             		ifeq
+0013+  7B10             
+0013+  7B10 26 FE       
+0014+  7B12 C4 0F       			andB	#00001111b 
+0015+  7B14 86 0F       			ldaA	#$0F
+0016+  7B16             		else
+0016+  7B16             
+0016+  7B16             
+0016+  7B16             
+0016+  7B16             
+0016+  7B11             
+0016+  7B11             
+0016+  7B11             
+0016+  7B11~            		else
+0016+  7B11~            		else
+0016+  7B11~            		else
+0016+  7B11~            		else
+0016+  7B11             
+0016+  7B11~            		else
+0016+  7B11~            		else
+0016+  7B11~            		else
+0016+  7B11~            		else
+0016+  7B11             
+0016+  7B11             
+0016+  7B11 06          
+0016+  7B16             
+0016+  7B16 20 FE       
+0016+  7B18             
+0016+  7B18             
+0016+  7B18             
+0016+  7B18~            		else
+0016+  7B18~            		else
+0016+  7B18~            		else
+0016+  7B18~            		else
+0016+  7B18~            		else
+0016+  7B18             
+0016+  7B18~            		else
+0016+  7B18~            		else
+0016+  7B18             
+0016+  7B18~            		else
+0016+  7B18~            		else
+0016+  7B18             
+0017+  7B18 17          			tBA	; replace 0 with blank/0
+0018+  7B19             		endif
+0018+  7B19             
+0018+  7B19             
+0018+  7B19             
+0018+  7B19             
+0018+  7B19             
+0018+  7B19~            		endif
+0018+  7B19~            		endif
+0018+  7B19             
+0018+  7B19~            		endif
+0018+  7B19~            		endif
+0018+  7B19             
 0018+  7B17             
-0018+  7B17             
-0018+  7B17             
-0018+  7B17             
-0018+  7B0A             
-0018+  7B0A             
-0018+  7B0A             
-0018+  7B0A~            	else
-0018+  7B0A~            	else
-0018+  7B0A~            	else
-0018+  7B0A~            	else
-0018+  7B0A             
-0018+  7B0A~            	else
-0018+  7B0A~            	else
-0018+  7B0A~            	else
-0018+  7B0A~            	else
-0018+  7B0A             
-0018+  7B0A             
-0018+  7B0A 0E          
-0018+  7B17             
-0018+  7B17 20 FE       
+0018+  7B17 01          
+0018+  7B18             
+0018+  7B18             
+0018+  7B18~            		endif
+0018+  7B18~            		endif
+0018+  7B18~            		endif
+0018+  7B18             
 0018+  7B19             
+0018+  7B19~            		endif
+0018+  7B19~            		endif
 0018+  7B19             
-0018+  7B19             
-0018+  7B19~            	else
-0018+  7B19~            	else
-0018+  7B19~            	else
-0018+  7B19~            	else
-0018+  7B19~            	else
-0018+  7B19             
-0018+  7B19~            	else
-0018+  7B19~            	else
-0018+  7B19             
-0018+  7B19~            	else
-0018+  7B19~            	else
-0018+  7B19             
-0019+  7B19 48          		aslA
-0020+  7B1A 48          		aslA
-0021+  7B1B 48          		aslA
-0022+  7B1C 48          		aslA
-0023+  7B1D C4 0F       		andB	#00001111b ; mark upper half of B as 0 since number found
-0024+  7B1F 8A 0F       		oraA	#00001111b
-0025+  7B21             	endif
-0025+  7B21             
-0025+  7B21             
-0025+  7B21             
-0025+  7B21             
-0025+  7B21             
-0025+  7B21~            	endif
-0025+  7B21~            	endif
-0025+  7B21             
-0025+  7B21~            	endif
-0025+  7B21~            	endif
-0025+  7B21             
-0025+  7B18             
-0025+  7B18 08          
-0025+  7B19             
-0025+  7B19             
-0025+  7B19~            	endif
-0025+  7B19~            	endif
-0025+  7B19~            	endif
-0025+  7B19             
-0025+  7B21             
-0025+  7B21~            	endif
-0025+  7B21~            	endif
-0025+  7B21             
-0026+  7B21 A4 EC       	andA	pC_1m - displayBcd1, X
-0027+  7B23 85 0F       	bitA	#00001111b
-0028+  7B25             	ifeq ; pC is 0
-0028+  7B25             
-0028+  7B25 26 FE       
-0029+  7B27 C5 0F       		bitB	#1111b
-0030+  7B29             		ifne
-0030+  7B29             
-0030+  7B29 27 FE       
-0031+  7B2B 8C 00 74    			cpX		#displayBcd1 + 4
-0032+  7B2E             			ifeq
-0032+  7B2E             
-0032+  7B2E 26 FE       
-0033+  7B30 C4 F0       				andB	#11110000b
-0034+  7B32             			else
-0034+  7B32             
-0034+  7B32             
-0034+  7B32             
-0034+  7B32             
-0034+  7B2F             
-0034+  7B2F             
-0034+  7B2F             
-0034+  7B2F~            			else
-0034+  7B2F~            			else
-0034+  7B2F~            			else
-0034+  7B2F~            			else
-0034+  7B2F             
-0034+  7B2F~            			else
-0034+  7B2F~            			else
-0034+  7B2F~            			else
-0034+  7B2F~            			else
-0034+  7B2F             
-0034+  7B2F             
-0034+  7B2F 04          
-0034+  7B32             
-0034+  7B32 20 FE       
-0034+  7B34             
-0034+  7B34             
-0034+  7B34             
-0034+  7B34~            			else
-0034+  7B34~            			else
-0034+  7B34~            			else
-0034+  7B34~            			else
-0034+  7B34~            			else
-0034+  7B34             
-0034+  7B34~            			else
-0034+  7B34~            			else
-0034+  7B34             
-0034+  7B34~            			else
-0034+  7B34~            			else
-0034+  7B34             
-0035+  7B34 8A 0F       				oraA	#$F
-0036+  7B36             			endif
-0036+  7B36             
-0036+  7B36             
-0036+  7B36             
-0036+  7B36             
-0036+  7B36             
-0036+  7B36~            			endif
-0036+  7B36~            			endif
-0036+  7B36             
-0036+  7B36~            			endif
-0036+  7B36~            			endif
-0036+  7B36             
-0036+  7B33             
-0036+  7B33 02          
-0036+  7B34             
-0036+  7B34             
-0036+  7B34~            			endif
-0036+  7B34~            			endif
-0036+  7B34~            			endif
-0036+  7B34             
-0036+  7B36             
-0036+  7B36~            			endif
-0036+  7B36~            			endif
-0036+  7B36             
-0037+  7B36             		endif
+0019+  7B19             	else
+0019+  7B19             
+0019+  7B19             
+0019+  7B19             
+0019+  7B19             
+0019+  7B0C             
+0019+  7B0C             
+0019+  7B0C             
+0019+  7B0C~            	else
+0019+  7B0C~            	else
+0019+  7B0C~            	else
+0019+  7B0C~            	else
+0019+  7B0C             
+0019+  7B0C~            	else
+0019+  7B0C~            	else
+0019+  7B0C~            	else
+0019+  7B0C~            	else
+0019+  7B0C             
+0019+  7B0C             
+0019+  7B0C 0E          
+0019+  7B19             
+0019+  7B19 20 FE       
+0019+  7B1B             
+0019+  7B1B             
+0019+  7B1B             
+0019+  7B1B~            	else
+0019+  7B1B~            	else
+0019+  7B1B~            	else
+0019+  7B1B~            	else
+0019+  7B1B~            	else
+0019+  7B1B             
+0019+  7B1B~            	else
+0019+  7B1B~            	else
+0019+  7B1B             
+0019+  7B1B~            	else
+0019+  7B1B~            	else
+0019+  7B1B             
+0020+  7B1B 48          		aslA
+0021+  7B1C 48          		aslA
+0022+  7B1D 48          		aslA
+0023+  7B1E 48          		aslA
+0024+  7B1F C4 0F       		andB	#00001111b ; mark upper half of B as 0 since number found
+0025+  7B21 8A 0F       		oraA	#00001111b
+0026+  7B23             	endif
+0026+  7B23             
+0026+  7B23             
+0026+  7B23             
+0026+  7B23             
+0026+  7B23             
+0026+  7B23~            	endif
+0026+  7B23~            	endif
+0026+  7B23             
+0026+  7B23~            	endif
+0026+  7B23~            	endif
+0026+  7B23             
+0026+  7B1A             
+0026+  7B1A 08          
+0026+  7B1B             
+0026+  7B1B             
+0026+  7B1B~            	endif
+0026+  7B1B~            	endif
+0026+  7B1B~            	endif
+0026+  7B1B             
+0026+  7B23             
+0026+  7B23~            	endif
+0026+  7B23~            	endif
+0026+  7B23             
+0027+  7B23             	;andA	pC_1m - displayBcd1, X
+0028+  7B23             	
+0029+  7B23 84 F0       	andA	#$F0
+0030+  7B25 85 0F       	bitA	#00001111b
+0031+  7B27             	ifeq ; pC is 0
+0031+  7B27             
+0031+  7B27 26 FE       
+0032+  7B29 C5 0F       		bitB	#1111b
+0033+  7B2B             		ifne
+0033+  7B2B             
+0033+  7B2B 27 FE       
+0034+  7B2D 8C 00 64    			cpX		#displayBcd1 + 4
+0035+  7B30             			ifeq
+0035+  7B30             
+0035+  7B30 26 FE       
+0036+  7B32 C4 F0       				andB	#11110000b
+0037+  7B34             			else
+0037+  7B34             
+0037+  7B34             
+0037+  7B34             
+0037+  7B34             
+0037+  7B31             
+0037+  7B31             
+0037+  7B31             
+0037+  7B31~            			else
+0037+  7B31~            			else
+0037+  7B31~            			else
+0037+  7B31~            			else
+0037+  7B31             
+0037+  7B31~            			else
+0037+  7B31~            			else
+0037+  7B31~            			else
+0037+  7B31~            			else
+0037+  7B31             
+0037+  7B31             
+0037+  7B31 04          
+0037+  7B34             
+0037+  7B34 20 FE       
 0037+  7B36             
 0037+  7B36             
 0037+  7B36             
+0037+  7B36~            			else
+0037+  7B36~            			else
+0037+  7B36~            			else
+0037+  7B36~            			else
+0037+  7B36~            			else
 0037+  7B36             
+0037+  7B36~            			else
+0037+  7B36~            			else
 0037+  7B36             
-0037+  7B36~            		endif
-0037+  7B36~            		endif
+0037+  7B36~            			else
+0037+  7B36~            			else
 0037+  7B36             
-0037+  7B36~            		endif
-0037+  7B36~            		endif
-0037+  7B36             
-0037+  7B2A             
-0037+  7B2A 0B          
-0037+  7B2B             
-0037+  7B2B             
-0037+  7B2B~            		endif
-0037+  7B2B~            		endif
-0037+  7B2B~            		endif
-0037+  7B2B             
-0037+  7B36             
-0037+  7B36~            		endif
-0037+  7B36~            		endif
-0037+  7B36             
-0038+  7B36             	else
-0038+  7B36             
-0038+  7B36             
-0038+  7B36             
-0038+  7B36             
-0038+  7B26             
-0038+  7B26             
-0038+  7B26             
-0038+  7B26~            	else
-0038+  7B26~            	else
-0038+  7B26~            	else
-0038+  7B26~            	else
-0038+  7B26             
-0038+  7B26~            	else
-0038+  7B26~            	else
-0038+  7B26~            	else
-0038+  7B26~            	else
-0038+  7B26             
-0038+  7B26             
-0038+  7B26 11          
-0038+  7B36             
-0038+  7B36 20 FE       
-0038+  7B38             
-0038+  7B38             
-0038+  7B38             
-0038+  7B38~            	else
-0038+  7B38~            	else
-0038+  7B38~            	else
-0038+  7B38~            	else
-0038+  7B38~            	else
-0038+  7B38             
-0038+  7B38~            	else
-0038+  7B38~            	else
-0038+  7B38             
-0038+  7B38~            	else
-0038+  7B38~            	else
-0038+  7B38             
-0039+  7B38 C4 F0       		andB	#11110000b
-0040+  7B3A             	endif
-0040+  7B3A             
-0040+  7B3A             
-0040+  7B3A             
-0040+  7B3A             
-0040+  7B3A             
-0040+  7B3A~            	endif
-0040+  7B3A~            	endif
-0040+  7B3A             
-0040+  7B3A~            	endif
-0040+  7B3A~            	endif
-0040+  7B3A             
-0040+  7B37             
-0040+  7B37 02          
+0038+  7B36 8A 0F       				oraA	#$F
+0039+  7B38             			endif
+0039+  7B38             
+0039+  7B38             
+0039+  7B38             
+0039+  7B38             
+0039+  7B38             
+0039+  7B38~            			endif
+0039+  7B38~            			endif
+0039+  7B38             
+0039+  7B38~            			endif
+0039+  7B38~            			endif
+0039+  7B38             
+0039+  7B35             
+0039+  7B35 02          
+0039+  7B36             
+0039+  7B36             
+0039+  7B36~            			endif
+0039+  7B36~            			endif
+0039+  7B36~            			endif
+0039+  7B36             
+0039+  7B38             
+0039+  7B38~            			endif
+0039+  7B38~            			endif
+0039+  7B38             
+0040+  7B38             		endif
 0040+  7B38             
 0040+  7B38             
-0040+  7B38~            	endif
-0040+  7B38~            	endif
-0040+  7B38~            	endif
 0040+  7B38             
-0040+  7B3A             
-0040+  7B3A~            	endif
-0040+  7B3A~            	endif
-0040+  7B3A             
-0041+  7B3A A7 00       	staA	0, X
-0042+  7B3C             	
-0043+  7B3C 08          	inX
-0044+  7B3D 8C 00 76    	cpX		#displayBcd1 + 6
-0045+  7B40 2F C3       	ble copy13Loop
-0046+  7B42             	
-0047+  7B42 39          	rts
-0048+  7B43             
-0049+  7B43             copyScores24:
-0050+  7B43 CE 00 78    	ldX		#displayBcd1 + 8
-0051+  7B46 C6 FF       	ldaB	#$FF	; blank(F) until a number >0 is found then 0
-0052+  7B48             copy24Loop:
-0053+  7B48 A6 DE       	ldaA	pB_1m - (displayBcd1 + 8), X
-0054+  7B4A 81 F0       	cmpA	#$F0 ; is pA score 0?
-0055+  7B4C             	ifeq ; if pA score = 0?
-0055+  7B4C             
-0055+  7B4C 26 FE       
-0056+  7B4E 8C 00 7C    		cpX		#displayBcd1 + 8 + 4
-0057+  7B51             		ifeq
-0057+  7B51             
-0057+  7B51 26 FE       
-0058+  7B53 C4 0F       			andB	#00001111b 
-0059+  7B55 86 0F       			ldaA	#$0F
-0060+  7B57             		else
-0060+  7B57             
-0060+  7B57             
-0060+  7B57             
-0060+  7B57             
-0060+  7B52             
-0060+  7B52             
-0060+  7B52             
-0060+  7B52~            		else
-0060+  7B52~            		else
-0060+  7B52~            		else
-0060+  7B52~            		else
-0060+  7B52             
-0060+  7B52~            		else
-0060+  7B52~            		else
-0060+  7B52~            		else
-0060+  7B52~            		else
-0060+  7B52             
-0060+  7B52             
-0060+  7B52 06          
-0060+  7B57             
-0060+  7B57 20 FE       
-0060+  7B59             
-0060+  7B59             
-0060+  7B59             
-0060+  7B59~            		else
-0060+  7B59~            		else
-0060+  7B59~            		else
-0060+  7B59~            		else
-0060+  7B59~            		else
-0060+  7B59             
-0060+  7B59~            		else
-0060+  7B59~            		else
-0060+  7B59             
-0060+  7B59~            		else
-0060+  7B59~            		else
-0060+  7B59             
-0061+  7B59 17          			tBA	; replace 0 with blank/0
-0062+  7B5A             		endif
-0062+  7B5A             
-0062+  7B5A             
-0062+  7B5A             
-0062+  7B5A             
-0062+  7B5A             
-0062+  7B5A~            		endif
-0062+  7B5A~            		endif
-0062+  7B5A             
-0062+  7B5A~            		endif
-0062+  7B5A~            		endif
-0062+  7B5A             
-0062+  7B58             
-0062+  7B58 01          
-0062+  7B59             
-0062+  7B59             
-0062+  7B59~            		endif
-0062+  7B59~            		endif
-0062+  7B59~            		endif
-0062+  7B59             
-0062+  7B5A             
-0062+  7B5A~            		endif
-0062+  7B5A~            		endif
-0062+  7B5A             
-0063+  7B5A             	else
-0063+  7B5A             
-0063+  7B5A             
-0063+  7B5A             
-0063+  7B5A             
-0063+  7B4D             
-0063+  7B4D             
-0063+  7B4D             
-0063+  7B4D~            	else
-0063+  7B4D~            	else
-0063+  7B4D~            	else
-0063+  7B4D~            	else
-0063+  7B4D             
-0063+  7B4D~            	else
-0063+  7B4D~            	else
-0063+  7B4D~            	else
-0063+  7B4D~            	else
-0063+  7B4D             
-0063+  7B4D             
-0063+  7B4D 0E          
-0063+  7B5A             
-0063+  7B5A 20 FE       
-0063+  7B5C             
-0063+  7B5C             
-0063+  7B5C             
-0063+  7B5C~            	else
-0063+  7B5C~            	else
-0063+  7B5C~            	else
-0063+  7B5C~            	else
-0063+  7B5C~            	else
-0063+  7B5C             
-0063+  7B5C~            	else
-0063+  7B5C~            	else
-0063+  7B5C             
-0063+  7B5C~            	else
-0063+  7B5C~            	else
-0063+  7B5C             
-0064+  7B5C 48          		aslA
-0065+  7B5D 48          		aslA
-0066+  7B5E 48          		aslA
-0067+  7B5F 48          		aslA
-0068+  7B60 C4 0F       		andB	#00001111b ; mark upper half of B as 0 since number found
-0069+  7B62 8A 0F       		oraA	#00001111b
-0070+  7B64             	endif
-0070+  7B64             
-0070+  7B64             
-0070+  7B64             
-0070+  7B64             
-0070+  7B64             
-0070+  7B64~            	endif
-0070+  7B64~            	endif
-0070+  7B64             
-0070+  7B64~            	endif
-0070+  7B64~            	endif
-0070+  7B64             
-0070+  7B5B             
-0070+  7B5B 08          
-0070+  7B5C             
-0070+  7B5C             
-0070+  7B5C~            	endif
-0070+  7B5C~            	endif
-0070+  7B5C~            	endif
-0070+  7B5C             
-0070+  7B64             
-0070+  7B64~            	endif
-0070+  7B64~            	endif
-0070+  7B64             
-0071+  7B64 A4 EA       	andA	pD_1m - (displayBcd1 + 8), X
-0072+  7B66 85 0F       	bitA	#00001111b
-0073+  7B68             	ifeq ; pC is 0
-0073+  7B68             
-0073+  7B68 26 FE       
-0074+  7B6A C5 0F       		bitB	#1111b
-0075+  7B6C             		ifne
-0075+  7B6C             
-0075+  7B6C 27 FE       
-0076+  7B6E 8C 00 7C    			cpX		#displayBcd1 + 8 + 4
-0077+  7B71             			ifeq
-0077+  7B71             
-0077+  7B71 26 FE       
-0078+  7B73 C4 F0       				andB	#11110000b
-0079+  7B75             			else
-0079+  7B75             
-0079+  7B75             
-0079+  7B75             
-0079+  7B75             
-0079+  7B72             
-0079+  7B72             
-0079+  7B72             
-0079+  7B72~            			else
-0079+  7B72~            			else
-0079+  7B72~            			else
-0079+  7B72~            			else
-0079+  7B72             
-0079+  7B72~            			else
-0079+  7B72~            			else
-0079+  7B72~            			else
-0079+  7B72~            			else
-0079+  7B72             
-0079+  7B72             
-0079+  7B72 04          
-0079+  7B75             
-0079+  7B75 20 FE       
-0079+  7B77             
-0079+  7B77             
-0079+  7B77             
-0079+  7B77~            			else
-0079+  7B77~            			else
-0079+  7B77~            			else
-0079+  7B77~            			else
-0079+  7B77~            			else
-0079+  7B77             
-0079+  7B77~            			else
-0079+  7B77~            			else
-0079+  7B77             
-0079+  7B77~            			else
-0079+  7B77~            			else
-0079+  7B77             
-0080+  7B77 8A 0F       				oraA	#$F
-0081+  7B79             			endif
-0081+  7B79             
-0081+  7B79             
-0081+  7B79             
-0081+  7B79             
-0081+  7B79             
-0081+  7B79~            			endif
-0081+  7B79~            			endif
-0081+  7B79             
-0081+  7B79~            			endif
-0081+  7B79~            			endif
-0081+  7B79             
-0081+  7B76             
-0081+  7B76 02          
-0081+  7B77             
-0081+  7B77             
-0081+  7B77~            			endif
-0081+  7B77~            			endif
-0081+  7B77~            			endif
-0081+  7B77             
-0081+  7B79             
-0081+  7B79~            			endif
-0081+  7B79~            			endif
-0081+  7B79             
-0082+  7B79             		endif
-0082+  7B79             
-0082+  7B79             
-0082+  7B79             
-0082+  7B79             
-0082+  7B79             
-0082+  7B79~            		endif
-0082+  7B79~            		endif
-0082+  7B79             
-0082+  7B79~            		endif
-0082+  7B79~            		endif
-0082+  7B79             
-0082+  7B6D             
-0082+  7B6D 0B          
-0082+  7B6E             
-0082+  7B6E             
-0082+  7B6E~            		endif
-0082+  7B6E~            		endif
-0082+  7B6E~            		endif
-0082+  7B6E             
-0082+  7B79             
-0082+  7B79~            		endif
-0082+  7B79~            		endif
-0082+  7B79             
-0083+  7B79             	else
-0083+  7B79             
-0083+  7B79             
-0083+  7B79             
-0083+  7B79             
-0083+  7B69             
-0083+  7B69             
-0083+  7B69             
-0083+  7B69~            	else
-0083+  7B69~            	else
-0083+  7B69~            	else
-0083+  7B69~            	else
-0083+  7B69             
-0083+  7B69~            	else
-0083+  7B69~            	else
-0083+  7B69~            	else
-0083+  7B69~            	else
-0083+  7B69             
-0083+  7B69             
-0083+  7B69 11          
-0083+  7B79             
-0083+  7B79 20 FE       
-0083+  7B7B             
-0083+  7B7B             
-0083+  7B7B             
-0083+  7B7B~            	else
-0083+  7B7B~            	else
-0083+  7B7B~            	else
-0083+  7B7B~            	else
-0083+  7B7B~            	else
-0083+  7B7B             
-0083+  7B7B~            	else
-0083+  7B7B~            	else
-0083+  7B7B             
-0083+  7B7B~            	else
-0083+  7B7B~            	else
-0083+  7B7B             
-0084+  7B7B C4 F0       		andB	#11110000b
-0085+  7B7D             	endif
-0085+  7B7D             
-0085+  7B7D             
-0085+  7B7D             
-0085+  7B7D             
-0085+  7B7D             
-0085+  7B7D~            	endif
-0085+  7B7D~            	endif
-0085+  7B7D             
-0085+  7B7D~            	endif
-0085+  7B7D~            	endif
-0085+  7B7D             
-0085+  7B7A             
-0085+  7B7A 02          
-0085+  7B7B             
-0085+  7B7B             
-0085+  7B7B~            	endif
-0085+  7B7B~            	endif
-0085+  7B7B~            	endif
-0085+  7B7B             
-0085+  7B7D             
-0085+  7B7D~            	endif
-0085+  7B7D~            	endif
-0085+  7B7D             
-0086+  7B7D A7 00       	staA  0, X 
-0087+  7B7F             	
-0088+  7B7F 08          	inX
-0089+  7B80 8C 00 7E    	cpX		#displayBcd1 + 14
-0090+  7B83 2F C3       	ble copy24Loop	
-0091+  7B85             	
-0092+  7B85 39          	rts
-0093+  7B86             	
-0094+  7B86             blankNonPlayerScores:
-0095+  7B86 F6 01 70    	ldaB	playerCount
-0096+  7B89 C1 F0       	cmpB	#$F0
-0097+  7B8B 27 0E       	beq		blankP1
-0098+  7B8D C1 F1       	cmpB	#$F1
-0099+  7B8F 27 16       	beq		blankP2
-0100+  7B91 C1 F2       	cmpB 	#$F2
-0101+  7B93 27 1E       	beq 	blankP3
-0102+  7B95 C1 F3       	cmpB	#$F3
-0103+  7B97 27 26       	beq 	blankP4
-0104+  7B99 20 30       	bra		blankDone	
-0105+  7B9B             blankP1:
-0106+  7B9B 86 F0       	ldaA	#$F0
-0107+  7B9D 9A 74       	oraA	displayBcd1 + 4
-0108+  7B9F 97 74       	staA	displayBcd1 + 4
-0109+  7BA1 86 F0       	ldaA	#$F0
-0110+  7BA3 9A 75       	oraA	displayBcd1 + 5
-0111+  7BA5 97 75       	staA	displayBcd1 + 5
-0112+  7BA7             blankP2:
-0113+  7BA7 86 F0       	ldaA	#$F0
-0114+  7BA9 9A 7C       	oraA	displayBcd1 + 12
-0115+  7BAB 97 7C       	staA	displayBcd1 + 12
-0116+  7BAD 86 F0       	ldaA	#$F0
-0117+  7BAF 9A 7D       	oraA	displayBcd1 + 13
-0118+  7BB1 97 7D       	staA	displayBcd1 + 13
-0119+  7BB3             blankP3:
-0120+  7BB3 86 0F       	ldaA	#$0F
-0121+  7BB5 9A 74       	oraA	displayBcd1 + 4
-0122+  7BB7 97 74       	staA	displayBcd1 + 4
-0123+  7BB9 86 0F       	ldaA	#$0F
-0124+  7BBB 9A 75       	oraA	displayBcd1 + 5
-0125+  7BBD 97 75       	staA	displayBcd1 + 5
-0126+  7BBF             blankP4:
-0127+  7BBF 86 0F       	ldaA	#$0F
-0128+  7BC1 9A 7C       	oraA	displayBcd1 + 12
-0129+  7BC3 97 7C       	staA	displayBcd1 + 12
-0130+  7BC5 86 0F       	ldaA	#$0F
-0131+  7BC7 9A 7D       	oraA	displayBcd1 + 13
-0132+  7BC9 97 7D       	staA	displayBcd1 + 13
-0133+  7BCB             blankDone:
-0134+  7BCB 39          	rts
-0135+  7BCC             	
-0136+  7BCC             refreshPlayerScores:
-0137+  7BCC BD 7B 00    	jsr copyScores13
-0138+  7BCF BD 7B 43    	jsr copyScores24
-0139+  7BD2 BD 7B 86    	jsr blankNonPlayerScores
-0140+  7BD5 39          	rts
-0141+  7BD6             	
-0142+  7BD6             ; X = place in p*_1* to add the score to
-0143+  7BD6             ; A = amount to add (max 9)
-0144+  7BD6             addScore:
-0145+  7BD6 AB 00       	addA	0, X
-0146+  7BD8             	ifcs ; overflowed, need to increment next number
-0146+  7BD8             
-0146+  7BD8 24 FE       
-0147+  7BDA 8B 06       		addA	#6
-0148+  7BDC A7 00       		staA	0, X
-0149+  7BDE             addScore_carryOver:
-0150+  7BDE 09          		deX
-0151+  7BDF A6 00       		ldaA	0, X
-0152+  7BE1 81 F9       		cmpA	#$F9
-0153+  7BE3             		ifeq
-0153+  7BE3             
-0153+  7BE3 26 FE       
-0154+  7BE5 6F 00       			clr	0, X
-0155+  7BE7 27 F5       			beq addScore_carryOver
-0156+  7BE9             		else
-0156+  7BE9             
-0156+  7BE9             
-0156+  7BE9             
-0156+  7BE9             
-0156+  7BE4             
-0156+  7BE4             
-0156+  7BE4             
-0156+  7BE4~            		else
-0156+  7BE4~            		else
-0156+  7BE4~            		else
-0156+  7BE4~            		else
-0156+  7BE4             
-0156+  7BE4~            		else
-0156+  7BE4~            		else
-0156+  7BE4~            		else
-0156+  7BE4~            		else
-0156+  7BE4             
-0156+  7BE4             
-0156+  7BE4 06          
-0156+  7BE9             
-0156+  7BE9 20 FE       
-0156+  7BEB             
-0156+  7BEB             
-0156+  7BEB             
-0156+  7BEB~            		else
-0156+  7BEB~            		else
-0156+  7BEB~            		else
-0156+  7BEB~            		else
-0156+  7BEB~            		else
-0156+  7BEB             
-0156+  7BEB~            		else
-0156+  7BEB~            		else
-0156+  7BEB             
-0156+  7BEB~            		else
-0156+  7BEB~            		else
-0156+  7BEB             
-0157+  7BEB 6C 00       			inc	0, X
-0158+  7BED             		endif	
-0158+  7BED             
-0158+  7BED             
-0158+  7BED             
-0158+  7BED             
-0158+  7BED             
-0158+  7BED~            		endif	
-0158+  7BED~            		endif	
-0158+  7BED             
-0158+  7BED~            		endif	
-0158+  7BED~            		endif	
-0158+  7BED             
-0158+  7BEA             
-0158+  7BEA 02          
-0158+  7BEB             
-0158+  7BEB             
-0158+  7BEB~            		endif	
-0158+  7BEB~            		endif	
-0158+  7BEB~            		endif	
-0158+  7BEB             
-0158+  7BED             
-0158+  7BED~            		endif	
-0158+  7BED~            		endif	
-0158+  7BED             
-0159+  7BED             	else
-0159+  7BED             
-0159+  7BED             
-0159+  7BED             
-0159+  7BED             
-0159+  7BD9             
-0159+  7BD9             
-0159+  7BD9             
-0159+  7BD9~            	else
-0159+  7BD9~            	else
-0159+  7BD9~            	else
-0159+  7BD9~            	else
-0159+  7BD9             
-0159+  7BD9~            	else
-0159+  7BD9~            	else
-0159+  7BD9~            	else
-0159+  7BD9~            	else
-0159+  7BD9             
-0159+  7BD9             
-0159+  7BD9 15          
-0159+  7BED             
-0159+  7BED 20 FE       
-0159+  7BEF             
-0159+  7BEF             
-0159+  7BEF             
-0159+  7BEF~            	else
-0159+  7BEF~            	else
-0159+  7BEF~            	else
-0159+  7BEF~            	else
-0159+  7BEF~            	else
-0159+  7BEF             
-0159+  7BEF~            	else
-0159+  7BEF~            	else
-0159+  7BEF             
-0159+  7BEF~            	else
-0159+  7BEF~            	else
-0159+  7BEF             
-0160+  7BEF 81 F9       		cmpA	#$F9
-0161+  7BF1             		ifgt ; manual da
-0161+  7BF1             
-0161+  7BF1 23 FE       
-0162+  7BF3 8B 06       			addA	#6
-0163+  7BF5 A7 00       			staA	0, X
-0164+  7BF7             addScore_carryDa:
-0165+  7BF7 09          			deX
-0166+  7BF8 A6 00       			ldaA	0, X
-0167+  7BFA 81 F9       			cmpA	#$F9
-0168+  7BFC             			ifeq
-0168+  7BFC             
-0168+  7BFC 26 FE       
-0169+  7BFE 6F 00       				clr	0, X
-0170+  7C00 27 F5       				beq addScore_carryDa
-0171+  7C02             			else
-0171+  7C02             
-0171+  7C02             
-0171+  7C02             
-0171+  7C02             
-0171+  7BFD             
-0171+  7BFD             
-0171+  7BFD             
-0171+  7BFD~            			else
-0171+  7BFD~            			else
-0171+  7BFD~            			else
-0171+  7BFD~            			else
-0171+  7BFD             
-0171+  7BFD~            			else
-0171+  7BFD~            			else
-0171+  7BFD~            			else
-0171+  7BFD~            			else
-0171+  7BFD             
-0171+  7BFD             
-0171+  7BFD 06          
-0171+  7C02             
-0171+  7C02 20 FE       
-0171+  7C04             
-0171+  7C04             
-0171+  7C04             
-0171+  7C04~            			else
-0171+  7C04~            			else
-0171+  7C04~            			else
-0171+  7C04~            			else
-0171+  7C04~            			else
-0171+  7C04             
-0171+  7C04~            			else
-0171+  7C04~            			else
-0171+  7C04             
-0171+  7C04~            			else
-0171+  7C04~            			else
-0171+  7C04             
-0172+  7C04 6C 00       				inc	0, X
-0173+  7C06             			endif	
-0173+  7C06             
-0173+  7C06             
-0173+  7C06             
-0173+  7C06             
-0173+  7C06             
-0173+  7C06~            			endif	
-0173+  7C06~            			endif	
-0173+  7C06             
-0173+  7C06~            			endif	
-0173+  7C06~            			endif	
-0173+  7C06             
-0173+  7C03             
-0173+  7C03 02          
-0173+  7C04             
-0173+  7C04             
-0173+  7C04~            			endif	
-0173+  7C04~            			endif	
-0173+  7C04~            			endif	
-0173+  7C04             
-0173+  7C06             
-0173+  7C06~            			endif	
-0173+  7C06~            			endif	
-0173+  7C06             
-0174+  7C06             		else
-0174+  7C06             
-0174+  7C06             
-0174+  7C06             
-0174+  7C06             
-0174+  7BF2             
-0174+  7BF2             
-0174+  7BF2             
-0174+  7BF2~            		else
-0174+  7BF2~            		else
-0174+  7BF2~            		else
-0174+  7BF2~            		else
-0174+  7BF2             
-0174+  7BF2~            		else
-0174+  7BF2~            		else
-0174+  7BF2~            		else
-0174+  7BF2~            		else
-0174+  7BF2             
-0174+  7BF2             
-0174+  7BF2 15          
-0174+  7C06             
-0174+  7C06 20 FE       
-0174+  7C08             
-0174+  7C08             
-0174+  7C08             
-0174+  7C08~            		else
-0174+  7C08~            		else
-0174+  7C08~            		else
-0174+  7C08~            		else
-0174+  7C08~            		else
-0174+  7C08             
-0174+  7C08~            		else
-0174+  7C08~            		else
-0174+  7C08             
-0174+  7C08~            		else
-0174+  7C08~            		else
-0174+  7C08             
-0175+  7C08 A7 00       			staA	0, X
-0176+  7C0A             		endif
-0176+  7C0A             
-0176+  7C0A             
-0176+  7C0A             
-0176+  7C0A             
-0176+  7C0A             
-0176+  7C0A~            		endif
-0176+  7C0A~            		endif
-0176+  7C0A             
-0176+  7C0A~            		endif
-0176+  7C0A~            		endif
-0176+  7C0A             
-0176+  7C07             
-0176+  7C07 02          
-0176+  7C08             
-0176+  7C08             
-0176+  7C08~            		endif
-0176+  7C08~            		endif
-0176+  7C08~            		endif
-0176+  7C08             
-0176+  7C0A             
-0176+  7C0A~            		endif
-0176+  7C0A~            		endif
-0176+  7C0A             
-0177+  7C0A             	endif
-0177+  7C0A             
-0177+  7C0A             
-0177+  7C0A             
-0177+  7C0A             
-0177+  7C0A             
-0177+  7C0A~            	endif
-0177+  7C0A~            	endif
-0177+  7C0A             
-0177+  7C0A~            	endif
-0177+  7C0A~            	endif
-0177+  7C0A             
-0177+  7BEE             
-0177+  7BEE 1B          
-0177+  7BEF             
-0177+  7BEF             
-0177+  7BEF~            	endif
-0177+  7BEF~            	endif
-0177+  7BEF~            	endif
-0177+  7BEF             
-0177+  7C0A             
-0177+  7C0A~            	endif
-0177+  7C0A~            	endif
-0177+  7C0A             
+0040+  7B38             
+0040+  7B38             
+0040+  7B38~            		endif
+0040+  7B38~            		endif
+0040+  7B38             
+0040+  7B38~            		endif
+0040+  7B38~            		endif
+0040+  7B38             
+0040+  7B2C             
+0040+  7B2C 0B          
+0040+  7B2D             
+0040+  7B2D             
+0040+  7B2D~            		endif
+0040+  7B2D~            		endif
+0040+  7B2D~            		endif
+0040+  7B2D             
+0040+  7B38             
+0040+  7B38~            		endif
+0040+  7B38~            		endif
+0040+  7B38             
+0041+  7B38             	else
+0041+  7B38             
+0041+  7B38             
+0041+  7B38             
+0041+  7B38             
+0041+  7B28             
+0041+  7B28             
+0041+  7B28             
+0041+  7B28~            	else
+0041+  7B28~            	else
+0041+  7B28~            	else
+0041+  7B28~            	else
+0041+  7B28             
+0041+  7B28~            	else
+0041+  7B28~            	else
+0041+  7B28~            	else
+0041+  7B28~            	else
+0041+  7B28             
+0041+  7B28             
+0041+  7B28 11          
+0041+  7B38             
+0041+  7B38 20 FE       
+0041+  7B3A             
+0041+  7B3A             
+0041+  7B3A             
+0041+  7B3A~            	else
+0041+  7B3A~            	else
+0041+  7B3A~            	else
+0041+  7B3A~            	else
+0041+  7B3A~            	else
+0041+  7B3A             
+0041+  7B3A~            	else
+0041+  7B3A~            	else
+0041+  7B3A             
+0041+  7B3A~            	else
+0041+  7B3A~            	else
+0041+  7B3A             
+0042+  7B3A C4 F0       		andB	#11110000b
+0043+  7B3C             	endif
+0043+  7B3C             
+0043+  7B3C             
+0043+  7B3C             
+0043+  7B3C             
+0043+  7B3C             
+0043+  7B3C~            	endif
+0043+  7B3C~            	endif
+0043+  7B3C             
+0043+  7B3C~            	endif
+0043+  7B3C~            	endif
+0043+  7B3C             
+0043+  7B39             
+0043+  7B39 02          
+0043+  7B3A             
+0043+  7B3A             
+0043+  7B3A~            	endif
+0043+  7B3A~            	endif
+0043+  7B3A~            	endif
+0043+  7B3A             
+0043+  7B3C             
+0043+  7B3C~            	endif
+0043+  7B3C~            	endif
+0043+  7B3C             
+0044+  7B3C A7 00       	staA	0, X
+0045+  7B3E             	
+0046+  7B3E 08          	inX
+0047+  7B3F 8C 00 66    	cpX		#displayBcd1 + 6
+0048+  7B42 26 C1       	bne copy13Loop
+0049+  7B44             	
+0050+  7B44 39          	rts
+0051+  7B45             
+0052+  7B45             copyScores24:
+0053+  7B45 CE 00 68    	ldX		#displayBcd1 + 8
+0054+  7B48 C6 FF       	ldaB	#$FF	; blank(F) until a number >0 is found then 0
+0055+  7B4A             copy24Loop:
+0056+  7B4A A6 EE       	ldaA	pB_1m - (displayBcd1 + 8), X
+0057+  7B4C 84 0F       	andA	#$0F
+0058+  7B4E 81 00       	cmpA	#$00 ; is pA score 0?
+0059+  7B50             	ifeq ; if pA score = 0?
+0059+  7B50             
+0059+  7B50 26 FE       
+0060+  7B52 8C 00 6C    		cpX		#displayBcd1 + 8 + 4
+0061+  7B55             		ifeq
+0061+  7B55             
+0061+  7B55 26 FE       
+0062+  7B57 C4 0F       			andB	#00001111b 
+0063+  7B59 86 0F       			ldaA	#$0F
+0064+  7B5B             		else
+0064+  7B5B             
+0064+  7B5B             
+0064+  7B5B             
+0064+  7B5B             
+0064+  7B56             
+0064+  7B56             
+0064+  7B56             
+0064+  7B56~            		else
+0064+  7B56~            		else
+0064+  7B56~            		else
+0064+  7B56~            		else
+0064+  7B56             
+0064+  7B56~            		else
+0064+  7B56~            		else
+0064+  7B56~            		else
+0064+  7B56~            		else
+0064+  7B56             
+0064+  7B56             
+0064+  7B56 06          
+0064+  7B5B             
+0064+  7B5B 20 FE       
+0064+  7B5D             
+0064+  7B5D             
+0064+  7B5D             
+0064+  7B5D~            		else
+0064+  7B5D~            		else
+0064+  7B5D~            		else
+0064+  7B5D~            		else
+0064+  7B5D~            		else
+0064+  7B5D             
+0064+  7B5D~            		else
+0064+  7B5D~            		else
+0064+  7B5D             
+0064+  7B5D~            		else
+0064+  7B5D~            		else
+0064+  7B5D             
+0065+  7B5D 17          			tBA	; replace 0 with blank/0
+0066+  7B5E             		endif
+0066+  7B5E             
+0066+  7B5E             
+0066+  7B5E             
+0066+  7B5E             
+0066+  7B5E             
+0066+  7B5E~            		endif
+0066+  7B5E~            		endif
+0066+  7B5E             
+0066+  7B5E~            		endif
+0066+  7B5E~            		endif
+0066+  7B5E             
+0066+  7B5C             
+0066+  7B5C 01          
+0066+  7B5D             
+0066+  7B5D             
+0066+  7B5D~            		endif
+0066+  7B5D~            		endif
+0066+  7B5D~            		endif
+0066+  7B5D             
+0066+  7B5E             
+0066+  7B5E~            		endif
+0066+  7B5E~            		endif
+0066+  7B5E             
+0067+  7B5E             	else
+0067+  7B5E             
+0067+  7B5E             
+0067+  7B5E             
+0067+  7B5E             
+0067+  7B51             
+0067+  7B51             
+0067+  7B51             
+0067+  7B51~            	else
+0067+  7B51~            	else
+0067+  7B51~            	else
+0067+  7B51~            	else
+0067+  7B51             
+0067+  7B51~            	else
+0067+  7B51~            	else
+0067+  7B51~            	else
+0067+  7B51~            	else
+0067+  7B51             
+0067+  7B51             
+0067+  7B51 0E          
+0067+  7B5E             
+0067+  7B5E 20 FE       
+0067+  7B60             
+0067+  7B60             
+0067+  7B60             
+0067+  7B60~            	else
+0067+  7B60~            	else
+0067+  7B60~            	else
+0067+  7B60~            	else
+0067+  7B60~            	else
+0067+  7B60             
+0067+  7B60~            	else
+0067+  7B60~            	else
+0067+  7B60             
+0067+  7B60~            	else
+0067+  7B60~            	else
+0067+  7B60             
+0068+  7B60 48          		aslA
+0069+  7B61 48          		aslA
+0070+  7B62 48          		aslA
+0071+  7B63 48          		aslA
+0072+  7B64 C4 0F       		andB	#00001111b ; mark upper half of B as 0 since number found
+0073+  7B66 8A 0F       		oraA	#00001111b
+0074+  7B68             	endif
+0074+  7B68             
+0074+  7B68             
+0074+  7B68             
+0074+  7B68             
+0074+  7B68             
+0074+  7B68~            	endif
+0074+  7B68~            	endif
+0074+  7B68             
+0074+  7B68~            	endif
+0074+  7B68~            	endif
+0074+  7B68             
+0074+  7B5F             
+0074+  7B5F 08          
+0074+  7B60             
+0074+  7B60             
+0074+  7B60~            	endif
+0074+  7B60~            	endif
+0074+  7B60~            	endif
+0074+  7B60             
+0074+  7B68             
+0074+  7B68~            	endif
+0074+  7B68~            	endif
+0074+  7B68             
+0075+  7B68             	;andA	pD_1m - (displayBcd1 + 8), X
+0076+  7B68 84 F0       	andA	#$F0
+0077+  7B6A 85 0F       	bitA	#00001111b
+0078+  7B6C             	ifeq ; pC is 0
+0078+  7B6C             
+0078+  7B6C 26 FE       
+0079+  7B6E C5 0F       		bitB	#1111b
+0080+  7B70             		ifne
+0080+  7B70             
+0080+  7B70 27 FE       
+0081+  7B72 8C 00 6C    			cpX		#displayBcd1 + 8 + 4
+0082+  7B75             			ifeq
+0082+  7B75             
+0082+  7B75 26 FE       
+0083+  7B77 C4 F0       				andB	#11110000b
+0084+  7B79             			else
+0084+  7B79             
+0084+  7B79             
+0084+  7B79             
+0084+  7B79             
+0084+  7B76             
+0084+  7B76             
+0084+  7B76             
+0084+  7B76~            			else
+0084+  7B76~            			else
+0084+  7B76~            			else
+0084+  7B76~            			else
+0084+  7B76             
+0084+  7B76~            			else
+0084+  7B76~            			else
+0084+  7B76~            			else
+0084+  7B76~            			else
+0084+  7B76             
+0084+  7B76             
+0084+  7B76 04          
+0084+  7B79             
+0084+  7B79 20 FE       
+0084+  7B7B             
+0084+  7B7B             
+0084+  7B7B             
+0084+  7B7B~            			else
+0084+  7B7B~            			else
+0084+  7B7B~            			else
+0084+  7B7B~            			else
+0084+  7B7B~            			else
+0084+  7B7B             
+0084+  7B7B~            			else
+0084+  7B7B~            			else
+0084+  7B7B             
+0084+  7B7B~            			else
+0084+  7B7B~            			else
+0084+  7B7B             
+0085+  7B7B 8A 0F       				oraA	#$F
+0086+  7B7D             			endif
+0086+  7B7D             
+0086+  7B7D             
+0086+  7B7D             
+0086+  7B7D             
+0086+  7B7D             
+0086+  7B7D~            			endif
+0086+  7B7D~            			endif
+0086+  7B7D             
+0086+  7B7D~            			endif
+0086+  7B7D~            			endif
+0086+  7B7D             
+0086+  7B7A             
+0086+  7B7A 02          
+0086+  7B7B             
+0086+  7B7B             
+0086+  7B7B~            			endif
+0086+  7B7B~            			endif
+0086+  7B7B~            			endif
+0086+  7B7B             
+0086+  7B7D             
+0086+  7B7D~            			endif
+0086+  7B7D~            			endif
+0086+  7B7D             
+0087+  7B7D             		endif
+0087+  7B7D             
+0087+  7B7D             
+0087+  7B7D             
+0087+  7B7D             
+0087+  7B7D             
+0087+  7B7D~            		endif
+0087+  7B7D~            		endif
+0087+  7B7D             
+0087+  7B7D~            		endif
+0087+  7B7D~            		endif
+0087+  7B7D             
+0087+  7B71             
+0087+  7B71 0B          
+0087+  7B72             
+0087+  7B72             
+0087+  7B72~            		endif
+0087+  7B72~            		endif
+0087+  7B72~            		endif
+0087+  7B72             
+0087+  7B7D             
+0087+  7B7D~            		endif
+0087+  7B7D~            		endif
+0087+  7B7D             
+0088+  7B7D             	else
+0088+  7B7D             
+0088+  7B7D             
+0088+  7B7D             
+0088+  7B7D             
+0088+  7B6D             
+0088+  7B6D             
+0088+  7B6D             
+0088+  7B6D~            	else
+0088+  7B6D~            	else
+0088+  7B6D~            	else
+0088+  7B6D~            	else
+0088+  7B6D             
+0088+  7B6D~            	else
+0088+  7B6D~            	else
+0088+  7B6D~            	else
+0088+  7B6D~            	else
+0088+  7B6D             
+0088+  7B6D             
+0088+  7B6D 11          
+0088+  7B7D             
+0088+  7B7D 20 FE       
+0088+  7B7F             
+0088+  7B7F             
+0088+  7B7F             
+0088+  7B7F~            	else
+0088+  7B7F~            	else
+0088+  7B7F~            	else
+0088+  7B7F~            	else
+0088+  7B7F~            	else
+0088+  7B7F             
+0088+  7B7F~            	else
+0088+  7B7F~            	else
+0088+  7B7F             
+0088+  7B7F~            	else
+0088+  7B7F~            	else
+0088+  7B7F             
+0089+  7B7F C4 F0       		andB	#11110000b
+0090+  7B81             	endif
+0090+  7B81             
+0090+  7B81             
+0090+  7B81             
+0090+  7B81             
+0090+  7B81             
+0090+  7B81~            	endif
+0090+  7B81~            	endif
+0090+  7B81             
+0090+  7B81~            	endif
+0090+  7B81~            	endif
+0090+  7B81             
+0090+  7B7E             
+0090+  7B7E 02          
+0090+  7B7F             
+0090+  7B7F             
+0090+  7B7F~            	endif
+0090+  7B7F~            	endif
+0090+  7B7F~            	endif
+0090+  7B7F             
+0090+  7B81             
+0090+  7B81~            	endif
+0090+  7B81~            	endif
+0090+  7B81             
+0091+  7B81 A7 00       	staA  0, X 
+0092+  7B83             	
+0093+  7B83 08          	inX
+0094+  7B84 8C 00 6E    	cpX		#displayBcd1 + 14
+0095+  7B87 26 C1       	bne copy24Loop	
+0096+  7B89             	
+0097+  7B89 39          	rts
+0098+  7B8A             	
+0099+  7B8A             blankNonPlayerScores:
+0100+  7B8A F6 01 70    	ldaB	playerCount
+0101+  7B8D CA F0       	oraB	#$F0	
+0102+  7B8F C1 F0       	cmpB	#$F0
+0103+  7B91 27 0E       	beq		blankP1
+0104+  7B93 C1 F1       	cmpB	#$F1
+0105+  7B95 27 16       	beq		blankP2
+0106+  7B97 C1 F2       	cmpB 	#$F2
+0107+  7B99 27 1E       	beq 	blankP3
+0108+  7B9B C1 F3       	cmpB	#$F3
+0109+  7B9D 27 26       	beq 	blankP4
+0110+  7B9F 20 30       	bra		blankDone	
+0111+  7BA1             blankP1:
+0112+  7BA1 86 F0       	ldaA	#$F0
+0113+  7BA3 9A 64       	oraA	displayBcd1 + 4
+0114+  7BA5 97 64       	staA	displayBcd1 + 4
+0115+  7BA7 86 F0       	ldaA	#$F0
+0116+  7BA9 9A 65       	oraA	displayBcd1 + 5
+0117+  7BAB 97 65       	staA	displayBcd1 + 5
+0118+  7BAD             blankP2:
+0119+  7BAD 86 F0       	ldaA	#$F0
+0120+  7BAF 9A 6C       	oraA	displayBcd1 + 12
+0121+  7BB1 97 6C       	staA	displayBcd1 + 12
+0122+  7BB3 86 F0       	ldaA	#$F0
+0123+  7BB5 9A 6D       	oraA	displayBcd1 + 13
+0124+  7BB7 97 6D       	staA	displayBcd1 + 13
+0125+  7BB9             blankP3:
+0126+  7BB9 86 0F       	ldaA	#$0F
+0127+  7BBB 9A 64       	oraA	displayBcd1 + 4
+0128+  7BBD 97 64       	staA	displayBcd1 + 4
+0129+  7BBF 86 0F       	ldaA	#$0F
+0130+  7BC1 9A 65       	oraA	displayBcd1 + 5
+0131+  7BC3 97 65       	staA	displayBcd1 + 5
+0132+  7BC5             blankP4:
+0133+  7BC5 86 0F       	ldaA	#$0F
+0134+  7BC7 9A 6C       	oraA	displayBcd1 + 12
+0135+  7BC9 97 6C       	staA	displayBcd1 + 12
+0136+  7BCB 86 0F       	ldaA	#$0F
+0137+  7BCD 9A 6D       	oraA	displayBcd1 + 13
+0138+  7BCF 97 6D       	staA	displayBcd1 + 13
+0139+  7BD1             blankDone:
+0140+  7BD1 39          	rts
+0141+  7BD2             	
+0142+  7BD2             refreshPlayerScores:
+0143+  7BD2 BD 7B 00    	jsr copyScores13
+0144+  7BD5 BD 7B 45    	jsr copyScores24
+0145+  7BD8 BD 7B 8A    	jsr blankNonPlayerScores
+0146+  7BDB 39          	rts
+0147+  7BDC             	
+0148+  7BDC             ; X = place in p*_1* to add the score to
+0149+  7BDC             ; A = amount to add (max 9)
+0150+  7BDC             ; tail call
+0151+  7BDC             _addScore:
+0152+  7BDC AB 00       	addA	0, X
+0153+  7BDE             	ifcs ; overflowed, need to increment next number
+0153+  7BDE             
+0153+  7BDE 24 FE       
+0154+  7BE0 8B 06       		addA	#6	; adjust A back into BCD
+0155+  7BE2 A7 00       		staA	0, X
+0156+  7BE4             addScore_carryOver:		; loop to propagate carry
+0157+  7BE4 09          		deX				; go to next decimal place
+0158+  7BE5 A6 00       		ldaA	0, X	
+0159+  7BE7 81 F9       		cmpA	#$F9
+0160+  7BE9             		ifeq			; if it's already a 9, reset it and carry again
+0160+  7BE9             
+0160+  7BE9 26 FE       
+0161+  7BEB 6F 00       			clr	0, X
+0162+  7BED 27 F5       			beq addScore_carryOver
+0163+  7BEF             		else			; otherwise ++ it and done
+0163+  7BEF             
+0163+  7BEF             
+0163+  7BEF             
+0163+  7BEF             
+0163+  7BEA             
+0163+  7BEA             
+0163+  7BEA             
+0163+  7BEA~            		else			; otherwise ++ it and done
+0163+  7BEA~            		else			; otherwise ++ it and done
+0163+  7BEA~            		else			; otherwise ++ it and done
+0163+  7BEA~            		else			; otherwise ++ it and done
+0163+  7BEA             
+0163+  7BEA~            		else			; otherwise ++ it and done
+0163+  7BEA~            		else			; otherwise ++ it and done
+0163+  7BEA~            		else			; otherwise ++ it and done
+0163+  7BEA~            		else			; otherwise ++ it and done
+0163+  7BEA             
+0163+  7BEA             
+0163+  7BEA 06          
+0163+  7BEF             
+0163+  7BEF 20 FE       
+0163+  7BF1             
+0163+  7BF1             
+0163+  7BF1             
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1             
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1             
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1~            		else			; otherwise ++ it and done
+0163+  7BF1             
+0164+  7BF1 6C 00       			inc	0, X
+0165+  7BF3             		endif	
+0165+  7BF3             
+0165+  7BF3             
+0165+  7BF3             
+0165+  7BF3             
+0165+  7BF3             
+0165+  7BF3~            		endif	
+0165+  7BF3~            		endif	
+0165+  7BF3             
+0165+  7BF3~            		endif	
+0165+  7BF3~            		endif	
+0165+  7BF3             
+0165+  7BF0             
+0165+  7BF0 02          
+0165+  7BF1             
+0165+  7BF1             
+0165+  7BF1~            		endif	
+0165+  7BF1~            		endif	
+0165+  7BF1~            		endif	
+0165+  7BF1             
+0165+  7BF3             
+0165+  7BF3~            		endif	
+0165+  7BF3~            		endif	
+0165+  7BF3             
+0166+  7BF3             	else
+0166+  7BF3             
+0166+  7BF3             
+0166+  7BF3             
+0166+  7BF3             
+0166+  7BDF             
+0166+  7BDF             
+0166+  7BDF             
+0166+  7BDF~            	else
+0166+  7BDF~            	else
+0166+  7BDF~            	else
+0166+  7BDF~            	else
+0166+  7BDF             
+0166+  7BDF~            	else
+0166+  7BDF~            	else
+0166+  7BDF~            	else
+0166+  7BDF~            	else
+0166+  7BDF             
+0166+  7BDF             
+0166+  7BDF 15          
+0166+  7BF3             
+0166+  7BF3 20 FE       
+0166+  7BF5             
+0166+  7BF5             
+0166+  7BF5             
+0166+  7BF5~            	else
+0166+  7BF5~            	else
+0166+  7BF5~            	else
+0166+  7BF5~            	else
+0166+  7BF5~            	else
+0166+  7BF5             
+0166+  7BF5~            	else
+0166+  7BF5~            	else
+0166+  7BF5             
+0166+  7BF5~            	else
+0166+  7BF5~            	else
+0166+  7BF5             
+0167+  7BF5 81 F9       		cmpA	#$F9
+0168+  7BF7             		ifgt ; >9 -> need to adjust back into BCD
+0168+  7BF7             
+0168+  7BF7 23 FE       
+0169+  7BF9 8B 06       			addA	#6
+0170+  7BFB A7 00       			staA	0, X
+0171+  7BFD             addScore_carryDa:
+0172+  7BFD 09          			deX
+0173+  7BFE A6 00       			ldaA	0, X
+0174+  7C00 81 F9       			cmpA	#$F9
+0175+  7C02             			ifeq
+0175+  7C02             
+0175+  7C02 26 FE       
+0176+  7C04 6F 00       				clr	0, X
+0177+  7C06 27 F5       				beq addScore_carryDa
+0178+  7C08             			else
+0178+  7C08             
+0178+  7C08             
+0178+  7C08             
+0178+  7C08             
+0178+  7C03             
+0178+  7C03             
+0178+  7C03             
+0178+  7C03~            			else
+0178+  7C03~            			else
+0178+  7C03~            			else
+0178+  7C03~            			else
+0178+  7C03             
+0178+  7C03~            			else
+0178+  7C03~            			else
+0178+  7C03~            			else
+0178+  7C03~            			else
+0178+  7C03             
+0178+  7C03             
+0178+  7C03 06          
+0178+  7C08             
+0178+  7C08 20 FE       
 0178+  7C0A             
-0179+  7C0A 7E 7B CC    	jmp refreshPlayerScores0006   7C0D             
-0007   7C0D             #include "game.asm"
-0001+  7C0D             
-0002+  6100             none:	.org $6000 + 256
-0003+  6100 39          	rts
-0004+  6101             sw32:
-0005+  6101 39          	rts
-0006+  6102             	
-0007+  6102             addP2_10:
-0008+  6102 CE 01 5B    	ldX		#pB_10
-0009+  6105 86 09       	ldaA	#9
-0010+  6107 7E 7B D6    	jmp 	addScore
-0011+  610A             	
-0012+  610A             	.msfirst
-0013+  6000             callbackTable: 	.org $6000 ; note: TRANSPOSED
-0014+  6000 61 00       	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0014+  6002 61 00       
-0014+  6004 61 00       
-0014+  6006 61 00       
-0014+  6008 61 00       
-0014+  600A 61 00       
-0014+  600C 61 00       
-0014+  600E 61 00       
-0015+  6010 61 00       	.dw none\.dw addP2_10\.dw sw32\.dw none\.dw none\.dw none\.dw none\.dw none
-0015+  6012 61 02       
-0015+  6014 61 01       
-0015+  6016 61 00       
-0015+  6018 61 00       
-0015+  601A 61 00       
-0015+  601C 61 00       
-0015+  601E 61 00       
-0016+  6020 61 00       	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0016+  6022 61 00       
-0016+  6024 61 00       
-0016+  6026 61 00       
-0016+  6028 61 00       
-0016+  602A 61 00       
-0016+  602C 61 00       
-0016+  602E 61 00       
-0017+  6030 61 00       	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0017+  6032 61 00       
-0017+  6034 61 00       
-0017+  6036 61 00       
-0017+  6038 61 00       
-0017+  603A 61 00       
-0017+  603C 61 00       
-0017+  603E 61 00       
-0018+  6040 61 00       	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0018+  6042 61 00       
-0018+  6044 61 00       
-0018+  6046 61 00       
-0018+  6048 61 00       
-0018+  604A 61 00       
-0018+  604C 61 00       
-0018+  604E 61 00       
-0019+  6050 61 00       	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0019+  6052 61 00       
-0019+  6054 61 00       
-0019+  6056 61 00       
-0019+  6058 61 00       
-0019+  605A 61 00       
-0019+  605C 61 00       
-0019+  605E 61 00       
-0020+  6060 61 00       	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0020+  6062 61 00       
-0020+  6064 61 00       
-0020+  6066 61 00       
-0020+  6068 61 00       
-0020+  606A 61 00       
-0020+  606C 61 00       
-0020+  606E 61 00       
-0021+  6070 61 00       	.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0021+  6072 61 00       
-0021+  6074 61 00       
-0021+  6076 61 00       
-0021+  6078 61 00       
-0021+  607A 61 00       
-0021+  607C 61 00       
-0021+  607E 61 00       
-0022+  6080             ; on = how many cycles it must be on for before registering (1 cycle = 16ms (?)) (max 7)
-0023+  6080             ; off = how many cycles it must be off for
-0024+  6080             ; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
-0025+  6080             ; gameover = whether the switch is active in gameover mode (these callbacks must check whether in game over when triggered)
-0026+  6080             #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
-0027+  6080             settleTable: ; must be right after callbackTable
-0028+  6080 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0028+  6081 47          
-0028+  6082 47          
-0028+  6083 47          
-0028+  6084 47          
-0028+  6085 47          
-0028+  6086 47          
-0028+  6087 47          
-0029+  6088 47          	SW(0,7,0,1)\SW(0,0,1,1)\SW(7,0,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0029+  6089 C0          
-0029+  608A F8          
-0029+  608B 47          
-0029+  608C 47          
-0029+  608D 47          
-0029+  608E 47          
-0029+  608F 47          
-0030+  6090 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0030+  6091 47          
-0030+  6092 47          
-0030+  6093 47          
-0030+  6094 47          
-0030+  6095 47          
-0030+  6096 47          
-0030+  6097 47          
-0031+  6098 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0031+  6099 47          
-0031+  609A 47          
-0031+  609B 47          
-0031+  609C 47          
-0031+  609D 47          
-0031+  609E 47          
-0031+  609F 47          
-0032+  60A0 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0032+  60A1 47          
-0032+  60A2 47          
-0032+  60A3 47          
-0032+  60A4 47          
-0032+  60A5 47          
-0032+  60A6 47          
-0032+  60A7 47          
-0033+  60A8 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0033+  60A9 47          
-0033+  60AA 47          
-0033+  60AB 47          
-0033+  60AC 47          
-0033+  60AD 47          
-0033+  60AE 47          
-0033+  60AF 47          
-0034+  60B0 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0034+  60B1 47          
-0034+  60B2 47          
-0034+  60B3 47          
-0034+  60B4 47          
-0034+  60B5 47          
-0034+  60B6 47          
-0034+  60B7 47          
-0035+  60B8 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)0035+  60B9 47          
-0035+  60BA 47          
-0035+  60BB 47          
-0035+  60BC 47          
-0035+  60BD 47          
-0035+  60BE 47          
-0035+  60BF 47          
-0008   60C0             	
-0009   7800             main:		.org $7800
-0010   7800             	
-0011   7800 86 00       	ldaA 	#0
-0012   7802 97 00       	staA	temp
-0013   7804 86 FF       	ldaA	#$FF
-0014   7806 97 01       	staA	temp + 1
-0015   7808 9E 00       	ldS		temp
-0016   780A             
-0017   780A             test:
-0018   780A             	
-0019   780A             piaSetup:
-0020   780A 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0021   780C B7 28 01    	staA 	displayStrobeC
-0022   780F 86 3F       	ldaA 	#00111111b	;set LED pins to outputs
-0023   7811 B7 28 00    	staA 	displayStrobe
-0024   7814 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0025   7816 B7 28 01    	staA 	displayStrobeC
-0026   7819             	
-0027   7819 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0028   781B B7 28 03    	staA 	displayBcdC
-0029   781E 86 FF       	ldaA 	#11111111b	;set display BCD to output
-0030   7820 B7 28 02    	staA 	displayBcd
-0031   7823 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0032   7825 B7 28 03    	staA 	displayBcdC
-0033   7828             	
-0034   7828 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0035   782A B7 24 01    	staA 	lampRowC
-0036   782D 86 FF       	ldaA 	#11111111b	;set to output
-0037   782F B7 24 00    	staA 	lampRow
-0038   7832 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0039   7834 B7 24 01    	staA 	lampRowC
-0040   7837             	
-0041   7837 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0042   7839 B7 24 03    	staA 	lampStrobeC
-0043   783C 86 FF       	ldaA 	#11111111b	;set to output
-0044   783E B7 24 02    	staA 	lampStrobe
-0045   7841 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0046   7843 B7 24 03    	staA 	lampStrobeC
-0047   7846             	
-0048   7846 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0049   7848 B7 30 03    	staA 	switchStrobeC
-0050   784B 86 FF       	ldaA 	#11111111b	;set to output
-0051   784D B7 30 02    	staA 	switchStrobe
-0052   7850 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0053   7852 B7 30 03    	staA 	switchStrobeC
-0054   7855             	
-0055   7855 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0056   7857 B7 30 01    	staA 	switchRowC
-0057   785A 86 00       	ldaA 	#00000000b	;set to input
-0058   785C B7 30 00    	staA 	switchRow
-0059   785F 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0060   7861 B7 30 01    	staA 	switchRowC
-0061   7864             	
-0062   7864 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
-0063   7866 B7 22 01    	staA 	solenoidAC
-0064   7869 B7 22 03    	staA	solenoidBC
-0065   786C 86 FF       	ldaA 	#11111111b	;set to output
-0066   786E B7 22 00    	staA 	solenoidA
-0067   7871 B7 22 02    	staA 	solenoidB
-0068   7874 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
-0069   7876 B7 22 01    	staA 	solenoidAC
-0070   7879 B7 22 03    	staA 	solenoidBC
-0071   787C             	
-0072   787C             ;
-0073   787C             
-0074   787C 86 00       	ldaA	#00
-0075   787E D7 70       	staB	displayBcd1
-0076   7880             	
-0077   7880 86 FF       	ldaA	#$FF	
-0078   7882 B7 28 00    	staA 	displayStrobe
-0079   7885             
-0080   7885 86 00       	ldaA	#00
-0081   7887 97 07       	staA	strobe
-0082   7889 B7 01 68    	staA	displayCol
-0083   788C             	
-0084   788C CE 00 00    	ldX 	#0
-0085   788F DF 50       	stX		curCol
-0086   7891             	
-0087   7891 86 00       	ldaA	#0
-0088   7893 97 10       	staA	curSwitchRowLsb
-0089   7895             	
-0090   7895             ; fill solenoid status with off
-0091   7895 86 00       	ldaA	#0
-0092   7897 CE 01 40    	ldX		#solenoid1
-0093   789A             lSolDefault:
-0094   789A A7 00       	staA	0, X
-0095   789C 08          	inX
-0096   789D 8C 01 4F    	cpX		#solenoid16
-0097   78A0 2F F8       	ble		lSolDefault
-0098   78A2             	
-0099   78A2             ; empty settle
-0100   78A2 86 00       	ldaA	#$00
-0101   78A4 CE 01 00    	ldX		#settleRow1
-0102   78A7             lSettleDefault:
-0103   78A7 A7 00       	staA		0, X
-0104   78A9 08          	inX
-0105   78AA 8C 08 46    	cpX		#settleRow8 + 7
-0106   78AD 2F F8       	ble		lSettleDefault
-0107   78AF             	
-0108   78AF             ; empty queue
-0109   78AF 86 FF       	ldaA	#$FF
-0110   78B1 CE 00 60    	ldX		#queue
-0111   78B4             lEmptyQueue:
-0112   78B4 A7 00       	staA		0, X
-0113   78B6 08          	inX
-0114   78B7 8C 00 6F    	cpX		#queueEnd
-0115   78BA 2F F8       	ble		lEmptyQueue
-0116   78BC             	
-0117   78BC 86 00       	ldaA	#0
-0118   78BE 97 54       	staA	queueHead + 0
-0119   78C0 97 56       	staA	queueTail + 0
-0120   78C2 86 60       	ldaA	#queue
-0121   78C4 97 55       	staA	queueHead + 1
-0122   78C6 97 57       	staA	queueTail + 1
-0123   78C8             	
-0124   78C8             ; test numbers
-0125   78C8 CE 00 71    	ldX		#displayBcd1 + 1
-0126   78CB 86 00       	ldaA	#0
-0127   78CD             lTestNumbers:
-0128   78CD A7 00       	staA	0, X
-0129   78CF 08          	inX
-0130   78D0 4C          	incA
-0131   78D1 84 07       	andA	#00000111b
-0132   78D3 8C 00 7F    	cpX		#displayBcd16
-0133   78D6 2F F5       	ble		lTestNumbers
-0134   78D8             	
-0135   78D8 86 02       	ldaA	#2
-0136   78DA 97 77       	staA	ballCount
-0137   78DC             	
-0138   78DC 86 00       	ldaA	#0
-0139   78DE CE 01 55    	ldX		#pA_10
-0140   78E1             zeroScores:
-0141   78E1 A7 00       	staA	0, X
-0142   78E3 08          	inX
-0143   78E4 8C 01 62    	cpX		#pD_1m
-0144   78E7 2F F8       	ble		zeroScores
-0145   78E9             	
-0146   78E9 86 01       	ldaA	#1
-0147   78EB             	;staA	pA_10 - 1
-0148   78EB 86 09       	ldaA	#9
-0149   78ED B7 01 5B    	staA	pB_10 - 0
-0150   78F0 B7 01 5A    	staA	pB_10 - 1
-0151   78F3 B7 01 59    	staA	pB_10 - 2
-0152   78F6 B7 01 58    	staA	pB_10 - 3
-0153   78F9 86 03       	ldaA	#3
-0154   78FB             	;staA	pC_10 - 3
-0155   78FB 86 04       	ldaA	#4
-0156   78FD             	;staA	pD_10 - 4
-0157   78FD 86 00       	ldaA	#0
-0158   78FF B7 01 71    	staA	curPlayer
-0159   7902 86 03       	ldaA	#3
-0160   7904 B7 01 70    	staA	playerCount
-0161   7907             	
-0162   7907 BD 7B CC    	jsr		refreshPlayerScores
-0163   790A             	
-0164   790A             ; setup complete
-0165   790A 0E          	clI		; enable timer interrupt
-0166   790B             	
-0167   790B             	
-0168   790B             end:
-0169   790B D6 57       	ldaB	queueTail + 1
-0170   790D D1 55       	cmpB	queueHead + 1
-0171   790F 27 32       	beq 	skipQueue
-0172   7911             	
-0173   7911 DE 54       	ldX		queueHead
-0174   7913 A6 00       	ldaA	0, X	; A now contains the first queue item
-0175   7915             	
-0176   7915 16          	tAB
-0177   7916 C4 3F       	andB	#00111111b ; B = callback index
-0178   7918             	
-0179   7918 D7 59       	staB	tempQ + 1
-0180   791A C6 60       	ldaB	#callbackTable >> 8
-0181   791C D7 58       	staB	tempQ + 0	; callback address LSB / 2
-0182   791E DE 58       	ldX		tempQ
-0183   7920             	
-0184   7920 E6 80       	ldaB	settleTable - callbackTable, X ; B has settle settings
-0185   7922 C4 80       	andB 	#10000000b ; B set if switch limited to closures
-0186   7924             	ifne
-0186   7924             
-0186   7924 27 FE       
-0187   7926 DE 54       		ldX		queueHead
-0188   7928 E4 00       		andB	0, X	; B set if switch limited to closures and event was not a closure
-0189   792A 26 14       		bne		skipEvent
-0190   792C             	endif
-0190   792C             
-0190   792C             
-0190   792C             
-0190   792C             
-0190   792C             
-0190   792C~            	endif
-0190   792C~            	endif
-0190   792C             
-0190   792C~            	endif
-0190   792C~            	endif
-0190   792C             
-0190   7925             
-0190   7925 06          
-0190   7926             
-0190   7926             
-0190   7926~            	endif
-0190   7926~            	endif
-0190   7926~            	endif
-0190   7926             
-0190   792C             
-0190   792C~            	endif
-0190   792C~            	endif
-0190   792C             
-0191   792C             	
-0192   792C C6 08       	ldaB	#1000b	; gameover mask
-0193   792E F5 01 69    	bitB	state
-0194   7931             	ifeq	; not in gameover
-0194   7931             
-0194   7931 26 FE       
-0195   7933 85 40       		bitA 	#01000000b
-0196   7935 27 09       		beq		skipEvent	; skip if callback not active in game over
-0197   7937             	endif
-0197   7937             
-0197   7937             
-0197   7937             
-0197   7937             
-0197   7937             
-0197   7937~            	endif
-0197   7937~            	endif
-0197   7937             
-0197   7937~            	endif
-0197   7937~            	endif
-0197   7937             
-0197   7932             
-0197   7932 04          
-0197   7933             
-0197   7933             
-0197   7933~            	endif
-0197   7933~            	endif
-0197   7933~            	endif
-0197   7933             
-0197   7937             
-0197   7937~            	endif
-0197   7937~            	endif
-0197   7937             
-0198   7937             	
-0199   7937             	; checked passed, do callback
-0200   7937 78 00 59    	lsl		tempQ + 1 ; double LSB because callback table is 2b wide
-0201   793A DE 58       	ldX		tempQ
-0202   793C EE 00       	ldX		0, X
-0203   793E AD 00       	jsr		0, X
-0204   7940             				
-0205   7940             skipEvent:
-0206   7940 7C 00 55    	inc		queueHead + 1
-0207   7943             				
-0208   7943             skipQueue:
-0209   7943             				
-0210   7943             	
-0211   7943             				
-0212   7943 7E 79 0B    	jmp		end
-0213   7946 00 00       	.dw 0
-0214   7948 00 00       	.dw 0
-0215   794A 00 00       	.dw 0
-0216   794C 00 00       	.dw 0
-0217   794E 00 00       	.dw 0
-0218   7950             		
-0219   7950             interrupt:	
-0220   7950 7C 00 02    	inc		counter
-0221   7953 86 00       	ldaA	#0
-0222   7955 91 02       	cmpA	counter
-0223   7957 26 25       	bne		counterHandled
-0224   7959 7C 00 03    	inc 	counter2
-0225   795C 86 04       	ldaA	#4
-0226   795E 91 03       	cmpA	counter2
-0227   7960 26 1C       	bne		counterHandled
-0228   7962             	
-0229   7962 86 00       	ldaA	#0
-0230   7964 97 03       	staA	counter2
-0231   7966 86 77       	ldaA	#01110111b
-0232   7968 91 70       	cmpA	displayBcd1
-0233   796A 27 0A       	beq		on
-0234   796C             	
-0235   796C 86 F0       	ldaA	#$F0
-0236   796E 97 08       	staA	lampRow1
-0237   7970 86 77       	ldaA	#01110111b
-0238   7972 97 70       	staA	displayBcd1	
-0239   7974 20 08       	bra		counterHandled
-0240   7976             on:
-0241   7976 86 0F       	ldaA	#$0F
-0242   7978 97 08       	staA	lampRow1
-0243   797A 86 33       	ldaA	#00110011b
-0244   797C 97 70       	staA	displayBcd1	
-0245   797E             
-0246   797E             counterHandled:
-0247   797E             ; move switch column
-0248   797E 96 07       	ldaA	strobe
-0249   7980 B7 30 02    	staA	switchStrobe
-0250   7983             	
-0251   7983             ; update display 
-0252   7983 DE 50       	ldX		curCol
-0253   7985 B6 01 68    	ldaA	displayCol
-0254   7988 C6 FF       	ldaB 	#$FF
-0255   798A F7 28 02    	staB	displayBcd
-0256   798D B7 28 00    	staA	displayStrobe
-0257   7990 85 08       	bitA	#00001000b
-0258   7992             	ifeq
-0258   7992             
-0258   7992 26 FE       
-0259   7994 E6 70       		ldaB	displayBcd1, X
-0260   7996             	else
-0260   7996             
-0260   7996             
-0260   7996             
-0260   7996             
-0260   7993             
-0260   7993             
-0260   7993             
-0260   7993~            	else
-0260   7993~            	else
-0260   7993~            	else
-0260   7993~            	else
-0260   7993             
-0260   7993~            	else
-0260   7993~            	else
-0260   7993~            	else
-0260   7993~            	else
-0260   7993             
-0260   7993             
-0260   7993 04          
-0260   7996             
-0260   7996 20 FE       
-0260   7998             
-0260   7998             
-0260   7998             
-0260   7998~            	else
-0260   7998~            	else
-0260   7998~            	else
-0260   7998~            	else
-0260   7998~            	else
-0260   7998             
-0260   7998~            	else
-0260   7998~            	else
-0260   7998             
-0260   7998~            	else
-0260   7998~            	else
-0260   7998             
-0261   7998 E6 78       		ldaB	displayBcd1 + 8, X
-0262   799A             	endif
-0262   799A             
-0262   799A             
-0262   799A             
-0262   799A             
-0262   799A             
-0262   799A~            	endif
-0262   799A~            	endif
-0262   799A             
-0262   799A~            	endif
-0262   799A~            	endif
-0262   799A             
-0262   7997             
-0262   7997 02          
-0262   7998             
-0262   7998             
-0262   7998~            	endif
-0262   7998~            	endif
-0262   7998~            	endif
-0262   7998             
-0262   799A             
-0262   799A~            	endif
-0262   799A~            	endif
-0262   799A             
-0263   799A F7 28 02    	staB	displayBcd
-0264   799D             	
-0265   799D             ; read switches
-0266   799D DE 50       	ldX		curCol
-0267   799F B6 30 00    	ldaA	switchRow
-0268   79A2 16          	tab
-0269   79A3 A8 20       	eorA	switchRow1, X ; A contains any switches that have changed state
-0270   79A5             	
-0271   79A5 D6 10       	ldaB	curSwitchRowLsb 	;	B now contains LSB of callbackTable row addr
-0272   79A7 D7 01       	staB	temp + 1 			; temp = switch / 2
-0273   79A9 D7 53       	staB	tempX + 1			; tempX = cRAM
-0274   79AB C6 60       	ldaB	#callbackTable >> 8
-0275   79AD D7 00       	staB	temp
-0276   79AF C6 01       	ldaB	#cRAM >> 8
-0277   79B1 D7 52       	staB	tempX
-0278   79B3             	
-0279   79B3 C6 01       	ldaB	#00000001b ; B is the bit of the current switch in row
-0280   79B5             	
-0281   79B5             	; temp now contains the beginning of the row in the callbackTable
-0282   79B5             swNext:
-0283   79B5 85 01       	bitA	#00000001b	 ; Z set if switch not different
-0284   79B7             	ifne		; if bit set, switch different
-0284   79B7             
-0284   79B7 27 FE       
-0285   79B9 36          		pshA ; store changed switches left
-0286   79BA DE 52       		ldX		tempX
-0287   79BC A6 00       		ldaA	0, X ; A now how long the switch has left to settle
-0288   79BE 84 0F       		andA	#00001111b ; need to remove upper F ( sets Z if A = 0)
-0289   79C0             		ifne 	; A>0 -> settling
-0289   79C0             
-0289   79C0 27 FE       
-0290   79C2 4A          			decA
-0291   79C3 A7 00       			staA	0, X	; sets Z if now A = 0
-0292   79C5             			ifeq ; A=0 -> now settled, fire event
-0292   79C5             
-0292   79C5 26 FE       
-0293   79C7             settled:		
-0294   79C7 DE 50       				ldX		curCol
-0295   79C9 17          				tBA	; A now the bit in row
-0296   79CA A8 20       				eorA	switchRow1, X ; toggle bit in row
-0297   79CC A7 20       				staA	switchRow1, X ; A now state of row
-0298   79CE             				
-0299   79CE F5 30 00    				bitB	switchRow
-0300   79D1             				ifne ; switch now on
-0300   79D1             
-0300   79D1 27 FE       
-0301   79D3 86 40       					ldaA	#01000000b
-0302   79D5             				else
-0302   79D5             
-0302   79D5             
-0302   79D5             
-0302   79D5             
-0302   79D2             
-0302   79D2             
-0302   79D2             
-0302   79D2~            				else
-0302   79D2~            				else
-0302   79D2~            				else
-0302   79D2~            				else
-0302   79D2             
-0302   79D2~            				else
-0302   79D2~            				else
-0302   79D2~            				else
-0302   79D2~            				else
-0302   79D2             
-0302   79D2             
-0302   79D2 04          
-0302   79D5             
-0302   79D5 20 FE       
-0302   79D7             
-0302   79D7             
-0302   79D7             
-0302   79D7~            				else
-0302   79D7~            				else
-0302   79D7~            				else
-0302   79D7~            				else
-0302   79D7~            				else
-0302   79D7             
-0302   79D7~            				else
-0302   79D7~            				else
-0302   79D7             
-0302   79D7~            				else
-0302   79D7~            				else
-0302   79D7             
-0303   79D7 86 C0       					ldaA	#11000000b
-0304   79D9             				endif
-0304   79D9             
-0304   79D9             
-0304   79D9             
-0304   79D9             
-0304   79D9             
-0304   79D9~            				endif
-0304   79D9~            				endif
-0304   79D9             
-0304   79D9~            				endif
-0304   79D9~            				endif
-0304   79D9             
-0304   79D6             
-0304   79D6 02          
-0304   79D7             
-0304   79D7             
-0304   79D7~            				endif
-0304   79D7~            				endif
-0304   79D7~            				endif
-0304   79D7             
-0304   79D9             
-0304   79D9~            				endif
-0304   79D9~            				endif
-0304   79D9             
-0305   79D9 9A 53       				oraA	tempX + 1 ; A now contains the event per queue schema
-0306   79DB             				
-0307   79DB             				; store event
-0308   79DB DE 56       				ldX		queueTail
-0309   79DD A7 00       				staA	0, X
-0310   79DF 7C 00 57    				inc		queueTail + 1
-0311   79E2             				
-0312   79E2             				; wrap queueTail if necessary
-0313   79E2 8C 00 6F    				cpX		#queueEnd 
-0314   79E5             				ifeq
-0314   79E5             
-0314   79E5 26 FE       
-0315   79E7 86 60       					ldaA	#queue 
-0316   79E9 97 57       					staA	queueTail + 1
-0317   79EB             				endif
-0317   79EB             
-0317   79EB             
-0317   79EB             
-0317   79EB             
-0317   79EB             
-0317   79EB~            				endif
-0317   79EB~            				endif
-0317   79EB             
-0317   79EB~            				endif
-0317   79EB~            				endif
-0317   79EB             
-0317   79E6             
-0317   79E6 04          
-0317   79E7             
-0317   79E7             
-0317   79E7~            				endif
-0317   79E7~            				endif
-0317   79E7~            				endif
-0317   79E7             
-0317   79EB             
-0317   79EB~            				endif
-0317   79EB~            				endif
-0317   79EB             
-0318   79EB             			endif
-0318   79EB             
-0318   79EB             
-0318   79EB             
-0318   79EB             
-0318   79EB             
-0318   79EB~            			endif
-0318   79EB~            			endif
-0318   79EB             
-0318   79EB~            			endif
-0318   79EB~            			endif
-0318   79EB             
-0318   79C6             
-0318   79C6 24          
-0318   79C7             
-0318   79C7             
-0318   79C7~            			endif
-0318   79C7~            			endif
-0318   79C7~            			endif
-0318   79C7             
-0318   79EB             
-0318   79EB~            			endif
-0318   79EB~            			endif
-0318   79EB             
-0319   79EB             		else ; =0 -> was settled, so now it's not
-0319   79EB             
-0319   79EB             
-0319   79EB             
-0319   79EB             
-0319   79C1             
-0319   79C1             
-0319   79C1             
-0319   79C1~            		else ; =0 -> was settled, so now it's not
-0319   79C1~            		else ; =0 -> was settled, so now it's not
-0319   79C1~            		else ; =0 -> was settled, so now it's not
-0319   79C1~            		else ; =0 -> was settled, so now it's not
-0319   79C1             
-0319   79C1~            		else ; =0 -> was settled, so now it's not
-0319   79C1~            		else ; =0 -> was settled, so now it's not
-0319   79C1~            		else ; =0 -> was settled, so now it's not
-0319   79C1~            		else ; =0 -> was settled, so now it's not
-0319   79C1             
-0319   79C1             
-0319   79C1 2B          
-0319   79EB             
-0319   79EB 20 FE       
-0319   79ED             
-0319   79ED             
-0319   79ED             
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED             
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED             
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED~            		else ; =0 -> was settled, so now it's not
-0319   79ED             
-0320   79ED             			; get the settle time
-0321   79ED 96 53       			ldaA	tempX + 1
-0322   79EF 97 01       			staA	temp + 1 	; get temp in sync with tempX LSB
-0323   79F1 DE 00       			ldX		temp
-0324   79F3             			
-0325   79F3             			; temp contains half the address of the callback, so add diff between settleTable and callbackTable
-0326   79F3 A6 80       			ldaA	settleTable - callbackTable, X ; A has settle settings
-0327   79F5             			
-0328   79F5             			; need to get correct 3 bits from switch settings
-0329   79F5 F5 30 00    			bitB	switchRow
-0330   79F8             			ifne ; switch just turned on
-0330   79F8             
-0330   79F8 27 FE       
-0331   79FA 44          				lsrA
-0332   79FB 44          				lsrA
-0333   79FC             			else
-0333   79FC             
-0333   79FC             
-0333   79FC             
-0333   79FC             
-0333   79F9             
-0333   79F9             
-0333   79F9             
-0333   79F9~            			else
-0333   79F9~            			else
-0333   79F9~            			else
-0333   79F9~            			else
-0333   79F9             
-0333   79F9~            			else
-0333   79F9~            			else
-0333   79F9~            			else
-0333   79F9~            			else
-0333   79F9             
-0333   79F9             
-0333   79F9 04          
-0333   79FC             
-0333   79FC 20 FE       
-0333   79FE             
-0333   79FE             
-0333   79FE             
-0333   79FE~            			else
-0333   79FE~            			else
-0333   79FE~            			else
-0333   79FE~            			else
-0333   79FE~            			else
-0333   79FE             
-0333   79FE~            			else
-0333   79FE~            			else
-0333   79FE             
-0333   79FE~            			else
-0333   79FE~            			else
-0333   79FE             
-0334   79FE 48          				aslA
-0335   79FF             			endif
-0335   79FF             
-0335   79FF             
-0335   79FF             
-0335   79FF             
-0335   79FF             
-0335   79FF~            			endif
-0335   79FF~            			endif
-0335   79FF             
-0335   79FF~            			endif
-0335   79FF~            			endif
-0335   79FF             
-0335   79FD             
-0335   79FD 01          
-0335   79FE             
-0335   79FE             
-0335   79FE~            			endif
-0335   79FE~            			endif
-0335   79FE~            			endif
-0335   79FE             
-0335   79FF             
-0335   79FF~            			endif
-0335   79FF~            			endif
-0335   79FF             
-0336   79FF 84 0E       			andA	#1110b ; A now has 3 bit settle time * 2
-0337   7A01             						
-0338   7A01 DE 52       			ldX		tempX
-0339   7A03 A7 00       			staA	0, X		; start settling	
-0340   7A05 27 C0       			beq		settled		; quick out for 0 settle
-0341   7A07             		endif
-0341   7A07             
-0341   7A07             
-0341   7A07             
-0341   7A07             
-0341   7A07             
-0341   7A07~            		endif
-0341   7A07~            		endif
-0341   7A07             
-0341   7A07~            		endif
-0341   7A07~            		endif
-0341   7A07             
-0341   79EC             
-0341   79EC 1A          
-0341   79ED             
-0341   79ED             
-0341   79ED~            		endif
-0341   79ED~            		endif
-0341   79ED~            		endif
-0341   79ED             
-0341   7A07             
-0341   7A07~            		endif
-0341   7A07~            		endif
-0341   7A07             
-0342   7A07             			
-0343   7A07 32          		pulA
-0344   7A08             	endif
-0344   7A08             
-0344   7A08             
-0344   7A08             
-0344   7A08             
-0344   7A08             
-0344   7A08~            	endif
-0344   7A08~            	endif
-0344   7A08             
-0344   7A08~            	endif
-0344   7A08~            	endif
-0344   7A08             
-0344   79B8             
-0344   79B8 4F          
-0344   79B9             
-0344   79B9             
-0344   79B9~            	endif
-0344   79B9~            	endif
-0344   79B9~            	endif
-0344   79B9             
-0344   7A08             
-0344   7A08~            	endif
-0344   7A08~            	endif
-0344   7A08             
-0345   7A08 7C 00 53    	inc tempX + 1
-0346   7A0B 58          	aslB
-0347   7A0C 44          	lsrA			; pop lowest bit off, set Z if A is empty
-0348   7A0D 26 A6       	bne		swNext 	; more 'switched' bits, keep processing 
-0349   7A0F             	
-0350   7A0F             	
-0351   7A0F             ; update lamps
-0352   7A0F DE 50       	ldX		curCol
-0353   7A11 86 FF       	ldaA	#$FF	;lamp row is inverted
-0354   7A13 B7 24 00    	staA	lampRow
-0355   7A16 96 07       	ldaA	strobe
-0356   7A18 B7 24 02    	staA	lampStrobe
-0357   7A1B A6 20       	ldaA	switchRow1, X
-0358   7A1D B7 24 00    	staA	lampRow
-0359   7A20 86 00       	ldaA	#00
-0360   7A22             
-0361   7A22             ; update solenoids
-0362   7A22             	; if a solenoid is set to <254, --
-0363   7A22             	; if =255, off, otherwise on
-0364   7A22             	; leave it at 254
-0365   7A22             	
-0366   7A22 7C 00 50    	inc		curCol	; indexed can't use base >255, so temp inc X by 255 (1 MSB)
-0367   7A25 86 FE       	ldaA	#254
-0368   7A27 DE 50       	ldX		curCol
-0369   7A29 E6 40       	ldaB	solenoid1 - cRAM, X
-0370   7A2B A1 40       	cmpA	solenoid1 - cRAM, X
-0371   7A2D             	ifge 	; solenoid <=254, turn on
-0371   7A2D             
-0371   7A2D 25 FE       
-0372   7A2F             		ifgt	; solenoid < 254, decrement
-0372   7A2F             
-0372   7A2F 23 FE       
-0373   7A31 6A 40       			dec		solenoid1 - cRAM, X
-0374   7A33             		endif
-0374   7A33             
-0374   7A33             
-0374   7A33             
-0374   7A33             
-0374   7A33             
-0374   7A33~            		endif
-0374   7A33~            		endif
-0374   7A33             
-0374   7A33~            		endif
-0374   7A33~            		endif
-0374   7A33             
-0374   7A30             
-0374   7A30 02          
-0374   7A31             
-0374   7A31             
-0374   7A31~            		endif
-0374   7A31~            		endif
-0374   7A31~            		endif
-0374   7A31             
-0374   7A33             
-0374   7A33~            		endif
-0374   7A33~            		endif
-0374   7A33             
-0375   7A33 0D          		sec
-0376   7A34             	else
-0376   7A34             
-0376   7A34             
-0376   7A34             
-0376   7A34             
-0376   7A2E             
-0376   7A2E             
-0376   7A2E             
-0376   7A2E~            	else
-0376   7A2E~            	else
-0376   7A2E~            	else
-0376   7A2E~            	else
-0376   7A2E             
-0376   7A2E~            	else
-0376   7A2E~            	else
-0376   7A2E~            	else
-0376   7A2E~            	else
-0376   7A2E             
-0376   7A2E             
-0376   7A2E 07          
-0376   7A34             
-0376   7A34 20 FE       
-0376   7A36             
-0376   7A36             
-0376   7A36             
-0376   7A36~            	else
-0376   7A36~            	else
-0376   7A36~            	else
-0376   7A36~            	else
-0376   7A36~            	else
-0376   7A36             
-0376   7A36~            	else
-0376   7A36~            	else
-0376   7A36             
-0376   7A36~            	else
-0376   7A36~            	else
-0376   7A36             
-0377   7A36 0C          		clc
-0378   7A37             	endif
-0378   7A37             
-0378   7A37             
-0378   7A37             
-0378   7A37             
-0378   7A37             
-0378   7A37~            	endif
-0378   7A37~            	endif
-0378   7A37             
-0378   7A37~            	endif
-0378   7A37~            	endif
-0378   7A37             
-0378   7A35             
-0378   7A35 01          
-0378   7A36             
-0378   7A36             
-0378   7A36~            	endif
-0378   7A36~            	endif
-0378   7A36~            	endif
-0378   7A36             
-0378   7A37             
-0378   7A37~            	endif
-0378   7A37~            	endif
-0378   7A37             
-0379   7A37 76 00 28    	ror		solAStatus
-0380   7A3A A1 48       	cmpA	solenoid9 - cRAM, X
-0381   7A3C             	ifge 	; solenoid <=254, turn on
-0381   7A3C             
-0381   7A3C 25 FE       
-0382   7A3E             		ifgt	; solenoid < 254, decrement
-0382   7A3E             
-0382   7A3E 23 FE       
-0383   7A40 6A 48       			dec		solenoid9 - cRAM, X
-0384   7A42             		endif
-0384   7A42             
-0384   7A42             
-0384   7A42             
-0384   7A42             
-0384   7A42             
-0384   7A42~            		endif
-0384   7A42~            		endif
-0384   7A42             
-0384   7A42~            		endif
-0384   7A42~            		endif
-0384   7A42             
-0384   7A3F             
-0384   7A3F 02          
-0384   7A40             
-0384   7A40             
-0384   7A40~            		endif
-0384   7A40~            		endif
-0384   7A40~            		endif
-0384   7A40             
-0384   7A42             
-0384   7A42~            		endif
-0384   7A42~            		endif
-0384   7A42             
-0385   7A42 0D          		sec
-0386   7A43             	else
-0386   7A43             
-0386   7A43             
-0386   7A43             
-0386   7A43             
-0386   7A3D             
-0386   7A3D             
-0386   7A3D             
-0386   7A3D~            	else
-0386   7A3D~            	else
-0386   7A3D~            	else
-0386   7A3D~            	else
-0386   7A3D             
-0386   7A3D~            	else
-0386   7A3D~            	else
-0386   7A3D~            	else
-0386   7A3D~            	else
-0386   7A3D             
-0386   7A3D             
-0386   7A3D 07          
-0386   7A43             
-0386   7A43 20 FE       
-0386   7A45             
-0386   7A45             
-0386   7A45             
-0386   7A45~            	else
-0386   7A45~            	else
-0386   7A45~            	else
-0386   7A45~            	else
-0386   7A45~            	else
-0386   7A45             
-0386   7A45~            	else
-0386   7A45~            	else
-0386   7A45             
-0386   7A45~            	else
-0386   7A45~            	else
-0386   7A45             
-0387   7A45 0C          		clc
-0388   7A46             	endif
-0388   7A46             
-0388   7A46             
-0388   7A46             
-0388   7A46             
-0388   7A46             
-0388   7A46~            	endif
-0388   7A46~            	endif
-0388   7A46             
-0388   7A46~            	endif
-0388   7A46~            	endif
-0388   7A46             
-0388   7A44             
-0388   7A44 01          
-0388   7A45             
-0388   7A45             
-0388   7A45~            	endif
-0388   7A45~            	endif
-0388   7A45~            	endif
-0388   7A45             
-0388   7A46             
-0388   7A46~            	endif
-0388   7A46~            	endif
-0388   7A46             
-0389   7A46 76 00 29    	ror		solBStatus
-0390   7A49 7A 00 50    	dec		curCol
-0391   7A4C             	
-0392   7A4C             ; update strobe	
-0393   7A4C DE 50       	ldX		curCol
-0394   7A4E 08          	inX 	
-0395   7A4F 86 08       	ldaA	#8 	; pitch
-0396   7A51 9B 10       	addA	curSwitchRowLsb
-0397   7A53 97 10       	staA	curSwitchRowLsb
-0398   7A55 78 00 07    	asl		strobe
-0399   7A58 7C 01 68    	inc		displayCol
-0400   7A5B 86 00       	ldaA	#0
-0401   7A5D 91 07       	cmpA	strobe ; strobe done?  reset
-0402   7A5F             	ifeq		
-0402   7A5F             
-0402   7A5F 26 FE       
-0403   7A61 96 28       		ldaA	solAStatus
-0404   7A63 B7 22 00    		staA	solenoidA
-0405   7A66 96 29       		ldaA	solBStatus
-0406   7A68 B7 22 02    		staA	solenoidB
-0407   7A6B             	
-0408   7A6B 86 01       		ldaA	#00000001b
-0409   7A6D 97 07       		staA	strobe
-0410   7A6F             		
-0411   7A6F CE 00 00    		ldX 	#0
-0412   7A72             		
-0413   7A72 86 00       		ldaA	#0
-0414   7A74 97 10       		staA	curSwitchRowLsb
-0415   7A76 97 28       		staA	solAStatus
-0416   7A78 97 29       		staA	solBStatus
-0417   7A7A             		
-0418   7A7A F6 01 68    		ldaB	displayCol	; reset display col only if it's > 7 
-0419   7A7D C1 F8       		cmpB	#$F8	; since it needs to count to 15 instead of 7
-0420   7A7F             		ifgt
-0420   7A7F             
-0420   7A7F 23 FE       
-0421   7A81 B7 01 68    			staA	displayCol
-0422   7A84             		endif
-0422   7A84             
-0422   7A84             
-0422   7A84             
-0422   7A84             
-0422   7A84             
-0422   7A84~            		endif
-0422   7A84~            		endif
-0422   7A84             
-0422   7A84~            		endif
-0422   7A84~            		endif
-0422   7A84             
-0422   7A80             
-0422   7A80 03          
-0422   7A81             
-0422   7A81             
-0422   7A81~            		endif
-0422   7A81~            		endif
-0422   7A81~            		endif
-0422   7A81             
-0422   7A84             
-0422   7A84~            		endif
-0422   7A84~            		endif
-0422   7A84             
-0423   7A84             	endif
-0423   7A84             
-0423   7A84             
-0423   7A84             
-0423   7A84             
-0423   7A84             
-0423   7A84~            	endif
-0423   7A84~            	endif
-0423   7A84             
-0423   7A84~            	endif
-0423   7A84~            	endif
-0423   7A84             
+0178+  7C0A             
+0178+  7C0A             
+0178+  7C0A~            			else
+0178+  7C0A~            			else
+0178+  7C0A~            			else
+0178+  7C0A~            			else
+0178+  7C0A~            			else
+0178+  7C0A             
+0178+  7C0A~            			else
+0178+  7C0A~            			else
+0178+  7C0A             
+0178+  7C0A~            			else
+0178+  7C0A~            			else
+0178+  7C0A             
+0179+  7C0A 6C 00       				inc	0, X
+0180+  7C0C             			endif	
+0180+  7C0C             
+0180+  7C0C             
+0180+  7C0C             
+0180+  7C0C             
+0180+  7C0C             
+0180+  7C0C~            			endif	
+0180+  7C0C~            			endif	
+0180+  7C0C             
+0180+  7C0C~            			endif	
+0180+  7C0C~            			endif	
+0180+  7C0C             
+0180+  7C09             
+0180+  7C09 02          
+0180+  7C0A             
+0180+  7C0A             
+0180+  7C0A~            			endif	
+0180+  7C0A~            			endif	
+0180+  7C0A~            			endif	
+0180+  7C0A             
+0180+  7C0C             
+0180+  7C0C~            			endif	
+0180+  7C0C~            			endif	
+0180+  7C0C             
+0181+  7C0C             		else
+0181+  7C0C             
+0181+  7C0C             
+0181+  7C0C             
+0181+  7C0C             
+0181+  7BF8             
+0181+  7BF8             
+0181+  7BF8             
+0181+  7BF8~            		else
+0181+  7BF8~            		else
+0181+  7BF8~            		else
+0181+  7BF8~            		else
+0181+  7BF8             
+0181+  7BF8~            		else
+0181+  7BF8~            		else
+0181+  7BF8~            		else
+0181+  7BF8~            		else
+0181+  7BF8             
+0181+  7BF8             
+0181+  7BF8 15          
+0181+  7C0C             
+0181+  7C0C 20 FE       
+0181+  7C0E             
+0181+  7C0E             
+0181+  7C0E             
+0181+  7C0E~            		else
+0181+  7C0E~            		else
+0181+  7C0E~            		else
+0181+  7C0E~            		else
+0181+  7C0E~            		else
+0181+  7C0E             
+0181+  7C0E~            		else
+0181+  7C0E~            		else
+0181+  7C0E             
+0181+  7C0E~            		else
+0181+  7C0E~            		else
+0181+  7C0E             
+0182+  7C0E A7 00       			staA	0, X
+0183+  7C10             		endif
+0183+  7C10             
+0183+  7C10             
+0183+  7C10             
+0183+  7C10             
+0183+  7C10             
+0183+  7C10~            		endif
+0183+  7C10~            		endif
+0183+  7C10             
+0183+  7C10~            		endif
+0183+  7C10~            		endif
+0183+  7C10             
+0183+  7C0D             
+0183+  7C0D 02          
+0183+  7C0E             
+0183+  7C0E             
+0183+  7C0E~            		endif
+0183+  7C0E~            		endif
+0183+  7C0E~            		endif
+0183+  7C0E             
+0183+  7C10             
+0183+  7C10~            		endif
+0183+  7C10~            		endif
+0183+  7C10             
+0184+  7C10             	endif
+0184+  7C10             
+0184+  7C10             
+0184+  7C10             
+0184+  7C10             
+0184+  7C10             
+0184+  7C10~            	endif
+0184+  7C10~            	endif
+0184+  7C10             
+0184+  7C10~            	endif
+0184+  7C10~            	endif
+0184+  7C10             
+0184+  7BF4             
+0184+  7BF4 1B          
+0184+  7BF5             
+0184+  7BF5             
+0184+  7BF5~            	endif
+0184+  7BF5~            	endif
+0184+  7BF5~            	endif
+0184+  7BF5             
+0184+  7C10             
+0184+  7C10~            	endif
+0184+  7C10~            	endif
+0184+  7C10             
+0185+  7C10             
+0186+  7C10 7E 7B D2    	jmp refreshPlayerScores
+0187+  7C13             	
+0188+  7C13             	
+0189+  7C13             ; trashes B (max 104ms)
+0190+  7C13             #DEFINE fireSolenoidFor(n,ms)	ldaB #(ms/8)\ staB solenoid1+n-1 
+0191+  7C13             #DEFINE fireSolenoid(n)			fireSolenoidFor(n, 57)
+0192+  7C13             
+0193+  7C13             ; trashes AX
+0194+  7C13             ; place: 1-5 = 10s thru 100ks
+0195+  7C13             ; amount: 1-9
+0196+  7C13             #DEFINE addScore(place,amount)		ldX #pB_10-place+1\ ldaA #0+amount\ jsr _addScore
+0197+  7C13             #DEFINE addScore_T(place,amount)	ldX #pB_10-place+1\ ldaA #0+amount\ jmp _addScore
+0006   7C13             
+0007   7C13             #include "game.asm"
+0001+  7C13             ; Laser Ball solenoids
+0002+  7C13             #DEFINE KICKOUT 		01
+0003+  7C13             #DEFINE LEFT_KICKER 	02
+0004+  7C13             #DEFINE DROP_LA			03
+0005+  7C13             #DEFINE DROP_SER		04
+0006+  7C13             #DEFINE EJECT_HOLE		05
+0007+  7C13             #DEFINE DROP_BA			06
+0008+  7C13             #DEFINE DROP_LL			07
+0009+  7C13             #DEFINE RIGHT_KICKER	08
+0010+  7C13             #DEFINE SOUND1			09 ; thru 13
+0011+  7C13             #DEFINE KNOCKER			14
+0012+  7C13             #DEFINE	FLASHERS		15
+0013+  7C13             #DEFINE COIN_LOCKOUT	16
+0014+  7C13             
+0015+  7C13             ; switch callbacks:
+0016+  7C13             
+0017+  7E00             none:	.org $7D00 + 256
+0018+  7E00 39          	rts
+0019+  7E01             sw32:
+0020+  7E01 39          	rts
+0021+  7E02             	
+0022+  7E02             addP2_10:
+0023+  7E02             	;ldX		#pB_10
+0024+  7E02             	;ldaA	#9
+0025+  7E02             	;jmp 	addScore
+0026+  7E02 CE 01 5B    	addScore_T(1,9)
+0026+  7E05 86 09       
+0026+  7E07 7E 7B DC    
+0027+  7E0A             	
+0028+  7E0A             swStart:
+0029+  7E0A 86 08       	ldaA #1000b
+0030+  7E0C BA 01 69    	oraA state
+0031+  7E0F B7 01 69    	staA	state
+0032+  7E12             	
+0033+  7E12 B6 22 03    	ldaA 	solenoidBC; enable kickers 	
+0034+  7E15 8A 38       	oraA 	#00111000b 
+0035+  7E17 B7 22 03    	staA	solenoidBC
+0036+  7E1A 39          	rts
+0037+  7E1B             	
+0038+  7E1B             swOuthole:
+0039+  7E1B C6 07       	fireSolenoid(KICKOUT)
+0039+  7E1D F7 01 40    
+0040+  7E20 39          	rts
+0041+  7E21             	
+0042+  7E21             swEjectHole:
+0043+  7E21 C6 07       	fireSolenoid(EJECT_HOLE)
+0043+  7E23 F7 01 44    
+0044+  7E26 39          	rts
+0045+  7E27             	
+0046+  7E27             swRKicker:
+0047+  7E27 C6 07       	fireSolenoid(RIGHT_KICKER)
+0047+  7E29 F7 01 47    
+0048+  7E2C 39          	rts
+0049+  7E2D             	
+0050+  7E2D             ; end callbacks
+0051+  7E2D             	.msfirst
+0052+  7D00             callbackTable: 	.org $7D00 ; note: TRANSPOSED
+0053+  7D00 7E 00       	.dw none		\.dw none		\.dw swStart	\.dw none\.dw none\.dw none\.dw none\.dw none
+0053+  7D02 7E 00       
+0053+  7D04 7E 0A       
+0053+  7D06 7E 00       
+0053+  7D08 7E 00       
+0053+  7D0A 7E 00       
+0053+  7D0C 7E 00       
+0053+  7D0E 7E 00       
+0054+  7D10 7E 1B       	.dw swOuthole	\.dw addP2_10	\.dw sw32		\.dw none\.dw none\.dw none\.dw none\.dw none
+0054+  7D12 7E 02       
+0054+  7D14 7E 01       
+0054+  7D16 7E 00       
+0054+  7D18 7E 00       
+0054+  7D1A 7E 00       
+0054+  7D1C 7E 00       
+0054+  7D1E 7E 00       
+0055+  7D20 7E 00       	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+0055+  7D22 7E 00       
+0055+  7D24 7E 00       
+0055+  7D26 7E 00       
+0055+  7D28 7E 00       
+0055+  7D2A 7E 00       
+0055+  7D2C 7E 00       
+0055+  7D2E 7E 00       
+0056+  7D30 7E 00       	.dw none		\.dw none\.dw none\.dw addP2_10\.dw none\.dw none\.dw none\.dw swEjectHole
+0056+  7D32 7E 00       
+0056+  7D34 7E 00       
+0056+  7D36 7E 02       
+0056+  7D38 7E 00       
+0056+  7D3A 7E 00       
+0056+  7D3C 7E 00       
+0056+  7D3E 7E 21       
+0057+  7D40 7E 00       	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+0057+  7D42 7E 00       
+0057+  7D44 7E 00       
+0057+  7D46 7E 00       
+0057+  7D48 7E 00       
+0057+  7D4A 7E 00       
+0057+  7D4C 7E 00       
+0057+  7D4E 7E 00       
+0058+  7D50 7E 27       	.dw swRKicker	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+0058+  7D52 7E 00       
+0058+  7D54 7E 00       
+0058+  7D56 7E 00       
+0058+  7D58 7E 00       
+0058+  7D5A 7E 00       
+0058+  7D5C 7E 00       
+0058+  7D5E 7E 00       
+0059+  7D60 7E 00       	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+0059+  7D62 7E 00       
+0059+  7D64 7E 00       
+0059+  7D66 7E 00       
+0059+  7D68 7E 00       
+0059+  7D6A 7E 00       
+0059+  7D6C 7E 00       
+0059+  7D6E 7E 00       
+0060+  7D70 7E 00       	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+0060+  7D72 7E 00       
+0060+  7D74 7E 00       
+0060+  7D76 7E 00       
+0060+  7D78 7E 00       
+0060+  7D7A 7E 00       
+0060+  7D7C 7E 00       
+0060+  7D7E 7E 00       
+0061+  7D80             ; on = how many cycles it must be on for before registering (1 cycle = 64ms (?)) (max 7)
+0062+  7D80             ; off = how many cycles it must be off for
+0063+  7D80             ; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
+0064+  7D80             ; gameover = whether the switch is active in gameover mode (these callbacks must check whether in game over when triggered)
+0065+  7D80             #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
+0066+  7D80             settleTable: ; must be right after callbackTable
+0067+  7D80 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(4,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0067+  7D81 47          
+0067+  7D82 E7          
+0067+  7D83 47          
+0067+  7D84 47          
+0067+  7D85 47          
+0067+  7D86 47          
+0067+  7D87 47          
+0068+  7D88 FF          	SW(7,7,1,1)\SW(0,0,1,1)\SW(7,0,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0068+  7D89 C0          
+0068+  7D8A F8          
+0068+  7D8B 47          
+0068+  7D8C 47          
+0068+  7D8D 47          
+0068+  7D8E 47          
+0068+  7D8F 47          
+0069+  7D90 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0069+  7D91 47          
+0069+  7D92 47          
+0069+  7D93 47          
+0069+  7D94 47          
+0069+  7D95 47          
+0069+  7D96 47          
+0069+  7D97 47          
+0070+  7D98 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(7,7,1,1)
+0070+  7D99 47          
+0070+  7D9A 47          
+0070+  7D9B FF          
+0070+  7D9C 47          
+0070+  7D9D 47          
+0070+  7D9E 47          
+0070+  7D9F FF          
+0071+  7DA0 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0071+  7DA1 47          
+0071+  7DA2 47          
+0071+  7DA3 47          
+0071+  7DA4 47          
+0071+  7DA5 47          
+0071+  7DA6 47          
+0071+  7DA7 47          
+0072+  7DA8 FF          	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0072+  7DA9 47          
+0072+  7DAA 47          
+0072+  7DAB 47          
+0072+  7DAC 47          
+0072+  7DAD 47          
+0072+  7DAE 47          
+0072+  7DAF 47          
+0073+  7DB0 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0073+  7DB1 47          
+0073+  7DB2 47          
+0073+  7DB3 47          
+0073+  7DB4 47          
+0073+  7DB5 47          
+0073+  7DB6 47          
+0073+  7DB7 47          
+0074+  7DB8 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)0074+  7DB9 47          
+0074+  7DBA 47          
+0074+  7DBB 47          
+0074+  7DBC 47          
+0074+  7DBD 47          
+0074+  7DBE 47          
+0074+  7DBF 47          
+0008   7DC0             
+0009   6000             .org	$6000
+0010   6000 01          	nop
+0011   6001             	
+0012   7800             main:		.org $7800
+0013   7800             resetRam:
+0014   7800 CE 00 00    	ldX		#RAM
+0015   7803 86 00       	ldaA	#0
+0016   7805             resetRamLoop:
+0017   7805 A7 00       	staA	0, X
+0018   7807 08          	inX
+0019   7808 8C 02 00    	cpX		#RAMEnd + 1
+0020   780B 26 F8       	bne		resetRamLoop
+0021   780D             	
+0022   780D             	
+0023   780D 86 00       	ldaA 	#0
+0024   780F 97 00       	staA	temp
+0025   7811 86 FF       	ldaA	#$FF
+0026   7813 97 01       	staA	temp + 1
+0027   7815 9E 00       	ldS		temp
+0028   7817             
+0029   7817             test:
+0030   7817             	
+0031   7817             piaSetup:
+0032   7817 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0033   7819 B7 28 01    	staA 	displayStrobeC
+0034   781C 86 3F       	ldaA 	#00111111b	;set LED pins to outputs
+0035   781E B7 28 00    	staA 	displayStrobe
+0036   7821 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0037   7823 B7 28 01    	staA 	displayStrobeC
+0038   7826             	
+0039   7826 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0040   7828 B7 28 03    	staA 	displayBcdC
+0041   782B 86 FF       	ldaA 	#11111111b	;set display BCD to output
+0042   782D B7 28 02    	staA 	displayBcd
+0043   7830 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0044   7832 B7 28 03    	staA 	displayBcdC
+0045   7835             	
+0046   7835 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0047   7837 B7 24 01    	staA 	lampRowC
+0048   783A 86 FF       	ldaA 	#11111111b	;set to output
+0049   783C B7 24 00    	staA 	lampRow
+0050   783F 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0051   7841 B7 24 01    	staA 	lampRowC
+0052   7844             	
+0053   7844 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0054   7846 B7 24 03    	staA 	lampStrobeC
+0055   7849 86 FF       	ldaA 	#11111111b	;set to output
+0056   784B B7 24 02    	staA 	lampStrobe
+0057   784E 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0058   7850 B7 24 03    	staA 	lampStrobeC
+0059   7853             	
+0060   7853 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0061   7855 B7 30 03    	staA 	switchStrobeC
+0062   7858 86 FF       	ldaA 	#11111111b	;set to output
+0063   785A B7 30 02    	staA 	switchStrobe
+0064   785D 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0065   785F B7 30 03    	staA 	switchStrobeC
+0066   7862             	
+0067   7862 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0068   7864 B7 30 01    	staA 	switchRowC
+0069   7867 86 00       	ldaA 	#00000000b	;set to input
+0070   7869 B7 30 00    	staA 	switchRow
+0071   786C 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0072   786E B7 30 01    	staA 	switchRowC
+0073   7871             	
+0074   7871 86 00       	ldaA	#00000000b	;select direction (3rd bit = 0)
+0075   7873 B7 22 01    	staA 	solenoidAC
+0076   7876 B7 22 03    	staA	solenoidBC
+0077   7879 86 FF       	ldaA 	#11111111b	;set to output
+0078   787B B7 22 00    	staA 	solenoidA
+0079   787E B7 22 02    	staA 	solenoidB
+0080   7881 86 04       	ldaA 	#00000100b 	;select data (3rb bit = 1)
+0081   7883 B7 22 01    	staA 	solenoidAC
+0082   7886 86 34       	ldaA 	#00110100b 	;select data (3rb bit = 1), enable CB2 output low
+0083   7888 B7 22 03    	staA 	solenoidBC
+0084   788B             	
+0085   788B             ;
+0086   788B             
+0087   788B 86 00       	ldaA	#00
+0088   788D D7 60       	staB	displayBcd1
+0089   788F             	
+0090   788F 86 FF       	ldaA	#$FF	
+0091   7891 B7 28 00    	staA 	displayStrobe
+0092   7894             
+0093   7894 86 00       	ldaA	#00
+0094   7896 97 07       	staA	strobe
+0095   7898 B7 01 68    	staA	displayCol
+0096   789B             	
+0097   789B CE 00 00    	ldX 	#0
+0098   789E DF 50       	stX		curCol
+0099   78A0             	
+0100   78A0 86 00       	ldaA	#0
+0101   78A2 97 10       	staA	curSwitchRowLsb
+0102   78A4             	
+0103   78A4             ; fill solenoid status with off
+0104   78A4 86 00       	ldaA	#0
+0105   78A6 CE 01 40    	ldX		#solenoid1
+0106   78A9             lSolDefault:
+0107   78A9 A7 00       	staA	0, X
+0108   78AB 08          	inX
+0109   78AC 8C 01 4F    	cpX		#solenoid16
+0110   78AF 26 F8       	bne		lSolDefault
+0111   78B1             	
+0112   78B1             ; empty settle
+0113   78B1 86 00       	ldaA	#$00
+0114   78B3 CE 01 00    	ldX		#settleRow1
+0115   78B6             lSettleDefault:
+0116   78B6 A7 00       	staA		0, X
+0117   78B8 08          	inX
+0118   78B9 8C 08 46    	cpX		#settleRow8 + 7
+0119   78BC 26 F8       	bne		lSettleDefault
+0120   78BE             	
+0121   78BE             ; empty queue
+0122   78BE 86 FF       	ldaA	#$FF
+0123   78C0 CE 00 70    	ldX		#queue
+0124   78C3             lEmptyQueue:
+0125   78C3 A7 00       	staA		0, X
+0126   78C5 08          	inX
+0127   78C6 8C 00 7F    	cpX		#queueEnd
+0128   78C9 26 F8       	bne		lEmptyQueue
+0129   78CB             	
+0130   78CB 86 00       	ldaA	#0
+0131   78CD 97 54       	staA	queueHead + 0
+0132   78CF 97 56       	staA	queueTail + 0
+0133   78D1 86 70       	ldaA	#queue
+0134   78D3 97 55       	staA	queueHead + 1
+0135   78D5 97 57       	staA	queueTail + 1
+0136   78D7             	
+0137   78D7             ; test numbers
+0138   78D7             
+0139   78D7             	
+0140   78D7 CE 00 61    	ldX		#displayBcd1 + 1
+0141   78DA 86 11       	ldaA	#00010001b
+0142   78DC             lTestNumbers2:
+0143   78DC A7 00       	staA	0, X
+0144   78DE 08          	inX
+0145   78DF 4C          	incA
+0146   78E0 84 77       	andA	#01110111b
+0147   78E2 8C 00 6F    	cpX		#displayBcd16
+0148   78E5 26 F5       	bne		lTestNumbers2
+0149   78E7             	
+0150   78E7             	
+0151   78E7             	
+0152   78E7 86 02       	ldaA	#2
+0153   78E9 97 67       	staA	ballCount
+0154   78EB             	
+0155   78EB 86 00       	ldaA	#00
+0156   78ED CE 01 55    	ldX		#pA_10
+0157   78F0             zeroScores:
+0158   78F0 A7 00       	staA	0, X
+0159   78F2 08          	inX
+0160   78F3 8C 01 62    	cpX		#pD_1m
+0161   78F6 26 F8       	bne		zeroScores
+0162   78F8             	
+0163   78F8 86 01       	ldaA	#1
+0164   78FA             	;staA	pA_10 - 1
+0165   78FA 86 09       	ldaA	#9
+0166   78FC B7 01 5B    	staA	pB_10 - 0
+0167   78FF B7 01 5A    	staA	pB_10 - 1
+0168   7902 B7 01 59    	staA	pB_10 - 2
+0169   7905             	;staA	pB_10 - 3
+0170   7905 86 03       	ldaA	#3
+0171   7907             	;staA	pC_10 - 3
+0172   7907 86 04       	ldaA	#4
+0173   7909             	;staA	pD_10 - 4
+0174   7909 86 00       	ldaA	#0
+0175   790B B7 01 71    	staA	curPlayer
+0176   790E 86 03       	ldaA	#3
+0177   7910 B7 01 70    	staA	playerCount
+0178   7913             	
+0179   7913 BD 7B D2    	jsr		refreshPlayerScores
+0180   7916             	
+0181   7916             ; setup complete
+0182   7916 0E          	clI		; enable timer interrupt
+0183   7917             	
+0184   7917             	
+0185   7917             end:
+0186   7917 D6 57       	ldaB	queueTail + 1
+0187   7919 D1 55       	cmpB	queueHead + 1
+0188   791B 27 32       	beq 	skipQueue
+0189   791D             	
+0190   791D DE 54       	ldX		queueHead
+0191   791F A6 00       	ldaA	0, X	; A now contains the first queue item
+0192   7921             	
+0193   7921 16          	tAB
+0194   7922 C4 3F       	andB	#00111111b ; B = callback index
+0195   7924             	
+0196   7924 D7 59       	staB	tempQ + 1
+0197   7926 C6 7D       	ldaB	#callbackTable >> 8
+0198   7928 D7 58       	staB	tempQ + 0	; callback address LSB / 2
+0199   792A DE 58       	ldX		tempQ
+0200   792C             	
+0201   792C E6 80       	ldaB	settleTable - callbackTable, X ; B has settle settings
+0202   792E C4 80       	andB 	#10000000b ; B set if switch limited to closures
+0203   7930             	ifne
+0203   7930             
+0203   7930 27 FE       
+0204   7932 DE 54       		ldX		queueHead
+0205   7934 E4 00       		andB	0, X	; B set if switch limited to closures and event was not a closure
+0206   7936 26 14       		bne		skipEvent
+0207   7938             	endif
+0207   7938             
+0207   7938             
+0207   7938             
+0207   7938             
+0207   7938             
+0207   7938~            	endif
+0207   7938~            	endif
+0207   7938             
+0207   7938~            	endif
+0207   7938~            	endif
+0207   7938             
+0207   7931             
+0207   7931 06          
+0207   7932             
+0207   7932             
+0207   7932~            	endif
+0207   7932~            	endif
+0207   7932~            	endif
+0207   7932             
+0207   7938             
+0207   7938~            	endif
+0207   7938~            	endif
+0207   7938             
+0208   7938             	
+0209   7938 C6 08       	ldaB	#1000b	; gameover mask
+0210   793A F5 01 69    	bitB	state
+0211   793D             	ifeq	; not in gameover
+0211   793D             
+0211   793D 26 FE       
+0212   793F 85 40       		bitA 	#01000000b
+0213   7941 27 09       		beq		skipEvent	; skip if callback not active in game over
+0214   7943             	endif
+0214   7943             
+0214   7943             
+0214   7943             
+0214   7943             
+0214   7943             
+0214   7943~            	endif
+0214   7943~            	endif
+0214   7943             
+0214   7943~            	endif
+0214   7943~            	endif
+0214   7943             
+0214   793E             
+0214   793E 04          
+0214   793F             
+0214   793F             
+0214   793F~            	endif
+0214   793F~            	endif
+0214   793F~            	endif
+0214   793F             
+0214   7943             
+0214   7943~            	endif
+0214   7943~            	endif
+0214   7943             
+0215   7943             	
+0216   7943             	; checked passed, do callback
+0217   7943 78 00 59    	lsl		tempQ + 1 ; double LSB because callback table is 2b wide
+0218   7946 DE 58       	ldX		tempQ
+0219   7948 EE 00       	ldX		0, X
+0220   794A AD 00       	jsr		0, X
+0221   794C             				
+0222   794C             skipEvent:
+0223   794C 7C 00 55    	inc		queueHead + 1
+0224   794F             				
+0225   794F             skipQueue:
+0226   794F             				
+0227   794F             	
+0228   794F             				
+0229   794F 7E 79 17    	jmp		end
+0230   7952 00 00       	.dw 0
+0231   7954 00 00       	.dw 0
+0232   7956 00 00       	.dw 0
+0233   7958 00 00       	.dw 0
+0234   795A 00 00       	.dw 0
+0235   795C             		
+0236   795C             interrupt:	
+0237   795C 7C 00 02    	inc		counter
+0238   795F 86 00       	ldaA	#0
+0239   7961 91 02       	cmpA	counter
+0240   7963 26 25       	bne		counterHandled
+0241   7965 7C 00 03    	inc 	counter2
+0242   7968 86 04       	ldaA	#4
+0243   796A 91 03       	cmpA	counter2
+0244   796C 26 1C       	bne		counterHandled
+0245   796E             	
+0246   796E 86 00       	ldaA	#0
+0247   7970 97 03       	staA	counter2
+0248   7972 86 77       	ldaA	#01110111b
+0249   7974 91 60       	cmpA	displayBcd1
+0250   7976 27 0A       	beq		on
+0251   7978             	
+0252   7978 86 F0       	ldaA	#$F0
+0253   797A 97 08       	staA	lampRow1
+0254   797C 86 77       	ldaA	#01110111b
+0255   797E 97 60       	staA	displayBcd1	
+0256   7980 20 08       	bra		counterHandled
+0257   7982             on:
+0258   7982 86 0F       	ldaA	#$0F
+0259   7984 97 08       	staA	lampRow1
+0260   7986 86 33       	ldaA	#00110011b
+0261   7988 97 60       	staA	displayBcd1	
+0262   798A             
+0263   798A             counterHandled:
+0264   798A             ; move switch column
+0265   798A 96 07       	ldaA	strobe
+0266   798C B7 30 02    	staA	switchStrobe
+0267   798F             	
+0268   798F             ; update display 
+0269   798F             	
+0270   798F DE 50       	ldX	curCol
+0271   7991 B6 01 68    	ldaA	displayCol
+0272   7994 C6 FF       	ldaB 	#$FF
+0273   7996 F7 28 02    	staB	displayBcd
+0274   7999 B7 28 00    	staA	displayStrobe
+0275   799C 85 08       	bitA	#00001000b
+0276   799E             	ifeq
+0276   799E             
+0276   799E 26 FE       
+0277   79A0 E6 60       		ldaB	displayBcd1, X
+0278   79A2             	else
+0278   79A2             
+0278   79A2             
+0278   79A2             
+0278   79A2             
+0278   799F             
+0278   799F             
+0278   799F             
+0278   799F~            	else
+0278   799F~            	else
+0278   799F~            	else
+0278   799F~            	else
+0278   799F             
+0278   799F~            	else
+0278   799F~            	else
+0278   799F~            	else
+0278   799F~            	else
+0278   799F             
+0278   799F             
+0278   799F 04          
+0278   79A2             
+0278   79A2 20 FE       
+0278   79A4             
+0278   79A4             
+0278   79A4             
+0278   79A4~            	else
+0278   79A4~            	else
+0278   79A4~            	else
+0278   79A4~            	else
+0278   79A4~            	else
+0278   79A4             
+0278   79A4~            	else
+0278   79A4~            	else
+0278   79A4             
+0278   79A4~            	else
+0278   79A4~            	else
+0278   79A4             
+0279   79A4 E6 68       		ldaB	displayBcd1 + 8, X
+0280   79A6             	endif
+0280   79A6             
+0280   79A6             
+0280   79A6             
+0280   79A6             
+0280   79A6             
+0280   79A6~            	endif
+0280   79A6~            	endif
+0280   79A6             
+0280   79A6~            	endif
+0280   79A6~            	endif
+0280   79A6             
+0280   79A3             
+0280   79A3 02          
+0280   79A4             
+0280   79A4             
+0280   79A4~            	endif
+0280   79A4~            	endif
+0280   79A4~            	endif
+0280   79A4             
+0280   79A6             
+0280   79A6~            	endif
+0280   79A6~            	endif
+0280   79A6             
+0281   79A6 F7 28 02    	staB	displayBcd
+0282   79A9             	
+0283   79A9             ; read switches
+0284   79A9             	;jmp updateLamps
+0285   79A9 DE 50       	ldX		curCol
+0286   79AB B6 30 00    	ldaA	switchRow
+0287   79AE 16          	tab
+0288   79AF A8 20       	eorA	switchRow1, X ; A contains any switches that have changed state
+0289   79B1             	
+0290   79B1 D6 10       	ldaB	curSwitchRowLsb 	;	B now contains LSB of callbackTable row addr
+0291   79B3 D7 01       	staB	temp + 1 			; temp = switch / 2
+0292   79B5 D7 53       	staB	tempX + 1			; tempX = cRAM
+0293   79B7 C6 7D       	ldaB	#callbackTable >> 8
+0294   79B9 D7 00       	staB	temp
+0295   79BB C6 01       	ldaB	#cRAM >> 8
+0296   79BD D7 52       	staB	tempX
+0297   79BF             	
+0298   79BF C6 01       	ldaB	#00000001b ; B is the bit of the current switch in row
+0299   79C1             	
+0300   79C1             	; temp now contains the beginning of the row in the callbackTable
+0301   79C1             swNext:
+0302   79C1 85 01       	bitA	#00000001b	 ; Z set if switch not different
+0303   79C3             	ifne		; if bit set, switch different
+0303   79C3             
+0303   79C3 27 FE       
+0304   79C5 36          		pshA ; store changed switches left
+0305   79C6 DE 52       		ldX		tempX
+0306   79C8 86 18       		ldaA	#11000b
+0307   79CA 95 02       		bitA	counter
+0308   79CC 27 08       		beq checkSettled ;  skip settling (multiplies settle time by 8)
+0309   79CE             			; just check if it's currently settled
+0310   79CE A6 00       			ldaA	0, X ; A now how long the switch has left to settle
+0311   79D0 84 0F       			andA	#00001111b ; need to remove upper F ( sets Z if A = 0)
+0312   79D2 27 33       			beq 	notSettled; A=0 -> settled
+0313   79D4 20 4B       			bra settledEnd
+0314   79D6             checkSettled:
+0315   79D6 A6 00       		ldaA	0, X ; A now how long the switch has left to settle
+0316   79D8 84 0F       		andA	#00001111b ; need to remove upper F ( sets Z if A = 0)
+0317   79DA 27 2B       		beq 	notSettled; A=0 -> settled
+0318   79DC             		; else A > 0 -> settling
+0319   79DC 4A          			decA
+0320   79DD A7 00       			staA	0, X	; sets Z if now A = 0
+0321   79DF             			ifeq ; A=0 -> now settled, fire event
+0321   79DF             
+0321   79DF 26 FE       
+0322   79E1             settled:		
+0323   79E1 DE 50       				ldX		curCol
+0324   79E3 17          				tBA	; A now the bit in row
+0325   79E4 A8 20       				eorA	switchRow1, X ; toggle bit in row
+0326   79E6 A7 20       				staA	switchRow1, X ; A now state of row
+0327   79E8             				
+0328   79E8 F5 30 00    				bitB	switchRow
+0329   79EB             				ifne ; switch now on
+0329   79EB             
+0329   79EB 27 FE       
+0330   79ED 86 40       					ldaA	#01000000b
+0331   79EF             				else
+0331   79EF             
+0331   79EF             
+0331   79EF             
+0331   79EF             
+0331   79EC             
+0331   79EC             
+0331   79EC             
+0331   79EC~            				else
+0331   79EC~            				else
+0331   79EC~            				else
+0331   79EC~            				else
+0331   79EC             
+0331   79EC~            				else
+0331   79EC~            				else
+0331   79EC~            				else
+0331   79EC~            				else
+0331   79EC             
+0331   79EC             
+0331   79EC 04          
+0331   79EF             
+0331   79EF 20 FE       
+0331   79F1             
+0331   79F1             
+0331   79F1             
+0331   79F1~            				else
+0331   79F1~            				else
+0331   79F1~            				else
+0331   79F1~            				else
+0331   79F1~            				else
+0331   79F1             
+0331   79F1~            				else
+0331   79F1~            				else
+0331   79F1             
+0331   79F1~            				else
+0331   79F1~            				else
+0331   79F1             
+0332   79F1 86 C0       					ldaA	#11000000b
+0333   79F3             				endif
+0333   79F3             
+0333   79F3             
+0333   79F3             
+0333   79F3             
+0333   79F3             
+0333   79F3~            				endif
+0333   79F3~            				endif
+0333   79F3             
+0333   79F3~            				endif
+0333   79F3~            				endif
+0333   79F3             
+0333   79F0             
+0333   79F0 02          
+0333   79F1             
+0333   79F1             
+0333   79F1~            				endif
+0333   79F1~            				endif
+0333   79F1~            				endif
+0333   79F1             
+0333   79F3             
+0333   79F3~            				endif
+0333   79F3~            				endif
+0333   79F3             
+0334   79F3 9A 53       				oraA	tempX + 1 ; A now contains the event per queue schema
+0335   79F5             				
+0336   79F5             				; store event
+0337   79F5 DE 56       				ldX		queueTail
+0338   79F7 A7 00       				staA	0, X
+0339   79F9 7C 00 57    				inc		queueTail + 1
+0340   79FC             				
+0341   79FC             				; wrap queueTail if necessary
+0342   79FC 8C 00 7F    				cpX		#queueEnd 
+0343   79FF             				ifeq
+0343   79FF             
+0343   79FF 26 FE       
+0344   7A01 86 70       					ldaA	#queue 
+0345   7A03 97 57       					staA	queueTail + 1
+0346   7A05             				endif
+0346   7A05             
+0346   7A05             
+0346   7A05             
+0346   7A05             
+0346   7A05             
+0346   7A05~            				endif
+0346   7A05~            				endif
+0346   7A05             
+0346   7A05~            				endif
+0346   7A05~            				endif
+0346   7A05             
+0346   7A00             
+0346   7A00 04          
+0346   7A01             
+0346   7A01             
+0346   7A01~            				endif
+0346   7A01~            				endif
+0346   7A01~            				endif
+0346   7A01             
+0346   7A05             
+0346   7A05~            				endif
+0346   7A05~            				endif
+0346   7A05             
+0347   7A05             			endif
+0347   7A05             
+0347   7A05             
+0347   7A05             
+0347   7A05             
+0347   7A05             
+0347   7A05~            			endif
+0347   7A05~            			endif
+0347   7A05             
+0347   7A05~            			endif
+0347   7A05~            			endif
+0347   7A05             
+0347   79E0             
+0347   79E0 24          
+0347   79E1             
+0347   79E1             
+0347   79E1~            			endif
+0347   79E1~            			endif
+0347   79E1~            			endif
+0347   79E1             
+0347   7A05             
+0347   7A05~            			endif
+0347   7A05~            			endif
+0347   7A05             
+0348   7A05 20 1A       		bra settledEnd
+0349   7A07             notSettled: ; =0 -> was settled, so now it's not
+0350   7A07             			; get the settle time
+0351   7A07 96 53       			ldaA	tempX + 1
+0352   7A09 97 01       			staA	temp + 1 	; get temp in sync with tempX LSB
+0353   7A0B DE 00       			ldX		temp
+0354   7A0D             			
+0355   7A0D             			; temp contains half the address of the callback, so add diff between settleTable and callbackTable
+0356   7A0D A6 80       			ldaA	settleTable - callbackTable, X ; A has settle settings
+0357   7A0F             			
+0358   7A0F             			; need to get correct 3 bits from switch settings
+0359   7A0F F5 30 00    			bitB	switchRow
+0360   7A12             			ifne ; switch just turned on
+0360   7A12             
+0360   7A12 27 FE       
+0361   7A14 44          				lsrA
+0362   7A15 44          				lsrA
+0363   7A16             			else
+0363   7A16             
+0363   7A16             
+0363   7A16             
+0363   7A16             
+0363   7A13             
+0363   7A13             
+0363   7A13             
+0363   7A13~            			else
+0363   7A13~            			else
+0363   7A13~            			else
+0363   7A13~            			else
+0363   7A13             
+0363   7A13~            			else
+0363   7A13~            			else
+0363   7A13~            			else
+0363   7A13~            			else
+0363   7A13             
+0363   7A13             
+0363   7A13 04          
+0363   7A16             
+0363   7A16 20 FE       
+0363   7A18             
+0363   7A18             
+0363   7A18             
+0363   7A18~            			else
+0363   7A18~            			else
+0363   7A18~            			else
+0363   7A18~            			else
+0363   7A18~            			else
+0363   7A18             
+0363   7A18~            			else
+0363   7A18~            			else
+0363   7A18             
+0363   7A18~            			else
+0363   7A18~            			else
+0363   7A18             
+0364   7A18 48          				aslA
+0365   7A19             			endif
+0365   7A19             
+0365   7A19             
+0365   7A19             
+0365   7A19             
+0365   7A19             
+0365   7A19~            			endif
+0365   7A19~            			endif
+0365   7A19             
+0365   7A19~            			endif
+0365   7A19~            			endif
+0365   7A19             
+0365   7A17             
+0365   7A17 01          
+0365   7A18             
+0365   7A18             
+0365   7A18~            			endif
+0365   7A18~            			endif
+0365   7A18~            			endif
+0365   7A18             
+0365   7A19             
+0365   7A19~            			endif
+0365   7A19~            			endif
+0365   7A19             
+0366   7A19 84 0E       			andA	#1110b ; A now has 3 bit settle time * 2
+0367   7A1B             						
+0368   7A1B DE 52       			ldX		tempX
+0369   7A1D A7 00       			staA	0, X		; start settling	
+0370   7A1F 27 C0       			beq		settled		; quick out for 0 settle
+0371   7A21             settledEnd:
+0372   7A21             			
+0373   7A21 32          		pulA
+0374   7A22             	endif
+0374   7A22             
+0374   7A22             
+0374   7A22             
+0374   7A22             
+0374   7A22             
+0374   7A22~            	endif
+0374   7A22~            	endif
+0374   7A22             
+0374   7A22~            	endif
+0374   7A22~            	endif
+0374   7A22             
+0374   79C4             
+0374   79C4 5D          
+0374   79C5             
+0374   79C5             
+0374   79C5~            	endif
+0374   79C5~            	endif
+0374   79C5~            	endif
+0374   79C5             
+0374   7A22             
+0374   7A22~            	endif
+0374   7A22~            	endif
+0374   7A22             
+0375   7A22 7C 00 53    	inc tempX + 1
+0376   7A25 58          	aslB
+0377   7A26 44          	lsrA			; pop lowest bit off, set Z if A is empty
+0378   7A27 26 98       	bne		swNext 	; more 'switched' bits, keep processing 
+0379   7A29             	
+0380   7A29             	
+0381   7A29             ; update lamps
+0382   7A29             updateLamps:
+0383   7A29             	;jmp updateStrobe
+0384   7A29             
+0385   7A29 DE 50       	ldX		curCol
+0386   7A2B 86 FF       	ldaA	#$FF	;lamp row is inverted
+0387   7A2D B7 24 00    	staA	lampRow
+0388   7A30 96 07       	ldaA	strobe
+0389   7A32 B7 24 02    	staA	lampStrobe
+0390   7A35 A6 20       	ldaA	switchRow1, X
+0391   7A37 B7 24 00    	staA	lampRow
+0392   7A3A 86 00       	ldaA	#00
+0393   7A3C             
+0394   7A3C             ; update solenoids
+0395   7A3C             	; if a solenoid is set to <254, --
+0396   7A3C             	; if =255, off, otherwise on
+0397   7A3C             	; else leave it at 254
+0398   7A3C             	
+0399   7A3C 7C 00 50    	inc		curCol	; indexed can't use base >255, so temp inc X by 255 (1 MSB)
+0400   7A3F 86 FE       	ldaA	#254
+0401   7A41 DE 50       	ldX		curCol
+0402   7A43 E6 40       	ldaB	solenoid1 - cRAM, X
+0403   7A45             	; update solenoid in current 'column' (1-8) 
+0404   7A45 A1 40       	cmpA	solenoid1 - cRAM, X
+0405   7A47             	ifge 	; solenoid <=254, turn on
+0405   7A47             
+0405   7A47 25 FE       
+0406   7A49             		ifgt	; solenoid < 254, decrement
+0406   7A49             
+0406   7A49 23 FE       
+0407   7A4B 6A 40       			dec		solenoid1 - cRAM, X
+0408   7A4D             		endif
+0408   7A4D             
+0408   7A4D             
+0408   7A4D             
+0408   7A4D             
+0408   7A4D             
+0408   7A4D~            		endif
+0408   7A4D~            		endif
+0408   7A4D             
+0408   7A4D~            		endif
+0408   7A4D~            		endif
+0408   7A4D             
+0408   7A4A             
+0408   7A4A 02          
+0408   7A4B             
+0408   7A4B             
+0408   7A4B~            		endif
+0408   7A4B~            		endif
+0408   7A4B~            		endif
+0408   7A4B             
+0408   7A4D             
+0408   7A4D~            		endif
+0408   7A4D~            		endif
+0408   7A4D             
+0409   7A4D 0D          		sec
+0410   7A4E             	else
+0410   7A4E             
+0410   7A4E             
+0410   7A4E             
+0410   7A4E             
+0410   7A48             
+0410   7A48             
+0410   7A48             
+0410   7A48~            	else
+0410   7A48~            	else
+0410   7A48~            	else
+0410   7A48~            	else
+0410   7A48             
+0410   7A48~            	else
+0410   7A48~            	else
+0410   7A48~            	else
+0410   7A48~            	else
+0410   7A48             
+0410   7A48             
+0410   7A48 07          
+0410   7A4E             
+0410   7A4E 20 FE       
+0410   7A50             
+0410   7A50             
+0410   7A50             
+0410   7A50~            	else
+0410   7A50~            	else
+0410   7A50~            	else
+0410   7A50~            	else
+0410   7A50~            	else
+0410   7A50             
+0410   7A50~            	else
+0410   7A50~            	else
+0410   7A50             
+0410   7A50~            	else
+0410   7A50~            	else
+0410   7A50             
+0411   7A50 0C          		clc
+0412   7A51             	endif
+0412   7A51             
+0412   7A51             
+0412   7A51             
+0412   7A51             
+0412   7A51             
+0412   7A51~            	endif
+0412   7A51~            	endif
+0412   7A51             
+0412   7A51~            	endif
+0412   7A51~            	endif
+0412   7A51             
+0412   7A4F             
+0412   7A4F 01          
+0412   7A50             
+0412   7A50             
+0412   7A50~            	endif
+0412   7A50~            	endif
+0412   7A50~            	endif
+0412   7A50             
+0412   7A51             
+0412   7A51~            	endif
+0412   7A51~            	endif
+0412   7A51             
+0413   7A51 76 00 28    	ror		solAStatus ; pushes carry bit (set prev) onto status
+0414   7A54             	; repeat above for second bank
+0415   7A54 A1 48       	cmpA	solenoid9 - cRAM, X
+0416   7A56             	ifge 	; solenoid <=254, turn on
+0416   7A56             
+0416   7A56 25 FE       
+0417   7A58             		ifgt	; solenoid < 254, decrement
+0417   7A58             
+0417   7A58 23 FE       
+0418   7A5A 6A 48       			dec		solenoid9 - cRAM, X
+0419   7A5C             		endif
+0419   7A5C             
+0419   7A5C             
+0419   7A5C             
+0419   7A5C             
+0419   7A5C             
+0419   7A5C~            		endif
+0419   7A5C~            		endif
+0419   7A5C             
+0419   7A5C~            		endif
+0419   7A5C~            		endif
+0419   7A5C             
+0419   7A59             
+0419   7A59 02          
+0419   7A5A             
+0419   7A5A             
+0419   7A5A~            		endif
+0419   7A5A~            		endif
+0419   7A5A~            		endif
+0419   7A5A             
+0419   7A5C             
+0419   7A5C~            		endif
+0419   7A5C~            		endif
+0419   7A5C             
+0420   7A5C 0D          		sec
+0421   7A5D             	else
+0421   7A5D             
+0421   7A5D             
+0421   7A5D             
+0421   7A5D             
+0421   7A57             
+0421   7A57             
+0421   7A57             
+0421   7A57~            	else
+0421   7A57~            	else
+0421   7A57~            	else
+0421   7A57~            	else
+0421   7A57             
+0421   7A57~            	else
+0421   7A57~            	else
+0421   7A57~            	else
+0421   7A57~            	else
+0421   7A57             
+0421   7A57             
+0421   7A57 07          
+0421   7A5D             
+0421   7A5D 20 FE       
+0421   7A5F             
+0421   7A5F             
+0421   7A5F             
+0421   7A5F~            	else
+0421   7A5F~            	else
+0421   7A5F~            	else
+0421   7A5F~            	else
+0421   7A5F~            	else
+0421   7A5F             
+0421   7A5F~            	else
+0421   7A5F~            	else
+0421   7A5F             
+0421   7A5F~            	else
+0421   7A5F~            	else
+0421   7A5F             
+0422   7A5F 0C          		clc
+0423   7A60             	endif
 0423   7A60             
-0423   7A60 23          
-0423   7A61             
-0423   7A61             
-0423   7A61~            	endif
-0423   7A61~            	endif
-0423   7A61~            	endif
-0423   7A61             
-0423   7A84             
-0423   7A84~            	endif
-0423   7A84~            	endif
-0423   7A84             
-0424   7A84             	
-0425   7A84 DF 50       	stX		curCol
-0426   7A86 3B          	rti
-0427   7A87             
-0428   7FF8             pointers: 	.org $7FF8  	
-0429   7FF8             	.msfirst
-0430   7FF8 79 50       	.dw interrupt			
-0431   7FFA 79 50       	.dw interrupt			
-0432   7FFC 79 50       	.dw interrupt			
-0433   7FFE 78 00       	.dw main
-0434   8000             	
-0435   8000             	
-0436   8000             	.endtasm: Number of errors = 0
+0423   7A60             
+0423   7A60             
+0423   7A60             
+0423   7A60             
+0423   7A60~            	endif
+0423   7A60~            	endif
+0423   7A60             
+0423   7A60~            	endif
+0423   7A60~            	endif
+0423   7A60             
+0423   7A5E             
+0423   7A5E 01          
+0423   7A5F             
+0423   7A5F             
+0423   7A5F~            	endif
+0423   7A5F~            	endif
+0423   7A5F~            	endif
+0423   7A5F             
+0423   7A60             
+0423   7A60~            	endif
+0423   7A60~            	endif
+0423   7A60             
+0424   7A60 76 00 29    	ror		solBStatus	
+0425   7A63 7A 00 50    	dec		curCol ; undo inc
+0426   7A66             	
+0427   7A66             ; update strobe	
+0428   7A66             updateStrobe:
+0429   7A66             	;ldX		curCol
+0430   7A66             	;inX 	
+0431   7A66 86 08       	ldaA	#8 	; pitch
+0432   7A68 9B 10       	addA	curSwitchRowLsb
+0433   7A6A 97 10       	staA	curSwitchRowLsb
+0434   7A6C 78 00 07    	asl		strobe
+0435   7A6F 7C 01 68    	inc		displayCol
+0436   7A72 86 00       	ldaA	#0
+0437   7A74 91 07       	cmpA	strobe ; strobe done?  reset
+0438   7A76             	ifeq		
+0438   7A76             
+0438   7A76 26 FE       
+0439   7A78 96 28       		ldaA	solAStatus
+0440   7A7A B7 22 00    		staA	solenoidA
+0441   7A7D 96 29       		ldaA	solBStatus
+0442   7A7F B7 22 02    		staA	solenoidB
+0443   7A82             	
+0444   7A82 86 01       		ldaA	#00000001b
+0445   7A84 97 07       		staA	strobe
+0446   7A86             		
+0447   7A86             		;ldX 	#0
+0448   7A86             		
+0449   7A86 86 00       		ldaA	#0
+0450   7A88 97 50       		staA	curCol
+0451   7A8A 97 51       		staA	curCol + 1
+0452   7A8C 97 10       		staA	curSwitchRowLsb
+0453   7A8E 97 28       		staA	solAStatus
+0454   7A90 97 29       		staA	solBStatus
+0455   7A92             		
+0456   7A92 F6 01 68    		ldaB	displayCol	; reset display col only if it's > 7 
+0457   7A95 C1 F8       		cmpB	#$F8	; since it needs to count to 15 instead of 7
+0458   7A97             		ifgt
+0458   7A97             
+0458   7A97 23 FE       
+0459   7A99 B7 01 68    			staA	displayCol
+0460   7A9C             		endif
+0460   7A9C             
+0460   7A9C             
+0460   7A9C             
+0460   7A9C             
+0460   7A9C             
+0460   7A9C~            		endif
+0460   7A9C~            		endif
+0460   7A9C             
+0460   7A9C~            		endif
+0460   7A9C~            		endif
+0460   7A9C             
+0460   7A98             
+0460   7A98 03          
+0460   7A99             
+0460   7A99             
+0460   7A99~            		endif
+0460   7A99~            		endif
+0460   7A99~            		endif
+0460   7A99             
+0460   7A9C             
+0460   7A9C~            		endif
+0460   7A9C~            		endif
+0460   7A9C             
+0461   7A9C             	else
+0461   7A9C             
+0461   7A9C             
+0461   7A9C             
+0461   7A9C             
+0461   7A77             
+0461   7A77             
+0461   7A77             
+0461   7A77~            	else
+0461   7A77~            	else
+0461   7A77~            	else
+0461   7A77~            	else
+0461   7A77             
+0461   7A77~            	else
+0461   7A77~            	else
+0461   7A77~            	else
+0461   7A77~            	else
+0461   7A77             
+0461   7A77             
+0461   7A77 26          
+0461   7A9C             
+0461   7A9C 20 FE       
+0461   7A9E             
+0461   7A9E             
+0461   7A9E             
+0461   7A9E~            	else
+0461   7A9E~            	else
+0461   7A9E~            	else
+0461   7A9E~            	else
+0461   7A9E~            	else
+0461   7A9E             
+0461   7A9E~            	else
+0461   7A9E~            	else
+0461   7A9E             
+0461   7A9E~            	else
+0461   7A9E~            	else
+0461   7A9E             
+0462   7A9E 7C 00 51    		inc	curCol + 1
+0463   7AA1             	endif
+0463   7AA1             
+0463   7AA1             
+0463   7AA1             
+0463   7AA1             
+0463   7AA1             
+0463   7AA1~            	endif
+0463   7AA1~            	endif
+0463   7AA1             
+0463   7AA1~            	endif
+0463   7AA1~            	endif
+0463   7AA1             
+0463   7A9D             
+0463   7A9D 03          
+0463   7A9E             
+0463   7A9E             
+0463   7A9E~            	endif
+0463   7A9E~            	endif
+0463   7A9E~            	endif
+0463   7A9E             
+0463   7AA1             
+0463   7AA1~            	endif
+0463   7AA1~            	endif
+0463   7AA1             
+0464   7AA1             	
+0465   7AA1 3B          	rti
+0466   7AA2             
+0467   7FF8             pointers: 	.org $7FF8  	
+0468   7FF8             	.msfirst
+0469   7FF8 79 5C       	.dw interrupt			
+0470   7FFA 79 5C       	.dw interrupt			
+0471   7FFC 79 5C       	.dw interrupt			
+0472   7FFE 78 00       	.dw main
+0473   8000             	
+0474   8000             	
+0475   8000             	.endtasm: Number of errors = 0

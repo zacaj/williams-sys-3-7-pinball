@@ -107,7 +107,7 @@ lSolDefault:
 	staA	0, X
 	inX
 	cpX		#solenoid16
-	ble		lSolDefault
+	bne		lSolDefault
 	
 ; empty settle
 	ldaA	#$00
@@ -116,7 +116,7 @@ lSettleDefault:
 	staA		0, X
 	inX
 	cpX		#settleRow8 + 7
-	ble		lSettleDefault
+	bne		lSettleDefault
 	
 ; empty queue
 	ldaA	#$FF
@@ -125,7 +125,7 @@ lEmptyQueue:
 	staA		0, X
 	inX
 	cpX		#queueEnd
-	ble		lEmptyQueue
+	bne		lEmptyQueue
 	
 	ldaA	#0
 	staA	queueHead + 0
@@ -135,15 +135,19 @@ lEmptyQueue:
 	staA	queueTail + 1
 	
 ; test numbers
+
+	
 	ldX		#displayBcd1 + 1
-	ldaA	#0
-lTestNumbers:
+	ldaA	#00010001b
+lTestNumbers2:
 	staA	0, X
 	inX
 	incA
-	andA	#00000111b
+	andA	#01110111b
 	cpX		#displayBcd16
-	ble		lTestNumbers
+	bne		lTestNumbers2
+	
+	
 	
 	ldaA	#2
 	staA	ballCount
@@ -154,7 +158,7 @@ zeroScores:
 	staA	0, X
 	inX
 	cpX		#pD_1m
-	ble		zeroScores
+	bne		zeroScores
 	
 	ldaA	#1
 	;staA	pA_10 - 1
@@ -262,7 +266,8 @@ counterHandled:
 	staA	switchStrobe
 	
 ; update display 
-	ldX		curCol
+	
+	ldX	curCol
 	ldaA	displayCol
 	ldaB 	#$FF
 	staB	displayBcd
@@ -276,6 +281,7 @@ counterHandled:
 	staB	displayBcd
 	
 ; read switches
+	;jmp updateLamps
 	ldX		curCol
 	ldaA	switchRow
 	tab
@@ -297,9 +303,19 @@ swNext:
 	ifne		; if bit set, switch different
 		pshA ; store changed switches left
 		ldX		tempX
+		ldaA	#11000b
+		bitA	counter
+		beq checkSettled ;  skip settling (multiplies settle time by 8)
+			; just check if it's currently settled
+			ldaA	0, X ; A now how long the switch has left to settle
+			andA	#00001111b ; need to remove upper F ( sets Z if A = 0)
+			beq 	notSettled; A=0 -> settled
+			bra settledEnd
+checkSettled:
 		ldaA	0, X ; A now how long the switch has left to settle
 		andA	#00001111b ; need to remove upper F ( sets Z if A = 0)
-		ifne 	; A>0 -> settling
+		beq 	notSettled; A=0 -> settled
+		; else A > 0 -> settling
 			decA
 			staA	0, X	; sets Z if now A = 0
 			ifeq ; A=0 -> now settled, fire event
@@ -329,7 +345,8 @@ settled:
 					staA	queueTail + 1
 				endif
 			endif
-		else ; =0 -> was settled, so now it's not
+		bra settledEnd
+notSettled: ; =0 -> was settled, so now it's not
 			; get the settle time
 			ldaA	tempX + 1
 			staA	temp + 1 	; get temp in sync with tempX LSB
@@ -351,7 +368,7 @@ settled:
 			ldX		tempX
 			staA	0, X		; start settling	
 			beq		settled		; quick out for 0 settle
-		endif
+settledEnd:
 			
 		pulA
 	endif
@@ -362,6 +379,9 @@ settled:
 	
 	
 ; update lamps
+updateLamps:
+	;jmp updateStrobe
+
 	ldX		curCol
 	ldaA	#$FF	;lamp row is inverted
 	staA	lampRow
@@ -405,8 +425,9 @@ settled:
 	dec		curCol ; undo inc
 	
 ; update strobe	
-	ldX		curCol
-	inX 	
+updateStrobe:
+	;ldX		curCol
+	;inX 	
 	ldaA	#8 	; pitch
 	addA	curSwitchRowLsb
 	staA	curSwitchRowLsb
@@ -423,9 +444,11 @@ settled:
 		ldaA	#00000001b
 		staA	strobe
 		
-		ldX 	#0
+		;ldX 	#0
 		
 		ldaA	#0
+		staA	curCol
+		staA	curCol + 1
 		staA	curSwitchRowLsb
 		staA	solAStatus
 		staA	solBStatus
@@ -435,9 +458,10 @@ settled:
 		ifgt
 			staA	displayCol
 		endif
+	else
+		inc	curCol + 1
 	endif
 	
-	stX		curCol
 	rti
 
 pointers: 	.org $7FF8  	
