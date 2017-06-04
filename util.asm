@@ -184,7 +184,25 @@ addScore_carryDa:
 	endif
 
 	jmp refreshPlayerScores
-	
+
+_delay:	
+	ldX	#waitLeft - 1
+findEmptyLoop:
+	inX
+	ldaA	0, X
+	bne 	findEmptyLoop ; ld sets Z if = 0
+	; X = first waitLeft that = 0
+	pulA	; A = MSB of PC
+	staA	waitMsb - waitLeft, X
+	pulA	; A = LSB of PC
+	staA	waitLsb - waitLeft, X
+	staB	0, X
+	; time and add stored
+	jmp afterQueueEvent
+
+; trash all
+; delay for ms (16-4000)
+#DEFINE delay(ms) ldaB #(ms/16)\ jsr _delay
 	
 ; trashes B (max 104ms)
 #DEFINE fireSolenoidFor(n,ms)	ldaB #(ms/8)\ staB solenoid1+n-1 
@@ -195,3 +213,5 @@ addScore_carryDa:
 ; amount: 1-9
 #DEFINE addScore(place,amount)		ldX #pB_10-place+1\ ldaA #0+amount\ jsr _addScore
 #DEFINE addScore_T(place,amount)	ldX #pB_10-place+1\ ldaA #0+amount\ jmp _addScore
+
+

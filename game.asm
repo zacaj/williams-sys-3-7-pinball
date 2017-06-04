@@ -12,18 +12,21 @@
 #DEFINE	FLASHERS		15
 #DEFINE COIN_LOCKOUT	16
 
+#DEFINE done jmp afterQueueEvent
 ; switch callbacks:
 
 none:	.org $7D00 + 256
-	rts
+	done
 sw32:
-	rts
+	done
 	
 addP2_10:
 	;ldX		#pB_10
 	;ldaA	#9
 	;jmp 	addScore
-	addScore_T(1,9)
+	delay(1000)
+	addScore(1,9)
+	done
 	
 swStart:
 	ldaA #1000b
@@ -33,19 +36,19 @@ swStart:
 	ldaA 	solenoidBC; enable kickers 	
 	oraA 	#00111000b 
 	staA	solenoidBC
-	rts
+	done
 	
 swOuthole:
 	fireSolenoid(KICKOUT)
-	rts
+	done
 	
 swEjectHole:
 	fireSolenoid(EJECT_HOLE)
-	rts
+	done
 	
 swRKicker:
 	fireSolenoid(RIGHT_KICKER)
-	rts
+	done
 	
 ; end callbacks
 	.msfirst

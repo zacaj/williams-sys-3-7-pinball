@@ -37,10 +37,15 @@ queueHead:		.equ RAM + $54 ; +
 queueTail:		.equ RAM + $56 ; +
 tempQ:			.equ RAM + $58 ; +
 queue:			.equ RAM + $60	; opened | switch? | number#6
-queueEnd:		.equ RAM + $6F
+queueEnd:		.equ RAM + $67
+;
 displayBcd1:	.equ RAM + $70
 displayBcd16:	.equ RAM + $7F
 ballCount:		.equ displayBcd1 + 7
+waitLeft: 		.equ RAM + $80
+waitLeftEnd:		.equ RAM + $87
+waitMsb:		.equ RAM + $88
+waitLsb:		.equ RAM + $90 ; -> 97
 
 
 settleRow1:		.equ cRAM + $00 ;must be at 0
@@ -58,7 +63,7 @@ pC_10:			.equ pC_1m + 5
 pD_1m:			.equ pC_10 + 1
 pD_10:			.equ pD_1m + 5  
 displayCol:		.equ cRAM + $68
-state:			.equ cRAM + $69	; !gameover | ? | ? | ?
+state:			.equ cRAM + $69	; !gameover | strobe reset | ? | ?
 playerCount:	.equ cRAM + $70
 curPlayer:		.equ cRAM + $71
 

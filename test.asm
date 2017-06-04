@@ -100,11 +100,12 @@ piaSetup:
 	ldaA	#0
 	staA	curSwitchRowLsb
 	
-; fill solenoid status with off
+; fill solenoid status and wait time with off
 	ldaA	#0
 	ldX		#solenoid1
 lSolDefault:
 	staA	0, X
+	staA	waitLeft - solenoid1, X
 	inX
 	cpX		#solenoid16
 	bne		lSolDefault
@@ -183,6 +184,36 @@ zeroScores:
 	
 	
 end:
+	ldaA	state
+	bitA	#100b
+	ifne
+		; dec wait timers
+		ldX	#waitLeft - 1
+decWaitTimers:
+		inX
+		ldaA	0, X
+		ifne
+			decA
+			staA	0, X
+			ifeq
+				ldaA	waitMsb - waitLeft, X
+				staA	tempQ
+				ldaA	waitLsb - waitLeft, X
+				staA	tempQ + 1
+				ldX	tempQ
+				jmp	0, X
+			endif
+		endif
+		cpX	#waitLeftEnd
+		bne	decWaitTimers
+		
+		ldaA	state		; clear strobe reset bit
+		andA	#11111011b
+		staA	state
+	endif
+
+		
+; pop queue
 	ldaB	queueTail + 1
 	cmpB	queueHead + 1
 	beq 	skipQueue
@@ -217,10 +248,23 @@ end:
 	lsl		tempQ + 1 ; double LSB because callback table is 2b wide
 	ldX		tempQ
 	ldX		0, X
-	jsr		0, X
+	jmp		0, X
+	; everything trashed
+afterQueueEvent:
 				
 skipEvent:
-	inc		queueHead + 1
+	ldaA	state
+	bitA	#100b
+	ifeq	; don't process queue if still finishing timers
+		ldaB	#queueEnd
+		cmpB	queueHead + 1
+		ifeq
+			ldaB	#queue
+			staB	queueHead + 1
+		else
+			inc	queueHead + 1
+		endif
+	endif
 				
 skipQueue:
 				
@@ -458,6 +502,10 @@ updateStrobe:
 		ifgt
 			staA	displayCol
 		endif
+	
+		ldaA	state
+		oraA	#100b
+		staA	state
 	else
 		inc	curCol + 1
 	endif
