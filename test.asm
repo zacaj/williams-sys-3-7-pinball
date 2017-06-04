@@ -100,7 +100,7 @@ piaSetup:
 	ldaA	#0
 	staA	curSwitchRowLsb
 	
-; fill solenoid status and wait time with off
+; fill solenoid status with off
 	ldaA	#0
 	ldX		#solenoid1
 lSolDefault:
@@ -109,6 +109,17 @@ lSolDefault:
 	inX
 	cpX		#solenoid16
 	bne		lSolDefault
+	
+; clear 8 banks
+	ldaA 	#0
+	ldX	#0
+lClear8:
+	staA	lampRow1, X
+	staA	flashLampRow1, X
+	staA	waitLeft, X
+	inX
+	cpX	#8
+	bne 	lClear8
 	
 ; empty settle
 	ldaA	#$00
@@ -136,6 +147,10 @@ lEmptyQueue:
 	staA	queueTail + 1
 	
 ; test numbers
+	ldaA	#00010001b
+	staA	flashLampRow1 + 2
+	ldaA	#$FF
+	staA	lampRow1 + 2
 
 	
 	ldX		#displayBcd1 + 1
@@ -294,13 +309,13 @@ interrupt:
 	beq		on
 	
 	ldaA	#$F0
-	staA	lampRow1
+	;staA	lampRow1
 	ldaA	#01110111b
 	staA	displayBcd1	
 	bra		counterHandled
 on:
 	ldaA	#$0F
-	staA	lampRow1
+	;staA	lampRow1
 	ldaA	#00110011b
 	staA	displayBcd1	
 
@@ -427,11 +442,21 @@ updateLamps:
 	;jmp updateStrobe
 
 	ldX		curCol
+	
 	ldaA	#$FF	;lamp row is inverted
 	staA	lampRow
 	ldaA	strobe
 	staA	lampStrobe
-	ldaA	switchRow1, X
+	
+	ldaB	counter2
+	ldaA	lampRow1, X
+	bitB	#1b 
+	ifeq
+		eorA	flashLampRow1, X
+		andA	lampRow1, X
+	endif
+	comA	; inverted
+	
 	staA	lampRow
 	ldaA	#00
 

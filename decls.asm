@@ -46,6 +46,8 @@ waitLeft: 		.equ RAM + $80
 waitLeftEnd:		.equ RAM + $87
 waitMsb:		.equ RAM + $88
 waitLsb:		.equ RAM + $90 ; -> 97
+flashLampRow1:		.equ RAM + $98
+flashLampRow8:		.equ RAM + $9F
 
 
 settleRow1:		.equ cRAM + $00 ;must be at 0

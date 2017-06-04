@@ -1,4 +1,4 @@
-utils:	.org $7B00
+utils:	.org $7C00
 
 ; copy players' scores to display 
 copyScores13:

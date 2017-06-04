@@ -15,7 +15,7 @@
 #DEFINE done jmp afterQueueEvent
 ; switch callbacks:
 
-none:	.org $7D00 + 256
+none:	.org $7E00 + 256 ; size of callback table
 	done
 sw32:
 	done
@@ -52,7 +52,7 @@ swRKicker:
 	
 ; end callbacks
 	.msfirst
-callbackTable: 	.org $7D00 ; note: TRANSPOSED
+callbackTable: 	.org $7E00 ; note: TRANSPOSED
 	.dw none		\.dw none		\.dw swStart	\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw swOuthole	\.dw addP2_10	\.dw sw32		\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
