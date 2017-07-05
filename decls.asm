@@ -23,10 +23,13 @@ temp:			.equ RAM + $00 ; 01
 counter:		.equ RAM + $02
 counter2:		.equ RAM + $03
 strobe:			.equ RAM + $07
+#DEFINE lr(x) lampRow1 + x - 1
 lampRow1:		.equ RAM + $08
 lampRow8:		.equ lampRow1 + 7 
-curSwitchRowLsb	.equ RAM + $10
-; 10 - 1F
+curSwitchRowLsb:	.equ RAM + $10 
+; 
+curPlayer:		.equ RAM + $12 ; + 0-3
+;;;
 switchRow1:		.equ RAM + $20
 switchRow8:		.equ switchRow1 + 7 
 solAStatus:		.equ RAM + $28 ; solenoid PIA is updated once every 8 IRQ
@@ -65,9 +68,7 @@ pC_10:			.equ pC_1m + 5
 pD_1m:			.equ pC_10 + 1
 pD_10:			.equ pD_1m + 5  
 displayCol:		.equ cRAM + $68
-state:			.equ cRAM + $69	; !gameover | strobe reset | ? | ?
-playerCount:	.equ cRAM + $70
-curPlayer:		.equ cRAM + $71
+state:			.equ cRAM + $69	; ? | strobe reset | don't validate | ?
 
 instant:		.equ 4
 debounce:		.equ 1

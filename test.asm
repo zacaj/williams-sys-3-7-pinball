@@ -173,24 +173,12 @@ lTestNumbers2:
 zeroScores:
 	staA	0, X
 	inX
-	cpX		#pD_1m
+	cpX		#pD_1m + 1
 	bne		zeroScores
 	
-	ldaA	#1
-	;staA	pA_10 - 1
-	ldaA	#9
-	staA	pB_10 - 0
-	staA	pB_10 - 1
-	staA	pB_10 - 2
-	;staA	pB_10 - 3
-	ldaA	#3
-	;staA	pC_10 - 3
-	ldaA	#4
-	;staA	pD_10 - 4
 	ldaA	#0
 	staA	curPlayer
-	ldaA	#3
-	staA	playerCount
+	staA	curPlayer + 1
 	
 	jsr		refreshPlayerScores
 	
@@ -252,12 +240,17 @@ decWaitTimers:
 		bne		skipEvent
 	endif
 	
-	ldaB	#1000b	; gameover mask
-	bitB	state
-	ifeq	; not in gameover
-		bitA 	#01000000b
-		beq		skipEvent	; skip if callback not active in game over
-	endif
+	ldaB	#10000000b	; gameover mask
+	bitB	lr(6)
+	bne	inGameover
+	ldaB	#10000000b ; tilt bit
+	bitB	lampRow1 + 4
+	bne	inGameover
+	bra gameoverPassed
+inGameover:
+	bitA 	#01000000b
+	beq	skipEvent	; skip if callback not active in game over
+gameoverPassed:
 	
 	; checked passed, do callback
 	lsl		tempQ + 1 ; double LSB because callback table is 2b wide
@@ -266,7 +259,24 @@ decWaitTimers:
 	jmp		0, X
 	; everything trashed
 afterQueueEvent:
-				
+	ldaA	#10b ; no validate bit
+	bitA	state
+	ifeq ; validate
+		ldX	curPlayer
+		ldaA	#10000000b ; player up
+		bitA	flashLampRow1, X
+		ifne ; flashing -> invalid
+			comA
+			andA	flashLampRow1, X
+			staA	flashLampRow1, X
+		endif
+	else
+		; clear don't validate bit
+		comA
+		andA	state
+		staA	state
+	endif
+	
 skipEvent:
 	ldaA	state
 	bitA	#100b
