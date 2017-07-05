@@ -151,48 +151,14 @@ lEmptyQueue:
 	staA	flashLampRow1 + 2
 	ldaA	#$FF
 	staA	lampRow1 + 2
+	
+	; game over
+	ldaA	#10000000b
+	oraA	lr(6)
+	staA	lr(6)
 
 	
-	ldX		#displayBcd1 + 1
-	ldaA	#00010001b
-lTestNumbers2:
-	staA	0, X
-	inX
-	incA
-	andA	#01110111b
-	cpX		#displayBcd16
-	bne		lTestNumbers2
-	
-	
-	
-	ldaA	#2
-	staA	ballCount
-	
-	ldaA	#00
-	ldX		#pA_10
-zeroScores:
-	staA	0, X
-	inX
-	cpX		#pD_1m
-	bne		zeroScores
-	
-	ldaA	#1
-	;staA	pA_10 - 1
-	ldaA	#9
-	staA	pB_10 - 0
-	staA	pB_10 - 1
-	staA	pB_10 - 2
-	;staA	pB_10 - 3
-	ldaA	#3
-	;staA	pC_10 - 3
-	ldaA	#4
-	;staA	pD_10 - 4
-	ldaA	#0
-	staA	curPlayer
-	ldaA	#3
-	staA	playerCount
-	
-	jsr		refreshPlayerScores
+	jsr resetScores
 	
 ; setup complete
 	clI		; enable timer interrupt
@@ -252,12 +218,17 @@ decWaitTimers:
 		bne		skipEvent
 	endif
 	
-	ldaB	#1000b	; gameover mask
-	bitB	state
-	ifeq	; not in gameover
-		bitA 	#01000000b
-		beq		skipEvent	; skip if callback not active in game over
-	endif
+	ldaB	#10000000b	; gameover mask
+	bitB	lr(6)
+	bne	inGameover
+	ldaB	#10000000b ; tilt bit
+	bitB	lampRow1 + 4
+	bne	inGameover
+	bra gameoverPassed
+inGameover:
+	bitA 	#01000000b
+	beq	skipEvent	; skip if callback not active in game over
+gameoverPassed:
 	
 	; checked passed, do callback
 	lsl		tempQ + 1 ; double LSB because callback table is 2b wide
@@ -266,7 +237,24 @@ decWaitTimers:
 	jmp		0, X
 	; everything trashed
 afterQueueEvent:
-				
+	ldaA	#10b ; no validate bit
+	bitA	state
+	ifeq ; validate
+		ldX	curPlayer
+		ldaA	#10000000b ; player up
+		bitA	flashLampRow1, X
+		ifne ; flashing -> invalid
+			comA
+			andA	flashLampRow1, X
+			staA	flashLampRow1, X
+		endif
+	else
+		; clear don't validate bit
+		comA
+		andA	state
+		staA	state
+	endif
+	
 skipEvent:
 	ldaA	state
 	bitA	#100b

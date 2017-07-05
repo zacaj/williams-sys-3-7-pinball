@@ -97,17 +97,16 @@ copy24Loop:
 	rts
 	
 blankNonPlayerScores:
-	ldaB	playerCount
-	oraB	#$F0	
-	cmpB	#$F0
-	beq		blankP1
-	cmpB	#$F1
-	beq		blankP2
-	cmpB 	#$F2
-	beq 	blankP3
-	cmpB	#$F3
-	beq 	blankP4
-	bra		blankDone	
+	ldaB	#01000000b
+	bitB	lr(2)
+	beq	blankP1
+	bitB	lr(3)
+	beq	blankP2
+	bitB	lr(4)
+	beq	blankP3
+	bitB	lr(5)
+	beq	blankP4
+	bra	blankDone
 blankP1:
 	ldaA	#$F0
 	oraA	displayBcd1 + 4
@@ -199,6 +198,26 @@ findEmptyLoop:
 	staB	0, X
 	; time and add stored
 	jmp afterQueueEvent
+	
+resetScores:
+	ldaA	#00
+	ldX		#pA_10
+_zeroScores:
+	staA	0, X
+	inX
+	cpX		#pD_1m + 1
+	bne		_zeroScores
+	
+	ldaA	#0
+	staA	curPlayer
+	staA	curPlayer + 1
+	ldaA	#$FF
+	staA	displayBcd1 + 6
+	staA	displayBcd1 + 14
+	staA	displayBcd1 + 15
+	
+	jsr		refreshPlayerScores
+	rts
 
 ; trash all
 ; delay for ms (16-4000)
@@ -214,4 +233,5 @@ findEmptyLoop:
 #DEFINE addScore(place,amount)		ldX #pB_10-place+1\ ldaA #0+amount\ jsr _addScore
 #DEFINE addScore_T(place,amount)	ldX #pB_10-place+1\ ldaA #0+amount\ jmp _addScore
 
-
+#define disablePf ldaA 	solenoidBC\ andA #11110111b\ staA solenoidBC
+#define enablePf ldaA 	solenoidBC\ oraA #00111000b\ staA solenoidBC
