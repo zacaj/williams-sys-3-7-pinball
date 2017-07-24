@@ -22,40 +22,40 @@ ABA     ""      1B      1       NOP     1
 ABX     ""      3A      1       NOP     2
 ABY     ""      183A    2       NOP     4
 
-ADCA    #*      89      2       NOP     1
 ADCA    *,Y     18A9    3       NOP     4
 ADCA    *,X     A9      2       NOP     1
-ADCA    *       B9      3       MZERO   1
+ADCA    >*       B9      3       MZERO   1
+ADCA    *      89      2       NOP     1
 
-ADCB    #*      C9      2       NOP     1
 ADCB    *,Y     18E9    3       NOP     4
 ADCB    *,X     E9      2       NOP     1
-ADCB    *       F9      3       MZERO   1
+ADCB    >*       F9      3       MZERO   1
+ADCB    *      C9      2       NOP     1
 
-ADDA    #*      8B      2       NOP     1
 ADDA    *,Y     18AB    3       NOP     4
 ADDA    *,X     AB      2       NOP     1
-ADDA    *       BB      3       MZERO   1
+ADDA    >*       BB      3       MZERO   1
+ADDA    *      8B      2       NOP     1
 
-ADDB    #*      CB      2       NOP     1
 ADDB    *,Y     18EB    3       NOP     4
 ADDB    *,X     EB      2       NOP     1
-ADDB    *       FB      3       MZERO   1
+ADDB    >*       FB      3       MZERO   1
+ADDB    *      CB      2       NOP     1
 
-ADDD    #*      C3      3       SWAP    2
 ADDD    *,Y     18E3    3       NOP     4
 ADDD    *,X     E3      2       NOP     2
-ADDD    *       F3      3       MZERO   2
+ADDD    >*       F3      3       MZERO   2
+ADDD    *      C3      3       SWAP    2
 
-ANDA    #*      84      2       NOP     1
 ANDA    *,Y     18A4    3       NOP     4
 ANDA    *,X     A4      2       NOP     1
-ANDA    *       B4      3       MZERO   1
+ANDA    >*       B4      3       MZERO   1
+ANDA    *      84      2       NOP     1
 
-ANDB    #*      C4      2       NOP     1
 ANDB    *,Y     18E4    3       NOP     4
 ANDB    *,X     E4      2       NOP     1
-ANDB    *       F4      3       MZERO   1
+ANDB    >*       F4      3       MZERO   1
+ANDB    *      C4      2       NOP     1
 
 ASL     *,Y     1868    3       NOP     4
 ASL     *,X     68      2       NOP     1
@@ -81,14 +81,14 @@ BGE     *       2C      2       R1      1
 BGT     *       2E      2       R1      1
 BHI     *       22      2       R1      1
 BHS     *       24      2       R1      1
-BITA    #*      85      2       NOP     1
 BITA    *,Y     18A5    3       NOP     4
 BITA    *,X     A5      2       NOP     1
-BITA    *       B5      3       MZERO   1
-BITB    #*      C5      2       NOP     1
+BITA    >*       B5      3       MZERO   1
+BITA    *      85      2       NOP     1
 BITB    *,Y     18E5    3       NOP     4
 BITB    *,X     E5      2       NOP     1
-BITB    *       F5      3       MZERO   1
+BITB    >*       F5      3       MZERO   1
+BITB    *      C5      2       NOP     1
 BLE     *       2F      2       R1      1
 BLO     *       25      2       R1      1
 BLS     *       23      2       R1      1
@@ -116,39 +116,39 @@ CLC     ""      0C      1       NOP     1
 CLI     ""      0E      1       NOP     1
 CLR     *,Y     186F    3       NOP     4
 CLR     *,X     6F      2       NOP     1
-CLR     *       7F      3       SWAP    1
+CLR     >*       7F      3       SWAP    1
 CLRA    ""      4F      1       NOP     1
 CLRB    ""      5F      1       NOP     1
 CLV     ""      0A      1       NOP     1
-CMPA    #*      81      2       NOP     1
 CMPA    *,X     A1      2       NOP     1
 CMPA    *,Y     18A1    3       NOP     4
-CMPA    *       B1      3       MZERO   1
-CMPB    #*      C1      2       NOP     1
+CMPA    >*       B1      3       MZERO   1
+CMPA    *      81      2       NOP     1
 CMPB    *,Y     18E1    3       NOP     4
 CMPB    *,X     E1      2       NOP     1
-CMPB    *       F1      3       MZERO   1
-CMPD    #*      1A83    4       SWAP    4  /* alias for CPD */
+CMPB    >*       F1      3       MZERO   1
+CMPB    *      C1      2       NOP     1
 CMPD    *,X     1AA3    3       NOP     4
 CMPD    *,Y     CDA3    3       NOP     4
-CMPD    *       1AB3    4       MZERO   4
+CMPD    >*       1AB3    4       MZERO   4
+CMPD    *      1A83    4       SWAP    4  /* alias for CPD */
 COM     *,X     63      2       NOP     1
 COM     *,Y     1863    3       NOP     4
-COM     *       73      3       SWAP    1
+COM     >*       73      3       SWAP    1
 COMA    ""      43      1       NOP     1
 COMB    ""      53      1       NOP     1
-CPD     #*      1A83    4       SWAP    4
 CPD     *,X     1AA3    3       NOP     4
 CPD     *,Y     CDA3    3       NOP     4
-CPD     *       1AB3    4       MZERO   4
-CPX     #*      8C      3       SWAP    1
+CPD     >*       1AB3    4       MZERO   4
+CPD     *      1A83    4       SWAP    4
 CPX     *,X     AC      2       NOP     1
 CPX     *,Y     CDAC    3       NOP     4
-CPX     *       BC      3       MZERO   1
-CPY     #*      188C    4       SWAP    4
+CPX     >*       BC      3       MZERO   1
+CPX     *      8C      3       SWAP    1
 CPY     *,Y     18AC    3       NOP     4
 CPY     *,X     1AAC    3       NOP     4
-CPY     *       18BC    4       MZERO   4
+CPY     >*       18BC    4       MZERO   4
+CPY     *      188C    4       SWAP    4
 DAA     ""      19      1       NOP     1
 DEC     *,Y     186A    3       NOP     4
 DEC     *,X     6A      2       NOP     1
@@ -158,14 +158,14 @@ DECB    ""      5A      1       NOP     1
 DES     ""      34      1       NOP     1
 DEX     ""      09      1       NOP     1
 DEY     ""      1809    2       NOP     4
-EORA    #*      88      2       NOP     1
 EORA    *,Y     18A8    3       NOP     4
 EORA    *,X     A8      2       NOP     1
-EORA    *       B8      3       MZERO   1
-EORB    #*      C8      2       NOP     1
+EORA    >*       B8      3       MZERO   1
+EORA    *      88      2       NOP     1
 EORB    *,Y     18E8    3       NOP     4
 EORB    *,X     E8      2       NOP     1
-EORB    *       F8      3       MZERO   1
+EORB    >*       F8      3       MZERO   1
+EORB    *      C8      2       NOP     1
 FDIV    ""      03      1       NOP     4
 IDIV    ""      02      1       NOP     4
 INC     *,Y     186C    3       NOP     4
@@ -183,35 +183,25 @@ JSR     *,Y     18AD    3       NOP     4
 JSR     *,X     AD      2       NOP     1
 JSR     *       BD      3       MZERO   1
 
-LDAA    #*      86      2       NOP     1
 LDAA    *,Y     18A6    3       NOP     4
 LDAA    *,X     A6      2       NOP     1
-LDAA    >*      B6      3       SWAP    1  /* Force EXT mode */
-LDAA    *       B6      3       MZERO   1
+LDAA    >*       B6      3       MZERO   1
+LDAA    *      86      2       NOP     1
 
-LDAB    #*      C6      2       NOP     1
 LDAB    *,Y     18E6    3       NOP     4
 LDAB    *,X     E6      2       NOP     1
-LDAB    >*      F6      3       SWAP    1  /* Force EXT mode */
-LDAB    *       F6      3       MZERO   1
+LDAB    >*      F6      3       MZERO   1
+LDAB    *       C6      2       NOP     1
 
-LDD     #*      CC      3       SWAP    2
-LDD     *,Y     18EC    3       NOP     4
-LDD     *,X     EC      2       NOP     2
-LDD     >*      FC      3       SWAP    2  /* Force EXT mode */
-LDD     *       FC      3       MZERO   2
-
-LDS     #*      8E      3       SWAP    1
 LDS     *,Y     18AE    3       NOP     4
 LDS     *,X     AE      2       NOP     1
-LDS     >*      BE      3       SWAP    1  /* Force EXT mode */
-LDS     *       BE      3       MZERO   1
+LDS     >*       BE      3       MZERO   1
+LDS     *      8E      3       SWAP    1
 
-LDX     #*      CE      3       SWAP    1
 LDX     *,X     EE      2       NOP     1
 LDX     *,Y     CDEE    3       NOP     4
-LDX     >*      FE      3       SWAP    1  /* Force EXT mode */
-LDX     *       FE      3       MZERO   1
+LDX     >*       FE      3       MZERO   1
+LDX     *      CE      3       SWAP    1
 
 LDY     #*      18CE    4       SWAP    4
 LDY     *,Y     18EE    3       NOP     4
@@ -221,12 +211,14 @@ LDY     *       18FE    4       MZERO   4
 
 LSL     *,Y     1868    3       NOP     4
 LSL     *,X     68      2       NOP     1       /*SAME AS ASL */
+LSL     >*       78      3       SWAP    1
 LSL     *       78      3       SWAP    1
 LSLA    ""      48      1       NOP     1
 LSLB    ""      58      1       NOP     1
 LSLD    ""      05      1       NOP     2
 LSR     *,Y     1864    3       NOP     4
 LSR     *,X     64      2       NOP     1
+LSR     >*       74      3       SWAP    1
 LSR     *       74      3       SWAP    1
 LSRA    ""      44      1       NOP     1
 LSRB    ""      54      1       NOP     1
@@ -238,14 +230,15 @@ NEG     *       70      3       SWAP    1
 NEGA    ""      40      1       NOP     1
 NEGB    ""      50      1       NOP     1
 NOP     ""      01      1       NOP     1
-ORAA    #*      8A      2       NOP     1
 ORAA    *,Y     18AA    3       NOP     4
 ORAA    *,X     AA      2       NOP     1
-ORAA    *       BA      3       MZERO   1
-ORAB    #*      CA      2       NOP     1
+ORAA    >*       BA      3       MZERO   1
+ORAA    *      8A      2       NOP     1
+
 ORAB    *,Y     18EA    3       NOP     4
 ORAB    *,X     EA      2       NOP     1
-ORAB    *       FA      3       MZERO   1
+ORAB    >*       FA      3       MZERO   1
+ORAB    *      CA      2       NOP     1
 PSHA    ""      36      1       NOP     1
 PSHB    ""      37      1       NOP     1
 PSHX    ""      3C      1       NOP     2
@@ -267,14 +260,16 @@ RORB    ""      56      1       NOP     1
 RTI     ""      3B      1       NOP     1
 RTS     ""      39      1       NOP     1
 SBA     ""      10      1       NOP     1
-SBCA    #*      82      2       NOP     1
 SBCA    *,Y     18A2    3       NOP     4
 SBCA    *,X     A2      2       NOP     1
-SBCA    *       B2      3       MZERO   1
-SBCB    #*      C2      2       NOP     1
+SBCA    >*       B2      3       MZERO   1
+SBCA    *      82      2       NOP     1
+
 SBCB    *,Y     18E2    3       NOP     4  
 SBCB    *,X     E2      2       NOP     1
-SBCB    *       F2      3       MZERO   1
+SBCB    >*       F2      3       MZERO   1
+SBCB    *      C2      2       NOP     1
+
 SEC     ""      0D      1       NOP     1
 SEI     ""      0F      1       NOP     1
 SEV     ""      0B      1       NOP     1
@@ -311,20 +306,20 @@ STY     *,X     1AEF    3       NOP     4
 STY     >*      18FF    4       SWAP    4  /* Force EXT mode */
 STY     *       18FF    4       MZERO   4
 
-SUBA    #*      80      2       NOP     1
 SUBA    *,Y     18A0    3       NOP     4
 SUBA    *,X     A0      2       NOP     1
-SUBA    *       B0      3       MZERO   1
+SUBA    >*       B0      3       MZERO   1
+SUBA    *      80      2       NOP     1
 
-SUBB    #*      C0      2       NOP     1
 SUBB    *,Y     18E0    3       NOP     4
 SUBB    *,X     E0      2       NOP     1
-SUBB    *       F0      3       MZERO   1
+SUBB    >*       F0      3       MZERO   1
+SUBB    *      C0      2       NOP     1
 
-SUBD    #*      83      3       SWAP    2
 SUBD    *,Y     18A3    3       NOP     4
 SUBD    *,X     A3      2       NOP     2
-SUBD    *       B3      3       MZERO   2
+SUBD    >*       B3      3       MZERO   2
+SUBD    *      83      3       SWAP    2
 
 SWI     ""      3F      1       NOP     1
 TAB     ""      16      1       NOP     1

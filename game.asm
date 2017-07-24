@@ -1,64 +1,77 @@
 ; Laser Ball solenoids
-#DEFINE KICKOUT 		01
-#DEFINE LEFT_KICKER 	02
-#DEFINE DROP_LA			03
-#DEFINE DROP_SER		04
-#DEFINE EJECT_HOLE		05
-#DEFINE DROP_BA			06
-#DEFINE DROP_LL			07
-#DEFINE RIGHT_KICKER	08
-#DEFINE SOUND1			09 ; thru 13
-#DEFINE KNOCKER			14
-#DEFINE	FLASHERS		15
-#DEFINE COIN_LOCKOUT	16
+;#DEFINE KICKOUT 		01
+;#DEFINE LEFT_KICKER 	02
+;#DEFINE DROP_LA			03
+;#DEFINE DROP_SER		04
+;#DEFINE EJECT_HOLE		05
+;#DEFINE DROP_BA			06
+;#DEFINE DROP_LL			07
+;#DEFINE RIGHT_KICKER	08
+;#DEFINE SOUND1			09 ; thru 13
+;#DEFINE KNOCKER			14
+;#DEFINE	FLASHERS		15
+;#DEFINE COIN_LOCKOUT	16
+
+; Hot Tip solenoids
+#DEFINE TOP_EJECT 	01
+#DEFINE DROP_TIP	02
+#DEFINE DROP_HOT	03
+#DEFINE LEFT_EJECT	04
+#DEFINE OUTHOLE		05
+#DEFINE CHIME_10	09
+#DEFINE CHIME_100	10
+#DEFINE CHIME_1000	11
+#DEFINE CHIME_10k	12
+#DEFINE CLICKER		13
+#DEFINE	KNOCKER		14
+#DEFINE BUZZER		15
 
 #DEFINE done jmp afterQueueEvent
-#DEFINE noValidate ldaA #10b\ oraA state\ staA state
+#DEFINE noValidate ldaA 10b\ oraA >state\ staA state
 ; switch callbacks:
 
-none:	.org $7E00 + 256 ; size of callback table
+none:	.org $7800 + $500 + 256 ; size of callback table
 	done
 	
 startGame:
-	ldaA ~10000000b
-	andA lr(6)
-	staA lr(6)
+	lampOff(6,8) ; game over
 	enablePf
 	
 	fireSolenoid(2)
 	fireSolenoid(3)
 	
 	; clear lights
-	ldX	#lampRow1
-	ldaA	#0b
+	ldX	lampCol1
+	ldaA	0b
 lClearLights:
 	staA	0, X
-	staA	flashLampRow1 - lampRow1, X
+	staA	flashLampCol1 - lampCol1, X
 	inX
-	cpX	#lampRow8 + 1
+	cpX	lampCol8 + 1
 	bne	lClearLights
+	;
 	
+	; reset scores
 	jsr 	resetScores
 	
-	
-	ldaA	#1
+	; reset ball count
+	ldaA	$10
 	staA	ballCount
 
-	ldX	curPlayer
+	ldaB	0
+	staB	curPlayer + 1
 	
-	; invalid playfield
-	ldaA	#10000000b ; player up lights
-	oraA	flashLampRow1, X
-	staA	flashLampRow1, X
-	oraA	lampRow1, X
-	staA	lampRow1, X
+	; invalidate playfield
+	ldaA	lr(1)
+	oraA	>flc(8)
+	staA	flc(8)
+	oraA	>lc(8)
+	staA	lc(8)
 	
-	ldaA	#01000000b ; player count light
-	oraA	lr(2)
-	staA	lr(2)
+	lampOn(2,7) ; one player
 	
-	ldaA	#01000000b ; check outhole
-	bitA	switchRow1
+	ldaA	sr(1) ; check outhole
+	bitA	>sc(2)
 	ifne ; ball in hole
 		fireSolenoid(5)
 	endif
@@ -79,37 +92,30 @@ addP2_10:
 	done
 	
 swTilt: noValidate
-	ldaA	#1000000b ; tilt
-	oraA	lampRow1 + 4
-	staA	lampRow1 + 4
+	lampOn(5,8) ; tilt
 	disablePf
 	done
 	
 swStart: noValidate
-	ldaA #10000000b
+	ldaA >lc(8)
 	bitA lr(6)
 	ifne ; in game over
 		jsr startGame
 	else 
-		ldaA	#1
-		cmpA	ballCount
+		ldaA	$10
+		cmpA	>ballCount
 		ifeq ; add player
-			ldaA	#01000000b ; player count light
-			bitA	lr(3)
-			ifne
-				oraA	lr(3)
-				staA	lr(3)
-				bra	playerAdded
+			ldaA	00011110b
+			andA	>lc(7) ; player count lights
+			bitA	lr(5)
+			ifeq	; if not on P4 already, add player
+				aslA
+				ldaB	11100001b
+				andB	>lc(7)
+				staB	lc(7)
+				oraA	>lc(7)
+				staA	lc(7)
 			endif
-			bitA	lr(4)
-			ifne
-				oraA	lr(4)
-				staA	lr(4)
-				bra	playerAdded
-			endif
-			oraA	lr(4)
-			staA	lr(4)
-playerAdded:
 		else ; restart game
 			jsr startGame
 		endif		
@@ -118,82 +124,95 @@ playerAdded:
 	done
 	
 swOuthole: noValidate
-	ldaA	#10000000b ; !game over
+	ldaA	>lc(8) ; !game over
 	bitA	lr(6)
 	ifeq ; !game over
-		ldX	curPlayer
-		ldaA	#10000000b ; player up lights
-		bitA	flashLampRow1, X
-		ifeq ; playfield invalid
-			ldaA	#01111111b 	; turn off tilt
-			andA	lampRow1 + 4
-			staA	lampRow1 + 4
+		ldaA	00001111b ; player up lights
+		bitA	>flc(8)	; check if any player is flashing
+		ifne ; any flashing -> playfield invalid
+			lampOff(5,8) ; tilt
 			
 			enablePf
-			
-			fireSolenoid(5)
-		else
-			; turn off that player light
-			comA
-			andA	lampRow1, X
-			staA	lampRow1, X
-			
-			; go to next player
-			inX
-			ldaB	#01000000b ; player count
-			bitB	1, X
-			ifeq	; was last player
-				ldX	#0
-				inc ballCount
-				ldaB	#4
-				cmpB	ballCount
-				ifeq ; game over
-					ldaA	#10000000b
-					andA	lr(6)
-					staA	lr(6)
-					disablePf
-					done
-				endif					
+			fireSolenoid(OUTHOLE)
+		else ; none flashing -> playfield valid -> end ball
+			andA	>lc(8)
+			ldaB	>lc(3)
+			bitB	lr(1)
+			ifeq ; shoot again not lit
+				; go to next player
+				aslA
+				inc	curPlayer + 1
+				bitA	>lc(7)	; is player count < player #
+				ifne ; last player
+					ldaA	00000001b; ; back to player 1
+					ldaB	0
+					staB	curPlayer + 1
+					
+					; increase ball count
+					ldaB	>ballCount
+					addB	$10
+					cmpB	$40
+					ifeq ; game over
+						lampOn(6,8)
+						disablePf
+						done
+					else
+						staB	ballCount
+					endif		
+				endif
+				
+				staA	lc(8)
 			endif
 			
-			; player up
-			comA
-			oraA	lampRow1, X
-			staA	lampRow1, X
-			oraA	flashLampRow1, X
-			staA	flashLampRow1, X
+			; flash player light
+			ldaA	00001111b ; player up lights
+			oraA	>flc(8)
+			staA	flc(8)
+			
 			
 			enablePf
 			
-			fireSolenoid(5)
+			fireSolenoid(OUTHOLE)
 		endif
 	endif		
 	done
 	
 swEjectHole:
-	fireSolenoid(EJECT_HOLE)
+	;fireSolenoid(EJECT_HOLE)
 	done
 	
 swLeftEject:
-	fireSolenoid(4)
+	ldaA	>lc(8)
+	bitA	lr(6)
+	ifeq ; in game
+		lampOn(1,3)
+		lampOn(7,8)
+	endif
+	fireSolenoid(LEFT_EJECT)
 	done
 	
 swTopEject:
-	fireSolenoid(1)
+	fireSolenoid(TOP_EJECT)
 	done
 	
 swRKicker:
-	fireSolenoid(RIGHT_KICKER)
+	;fireSolenoid(RIGHT_KICKER)
+	done
+swHotTip:
+	delay(400)
+	fireSolenoid(DROP_HOT)
+	fireSolenoid(DROP_TIP)
 	done
 	
 ; end callbacks
 	.msfirst
-callbackTable: 	.org $7E00 ; note: TRANSPOSED
+; needs to be on $**00 address
+callbackTable: 	.org $7800 + $500 ; note: TRANSPOSED
 	.dw swTilt		\.dw swTilt		\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
 	.dw swOuthole	\.dw swTilt	\.dw sw32		\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none		\.dw none\.dw none\.dw addP2_10\.dw none\.dw none\.dw none\.dw swEjectHole
-	.dw none		\.dw none\.dw none\.dw swLeftEject\.dw none\.dw none\.dw none\.dw none
+	.dw none		\.dw none\.dw none\.dw addP2_10\.dw swLeftEject\.dw none\.dw none\.dw swEjectHole
+	.dw none		\.dw none\.dw none\.dw none\.dw swHotTip\.dw none\.dw none\.dw none
 	.dw swRKicker	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
@@ -206,7 +225,7 @@ settleTable: ; must be right after callbackTable
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(1,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
 	SW(7,7,1,1)\SW(0,7,1,0)\SW(7,0,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(7,7,1,1)
+	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(7,7,1,1)\SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(7,7,1,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)

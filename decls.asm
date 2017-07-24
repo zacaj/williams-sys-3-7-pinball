@@ -3,8 +3,8 @@ displayStrobe: 	.equ $2800 ;		CB2=1 special solenoid 6
 displayBcd: 	.equ $2802
 displayStrobeC:	.equ $2801
 displayBcdC:	.equ $2803
-lampRow:		.equ $2400 ;		CA2=1 special solenoid 2
-lampRowC:		.equ $2401 ; 		CB2=1 special solenoid 1
+lampCol:		.equ $2400 ;		CA2=1 special solenoid 2
+lampColC:		.equ $2401 ; 		CB2=1 special solenoid 1
 lampStrobe:		.equ $2402
 lampStrobeC:	.equ $2403
 switchStrobe:	.equ $3002
@@ -23,15 +23,18 @@ temp:			.equ RAM + $00 ; 01
 counter:		.equ RAM + $02
 counter2:		.equ RAM + $03
 strobe:			.equ RAM + $07
-#DEFINE lr(x) 		lampRow1 + x - 1
-lampRow1:		.equ RAM + $08
-lampRow8:		.equ lampRow1 + 7 
+lampCol1:		.equ RAM + $08
+lampCol8:		.equ lampCol1 + 7 
+#DEFINE lc(x) 		lampCol1 + (x-1)
+#DEFINE lr(x)		((1 << (x-1))
 curSwitchRowLsb:	.equ RAM + $10 
 ; 
 curPlayer:		.equ RAM + $12 ; + 0-3
 ;;;
 switchRow1:		.equ RAM + $20
 switchRow8:		.equ switchRow1 + 7 
+#DEFINE sc(x) 		switchRow1 + x - 1
+#DEFINE sr(x)		(1 << (x-1))
 solAStatus:		.equ RAM + $28 ; solenoid PIA is updated once every 8 IRQ
 solBStatus:		.equ RAM + $29 ; one solenoid bit is generated per IRQ and pushed on
 curCol:			.equ RAM + $50 ; +
@@ -49,16 +52,18 @@ waitLeft: 		.equ RAM + $80
 waitLeftEnd:		.equ RAM + $87
 waitMsb:		.equ RAM + $88
 waitLsb:		.equ RAM + $90 ; -> 97
-flashLampRow1:		.equ RAM + $98
-flashLampRow8:		.equ RAM + $9F
+flashLampCol1:		.equ RAM + $98
+flashLampCol8:		.equ RAM + $9F
+#DEFINE flc(x) 		flashLampCol1 + (x - 1)
 
 
 settleRow1:		.equ cRAM + $00 ;must be at 0
-settleRow8:		.equ settleRow1+  8*8-1
+settleRow8:		.equ settleRow1+  (8*8)-1
 solenoid1:		.equ cRAM + $40		; set to E to turn solenoid on permanently
 solenoid8:		.equ solenoid1 + 7	; otherwise (<E), decremented every 8ms till reaches 0
 solenoid9:		.equ solenoid1 + 8	; F = solenoid off, otherwise on
 solenoid16:		.equ solenoid1 + 15 ; set to pulse time / 8ms to fire solenoid (5-7 reccomended)
+#DEFINE s(n) 		(0 + n)
 pA_1m:			.equ cRAM + $50	; note reverse order to match displays
 pA_10:			.equ pA_1m + 5
 pB_1m:			.equ pA_10 + 1
