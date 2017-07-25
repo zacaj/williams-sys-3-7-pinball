@@ -24,9 +24,9 @@ copy13Loop:
 		andB	00001111b ; mark upper half of B as 0 since number found
 		oraA	00001111b
 	endif
-	;andA	pC_1m - displayBcd1, X
+	andA	pC_1m - displayBcd1, X
 	
-	andA	$F0
+	;andA	$F0
 	bitA	00001111b
 	ifeq ; pC is 0
 		bitB	1111b
@@ -72,8 +72,8 @@ copy24Loop:
 		andB	00001111b ; mark upper half of B as 0 since number found
 		oraA	00001111b
 	endif
-	;andA	pD_1m - (displayBcd1 + 8), X
-	andA	$F0
+	andA	pD_1m - (displayBcd1 + 8), X
+	;andA	$F0
 	bitA	00001111b
 	ifeq ; pC is 0
 		bitB	1111b
@@ -97,7 +97,7 @@ copy24Loop:
 	rts
 	
 blankNonPlayerScores:
-	ldaB	lc(7)
+	ldaB	>lc(7)
 	bitB	lr(2)
 	bne	blankP2
 	bitB	lr(3)
@@ -144,10 +144,11 @@ refreshPlayerScores:
 	jsr blankNonPlayerScores
 	rts
 	
+; add score instantly
 ; X = place in p*_1* to add the score to
 ; A = amount to add (max 9)
 ; tail call
-_addScore:
+_addScoreI:
 	addA	0, X
 	ifcs ; overflowed, need to increment next number
 		addA	6	; adjust A back into BCD
@@ -183,21 +184,49 @@ addScore_carryDa:
 	endif
 
 	jmp refreshPlayerScores
+	
+	rts
+	
+; t A,X
+setXToCurPlayer10:
+	ldaA	>lc(8)
+	bitA	0001b
+	beq	_addScore10N_p2
+	ldX	pA_10
+	rts
+_addScore10N_p2:
+	bitA	0010b
+	beq	_addScore10N_p3
+	ldX	pB_10
+	rts
+_addScore10N_p3:
+	bitA	0100b
+	beq	_addScore10N_p4
+	ldX	pC_10
+	rts
+_addScore10N_p4:
+	ldX	pD_10
+	rts
 
+; suspends execution for A ms and returns to queue processor
+; should only be called from switch callbacks
+; trashes everything but B
 _delay:	
 	ldX	waitLeft - 1
 findEmptyLoop:
 	inX
-	ldaA	0, X
-	bne 	findEmptyLoop ; ld sets Z if = 0
+	tst	0, X
+	bne 	findEmptyLoop 
+	
 	; X = first waitLeft that = 0
-	pulA	; A = MSB of PC
-	staA	waitMsb - waitLeft, X
-	pulA	; A = LSB of PC
-	staA	waitLsb - waitLeft, X
-	staB	0, X
+	staB	waitReg - waitLeft, X
+	pulB	; A = MSB of PC
+	staB	waitMsb - waitLeft, X
+	pulB	; A = LSB of PC
+	staB	waitLsb - waitLeft, X
+	staA	0, X
 	; time and add stored
-	jmp afterQueueEvent
+	jmp skipEvent
 	
 resetScores:
 	ldaA	00
@@ -221,7 +250,7 @@ _zeroScores:
 
 ; trash all
 ; delay for ms (16-4000)
-#DEFINE delay(ms) ldaB ms/16\ jsr _delay
+#DEFINE delay(ms) ldaA ms/16\ jsr _delay
 	
 ; trashes B (max 104ms)
 #DEFINE fireSolenoidFor(n,ms)	ldaB ms/8\ staB solenoid1+n-1 
@@ -230,8 +259,12 @@ _zeroScores:
 ; trashes AX
 ; place: 1-5 = 10s thru 100ks
 ; amount: 1-9
+#DEFINE addScoreI(place,amount)		ldX pB_10-place+1\ ldaA 0+amount\ jsr _addScoreI
+#DEFINE addScoreI_T(place,amount)	ldX pB_10-place+1\ ldaA 0+amount\ jmp _addScoreI
 #DEFINE addScore(place,amount)		ldX pB_10-place+1\ ldaA 0+amount\ jsr _addScore
 #DEFINE addScore_T(place,amount)	ldX pB_10-place+1\ ldaA 0+amount\ jmp _addScore
+#DEFINE addScoreN(place,amount)		ldX pB_10-place+1\ ldaA 0+amount\ jsr _addScoreN
+#DEFINE addScoreN_T(place,amount)	ldX pB_10-place+1\ ldaA 0+amount\ jmp _addScoreN
 
 #define disablePf ldaA 	>solenoidBC\ andA 11110111b\ staA solenoidBC
 #define enablePf ldaA 	>solenoidBC\ oraA 00111000b\ staA solenoidBC

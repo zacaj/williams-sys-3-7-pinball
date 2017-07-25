@@ -173,6 +173,7 @@ decWaitTimers:
 				staA	tempQ
 				ldaA	waitLsb - waitLeft, X
 				staA	tempQ + 1
+				ldaB	waitReg - waitLeft, X
 				ldX	>tempQ
 				jmp	0, X
 			endif

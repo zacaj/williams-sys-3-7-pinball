@@ -26,15 +26,109 @@
 #DEFINE	KNOCKER		14
 #DEFINE BUZZER		15
 
-#DEFINE done jmp afterQueueEvent
 #DEFINE noValidate ldaA 10b\ oraA >state\ staA state
+#DEFINE done(v)	\
+#DEFCONT	#IF (v==0)
+#DEFCONT		\ ldaA 10b
+#DEFCONT		\ oraA >state
+#DEFCONT		\ staA state
+#DEFCONT	\#ENDIF
+#DEFCONT	\ jmp afterQueueEvent
+	
+	
+	
+; adds B x 100 one at a time, then returns
+; tail call
+_addScore100xN:
+	jsr setXToCurPlayer10
+	deX
+_l_addScore100N:
+	ldaA	1
+	jsr _addScoreI
+	decB
+	ldaA	2
+	staA	solenoid1 + CHIME_100 - 1	
+	delay(115)
+	bne	_l_addScore100N
+	rts
+_addScore1000xN:
+	jsr setXToCurPlayer10
+	deX
+	deX
+_l_addScore1000N:
+	ldaA	1
+	jsr _addScoreI
+	decB
+	ldaA	2
+	staA	solenoid1 + CHIME_1000 - 1	
+	delay(115)
+	bne	_l_addScore1000N
+	rts
+	
+_addScore10N:
+	jsr setXToCurPlayer10
+	ldaA	1
+	jsr _addScoreI
+	ldaA	2
+	staA	solenoid1 + CHIME_10 - 1	
+	rts
+_addScore100N:
+	jsr setXToCurPlayer10
+	deX
+	ldaA	1
+	jsr _addScoreI
+	ldaA	2
+	staA	solenoid1 + CHIME_100 - 1	
+	rts
+_addScore1000N:
+	jsr setXToCurPlayer10
+	deX
+	deX
+	ldaA	1
+	jsr _addScoreI
+	ldaA	2
+	staA	solenoid1 + CHIME_1000 - 1	
+	rts
+#DEFINE score10() jsr _addScore10N
+#DEFINE score100() jsr _addScore100N
+#DEFINE score1000() jsr _addScore1000N
+#DEFINE advBonus()
+	
 ; switch callbacks:
 
-none:	.org $7800 + $500 + 256 ; size of callback table
-	done
+none:	.org $7800 + $500 + 192 ; size of callback table
+	done(1)
+	
 	
 startGame:
 	lampOff(6,8) ; game over
+	
+	fireSolenoid(CHIME_10k)
+	delay(115)
+	fireSolenoid(CHIME_10k)
+	delay(115)
+	fireSolenoid(CHIME_10k)
+	delay(230)
+	
+	fireSolenoid(CHIME_10k)
+	delay(115)
+	fireSolenoid(CHIME_10k)
+	delay(115)
+	fireSolenoid(CHIME_10k)
+	delay(230)
+	
+	fireSolenoid(CHIME_10k)
+	delay(115)
+	fireSolenoid(CHIME_10k)
+	delay(115)
+	fireSolenoid(CHIME_1000)
+	delay(115)
+	fireSolenoid(CHIME_100)
+	delay(115)
+	fireSolenoid(CHIME_10)
+	delay(115)
+	
+	
 	enablePf
 	
 	fireSolenoid(2)
@@ -78,25 +172,14 @@ lClearLights:
 	
 	rts
 	
-	
 
-sw32:
-	done
 	
-addP2_10:
-	;ldX		#pB_10
-	;ldaA	#9
-	;jmp 	addScore
-	delay(1000)
-	addScore(1,9)
-	done
-	
-swTilt: noValidate
+swTilt: 
 	lampOn(5,8) ; tilt
 	disablePf
-	done
+	done(0)
 	
-swStart: noValidate
+swStart: 
 	ldaA >lc(8)
 	bitA lr(6)
 	ifne ; in game over
@@ -121,9 +204,11 @@ swStart: noValidate
 		endif		
 	endif
 	
-	done
+	jsr refreshPlayerScores
 	
-swOuthole: noValidate
+	done(0)
+	
+swOuthole: 
 	ldaA	>lc(8) ; !game over
 	bitA	lr(6)
 	ifeq ; !game over
@@ -155,7 +240,7 @@ swOuthole: noValidate
 					ifeq ; game over
 						lampOn(6,8)
 						disablePf
-						done
+						done(1)
 					else
 						staB	ballCount
 					endif		
@@ -175,11 +260,7 @@ swOuthole: noValidate
 			fireSolenoid(OUTHOLE)
 		endif
 	endif		
-	done
-	
-swEjectHole:
-	;fireSolenoid(EJECT_HOLE)
-	done
+	done(0)
 	
 swLeftEject:
 	ldaA	>lc(8)
@@ -188,34 +269,87 @@ swLeftEject:
 		lampOn(1,3)
 		lampOn(7,8)
 	endif
+	ldaB	5
+	jsr _addScore100xN
 	fireSolenoid(LEFT_EJECT)
-	done
+	done(1)
 	
 swTopEject:
+	ldaB	5
+	jsr _addScore100xN
 	fireSolenoid(TOP_EJECT)
-	done
+	done(1)
 	
-swRKicker:
-	;fireSolenoid(RIGHT_KICKER)
-	done
 swHotTip:
 	delay(400)
 	fireSolenoid(DROP_HOT)
 	fireSolenoid(DROP_TIP)
-	done
+	done(1)
+swLeftOutlane:
+swRightOutlane:
+swLeftInlane:
+swRightInlane:
+	score1000()
+	done(1)
+sw10pt:
+	score10()
+	done(1)
+sw100pt:
+	score100()
+	done(1)
+sw500pt:
+	jsr _addScore100N
+	fireSolenoid(CHIME_100)	
+	delay(115)
+	jsr _addScore100N
+	fireSolenoid(CHIME_100)	
+	delay(115)
+	jsr _addScore100N
+	fireSolenoid(CHIME_100)	
+	delay(115)
+	jsr _addScore100N
+	fireSolenoid(CHIME_100)	
+	delay(115)
+	jsr _addScore100N
+	fireSolenoid(CHIME_100)	
+	delay(115)
+	done(1)
+swDropTip:
+	score10()
+	done(1)
+swDropHot:
+	score10()
+	done(1)
+swAdvBonus:
+	advBonus()
+	done(1)
+swSpinner:
+	ldaA	sc(4)
+	bitA	sr(6)
+	ifne
+		score100()
+		ldaA	$E
+	else
+		noValidate
+		ldaA	0
+	endif
+	staA	solenoid1 + CLICKER - 1
+	done(1)
+
+	
 	
 ; end callbacks
 	.msfirst
 ; needs to be on $**00 address
 callbackTable: 	.org $7800 + $500 ; note: TRANSPOSED
-	.dw swTilt		\.dw swTilt		\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
-	.dw swOuthole	\.dw swTilt	\.dw sw32		\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none		\.dw none\.dw none\.dw addP2_10\.dw swLeftEject\.dw none\.dw none\.dw swEjectHole
-	.dw none		\.dw none\.dw none\.dw none\.dw swHotTip\.dw none\.dw none\.dw none
-	.dw swRKicker	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-	.dw none		\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
+	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw none\.dw none
+	.dw swDropTip	\.dw swDropTip\.dw swDropTip\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
+	.dw swDropHot	\.dw swDropHot\.dw swDropHot\.dw sw10pt\.dw swLeftEject\.dw swSpinner\.dw sw100pt\.dw sw500pt
+	.dw swLeftOutlane\.dw swLeftInlane\.dw sw10pt\.dw none\.dw swHotTip\.dw none\.dw none\.dw none
+	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 ; on = how many cycles it must be on for before registering (1 cycle = 64ms (?)) (max 7)
 ; off = how many cycles it must be off for
 ; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
@@ -223,10 +357,10 @@ callbackTable: 	.org $7800 + $500 ; note: TRANSPOSED
 #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
 settleTable: ; must be right after callbackTable
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(1,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
-	SW(7,7,1,1)\SW(0,7,1,0)\SW(7,0,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(7,7,1,1)\SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(7,7,1,1)
-	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(7,7,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,0,1,0)\SW(0,7,1,0)
+	SW(0,0,1,0)\SW(0,0,1,0)\SW(0,0,1,0)\SW(0,3,1,0)\SW(0,1,1,0)\SW(7,7,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
+	SW(0,0,1,0)\SW(0,0,1,0)\SW(0,0,1,0)\SW(0,1,1,0)\SW(7,7,1,1)\SW(0,0,0,0)\SW(0,0,1,0)\SW(0,1,1,0)
+	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,7,0,1)\SW(7,0,1,0)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)

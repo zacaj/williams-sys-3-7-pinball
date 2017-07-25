@@ -50,10 +50,11 @@ displayBcd16:	.equ RAM + $7F
 ballCount:		.equ displayBcd1 + 7
 waitLeft: 		.equ RAM + $80
 waitLeftEnd:		.equ RAM + $87
-waitMsb:		.equ RAM + $88
+waitMsb:		.equ RAM + $88 ; -> 8F
 waitLsb:		.equ RAM + $90 ; -> 97
-flashLampCol1:		.equ RAM + $98
-flashLampCol8:		.equ RAM + $9F
+waitReg:		.equ RAM + $98 ; -> 9F
+flashLampCol1:		.equ RAM + $A0
+flashLampCol8:		.equ RAM + $A7
 #DEFINE flc(x) 		flashLampCol1 + (x - 1)
 
 
