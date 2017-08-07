@@ -249,12 +249,12 @@ _zeroScores:
 	rts
 
 ; trash all
-; delay for ms (16-4000)
-#DEFINE delay(ms) ldaA ms/16\ jsr _delay
+; delay for ms (8-2000)
+#DEFINE delay(ms) ldaA ms/8\ jsr _delay
 	
 ; trashes B (max 104ms)
-#DEFINE fireSolenoidFor(n,ms)	ldaB ms/8\ staB solenoid1+n-1 
-#DEFINE fireSolenoid(n)			fireSolenoidFor(n, 32)
+#DEFINE fireSolenoid(s)	ldaB (s&$FF)/8\ staB solenoid1+(s>>8)-1 
+#DEFINE fireSolenoidA(s)	ldaA (s&$FF)/8\ staA solenoid1+(s>>8)-1 
 
 ; trashes AX
 ; place: 1-5 = 10s thru 100ks

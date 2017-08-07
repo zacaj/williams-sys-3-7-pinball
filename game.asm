@@ -13,18 +13,20 @@
 ;#DEFINE COIN_LOCKOUT	16
 
 ; Hot Tip solenoids
-#DEFINE TOP_EJECT 	01
-#DEFINE DROP_TIP	02
-#DEFINE DROP_HOT	03
-#DEFINE LEFT_EJECT	04
-#DEFINE OUTHOLE		05
-#DEFINE CHIME_10	09
-#DEFINE CHIME_100	10
-#DEFINE CHIME_1000	11
-#DEFINE CHIME_10k	12
-#DEFINE CLICKER		13
-#DEFINE	KNOCKER		14
-#DEFINE BUZZER		15
+#DEFINE SOL(n,t)	(n<<8)|t
+#DEFINE TOP_EJECT 	SOL(01, 32)
+#DEFINE DROP_TIP	SOL(02, 100)
+#DEFINE DROP_HOT	SOL(03, 100)
+#DEFINE LEFT_EJECT	SOL(04, 32)
+#DEFINE OUTHOLE		SOL(05, 10)
+#DEFINE CHIME_10	SOL(09, 16)
+#DEFINE CHIME_100	SOL(10, 16)
+#DEFINE CHIME_1000	SOL(11, 16)
+#DEFINE CHIME_10k	SOL(12, 16)
+#DEFINE CLICKER		SOL(13, 8)
+#DEFINE	KNOCKER		SOL(14, 50)
+#DEFINE BUZZER		SOL(15, 100)
+#DEFINE SHORT_PAUSE 	150
 
 #DEFINE noValidate ldaA 10b\ oraA >state\ staA state
 #DEFINE done(v)	\
@@ -36,49 +38,18 @@
 #DEFCONT	\ jmp afterQueueEvent
 	
 	
-	
-; adds B x 100 one at a time, then returns
-; tail call
-_addScore100xN:
-	jsr setXToCurPlayer10
-	deX
-_l_addScore100N:
-	ldaA	1
-	jsr _addScoreI
-	decB
-	ldaA	2
-	staA	solenoid1 + CHIME_100 - 1	
-	delay(115)
-	bne	_l_addScore100N
-	rts
-_addScore1000xN:
-	jsr setXToCurPlayer10
-	deX
-	deX
-_l_addScore1000N:
-	ldaA	1
-	jsr _addScoreI
-	decB
-	ldaA	2
-	staA	solenoid1 + CHIME_1000 - 1	
-	delay(115)
-	bne	_l_addScore1000N
-	rts
-	
 _addScore10N:
 	jsr setXToCurPlayer10
 	ldaA	1
 	jsr _addScoreI
-	ldaA	2
-	staA	solenoid1 + CHIME_10 - 1	
+	fireSolenoidA(CHIME_10)
 	rts
 _addScore100N:
 	jsr setXToCurPlayer10
 	deX
 	ldaA	1
 	jsr _addScoreI
-	ldaA	2
-	staA	solenoid1 + CHIME_100 - 1	
+	fireSolenoidA(CHIME_100)	
 	rts
 _addScore1000N:
 	jsr setXToCurPlayer10
@@ -86,12 +57,27 @@ _addScore1000N:
 	deX
 	ldaA	1
 	jsr _addScoreI
-	ldaA	2
-	staA	solenoid1 + CHIME_1000 - 1	
+	fireSolenoidA(CHIME_1000)
 	rts
 #DEFINE score10() jsr _addScore10N
 #DEFINE score100() jsr _addScore100N
 #DEFINE score1000() jsr _addScore1000N
+#DEFINE score500() \ jsr _addScore100N
+#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ delay(SHORT_PAUSE)
+#DEFCONT	\ jsr _addScore100N
+#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ delay(SHORT_PAUSE)
+#DEFCONT	\ jsr _addScore100N
+#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ delay(SHORT_PAUSE)
+#DEFCONT	\ jsr _addScore100N
+#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ delay(SHORT_PAUSE)
+#DEFCONT	\ jsr _addScore100N
+#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ delay(SHORT_PAUSE)
+
 #DEFINE advBonus()
 	
 ; switch callbacks:
@@ -103,30 +89,30 @@ none:	.org $7800 + $500 + 192 ; size of callback table
 startGame:
 	lampOff(6,8) ; game over
 	
-	fireSolenoid(CHIME_10k)
-	delay(115)
-	fireSolenoid(CHIME_10k)
-	delay(115)
-	fireSolenoid(CHIME_10k)
-	delay(230)
-	
-	fireSolenoid(CHIME_10k)
-	delay(115)
-	fireSolenoid(CHIME_10k)
-	delay(115)
-	fireSolenoid(CHIME_10k)
-	delay(230)
-	
-	fireSolenoid(CHIME_10k)
-	delay(115)
-	fireSolenoid(CHIME_10k)
-	delay(115)
-	fireSolenoid(CHIME_1000)
-	delay(115)
-	fireSolenoid(CHIME_100)
-	delay(115)
 	fireSolenoid(CHIME_10)
-	delay(115)
+	delay(SHORT_PAUSE)
+	fireSolenoid(CHIME_10)
+	delay(SHORT_PAUSE)
+	fireSolenoid(CHIME_10)
+	delay(SHORT_PAUSE*2)
+	
+	fireSolenoid(CHIME_10)
+	delay(SHORT_PAUSE)
+	fireSolenoid(CHIME_10)
+	delay(SHORT_PAUSE)
+	fireSolenoid(CHIME_10)
+	delay(SHORT_PAUSE*2)
+	
+	fireSolenoid(CHIME_10)
+	delay(SHORT_PAUSE)
+	fireSolenoid(CHIME_10)
+	delay(SHORT_PAUSE)
+	fireSolenoid(CHIME_100)
+	delay(SHORT_PAUSE)
+	fireSolenoid(CHIME_1000)
+	delay(SHORT_PAUSE)
+	fireSolenoid(CHIME_10k)
+	delay(SHORT_PAUSE)
 	
 	
 	enablePf
@@ -209,6 +195,7 @@ swStart:
 	done(0)
 	
 swOuthole: 
+	delay(600)
 	ldaA	>lc(8) ; !game over
 	bitA	lr(6)
 	ifeq ; !game over
@@ -269,14 +256,12 @@ swLeftEject:
 		lampOn(1,3)
 		lampOn(7,8)
 	endif
-	ldaB	5
-	jsr _addScore100xN
+	score500()
 	fireSolenoid(LEFT_EJECT)
 	done(1)
 	
 swTopEject:
-	ldaB	5
-	jsr _addScore100xN
+	score500()
 	fireSolenoid(TOP_EJECT)
 	done(1)
 	
@@ -298,21 +283,7 @@ sw100pt:
 	score100()
 	done(1)
 sw500pt:
-	jsr _addScore100N
-	fireSolenoid(CHIME_100)	
-	delay(115)
-	jsr _addScore100N
-	fireSolenoid(CHIME_100)	
-	delay(115)
-	jsr _addScore100N
-	fireSolenoid(CHIME_100)	
-	delay(115)
-	jsr _addScore100N
-	fireSolenoid(CHIME_100)	
-	delay(115)
-	jsr _addScore100N
-	fireSolenoid(CHIME_100)	
-	delay(115)
+	score500();
 	done(1)
 swDropTip:
 	score10()
