@@ -59,7 +59,7 @@ flashLampCol8:		.equ RAM + $A7
 
 
 settleRow1:		.equ cRAM + $00 ;must be at 0
-settleRow8:		.equ settleRow1+  (8*8)-1
+settleRow8End:		.equ settleRow1+  (8*8)-1
 solenoid1:		.equ cRAM + $40		; set to E to turn solenoid on permanently
 solenoid8:		.equ solenoid1 + 7	; otherwise (<E), decremented every 8ms till reaches 0
 solenoid9:		.equ solenoid1 + 8	; F = solenoid off, otherwise on

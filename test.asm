@@ -5,9 +5,6 @@
 #include "util.asm"
 
 #include "game.asm"
-
-.org	$6000
-	nop
 	
 main:		.org $7800
 resetRam:
@@ -101,11 +98,10 @@ piaSetup:
 	staA	curSwitchRowLsb
 	
 ; fill solenoid status with off
-	ldaA	0
+	ldaA	$F
 	ldX	solenoid1
 lSolDefault:
 	staA	0, X
-	staA	waitLeft - solenoid1, X
 	inX
 	cpX	solenoid16
 	bne	lSolDefault
@@ -127,7 +123,7 @@ lClear8:
 lSettleDefault:
 	staA	0, X
 	inX
-	cpX	settleRow8 + 7
+	cpX	settleRow8End
 	bne	lSettleDefault
 	
 ; empty queue
@@ -451,7 +447,6 @@ updateLamps:
 	inc	curCol	; indexed can't use base >255, so temp inc X by 255 (1 MSB)
 	ldaA	254
 	ldX	>curCol
-	ldaB	solenoid1 - cRAM, X
 	; update solenoid in current 'column' (1-8) 
 	cmpA	solenoid1 - cRAM, X
 	ifge 	; solenoid <=254, turn on

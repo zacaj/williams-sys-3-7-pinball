@@ -82,7 +82,7 @@ _addScore1000N:
 	
 ; switch callbacks:
 
-none:	.org $7800 + $500 + 192 ; size of callback table
+none:	.org $6000 + 192 ; size of callback table
 	done(1)
 	
 	
@@ -295,7 +295,7 @@ swAdvBonus:
 	advBonus()
 	done(1)
 swSpinner:
-	ldaA	sc(4)
+	ldaA	>sc(4)
 	bitA	sr(6)
 	ifne
 		score100()
@@ -312,7 +312,7 @@ swSpinner:
 ; end callbacks
 	.msfirst
 ; needs to be on $**00 address
-callbackTable: 	.org $7800 + $500 ; note: TRANSPOSED
+callbackTable: 	.org $6000 ; note: TRANSPOSED
 	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
 	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw none\.dw none
 	.dw swDropTip	\.dw swDropTip\.dw swDropTip\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
