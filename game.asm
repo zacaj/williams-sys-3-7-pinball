@@ -18,7 +18,7 @@
 #DEFINE DROP_TIP	SOL(02, 100)
 #DEFINE DROP_HOT	SOL(03, 100)
 #DEFINE LEFT_EJECT	SOL(04, 32)
-#DEFINE OUTHOLE		SOL(05, 10)
+#DEFINE OUTHOLE		SOL(05, 20)
 #DEFINE CHIME_10	SOL(09, 16)
 #DEFINE CHIME_100	SOL(10, 16)
 #DEFINE CHIME_1000	SOL(11, 16)
@@ -26,7 +26,7 @@
 #DEFINE CLICKER		SOL(13, 8)
 #DEFINE	KNOCKER		SOL(14, 50)
 #DEFINE BUZZER		SOL(15, 100)
-#DEFINE SHORT_PAUSE 	150
+#DEFINE SHORT_PAUSE 	115
 
 #DEFINE noValidate ldaA 10b\ oraA >state\ staA state
 #DEFINE done(v)	\
@@ -87,38 +87,39 @@ none:	.org $6000 + 192 ; size of callback table
 	
 	
 startGame:
-	lampOff(6,8) ; game over
 	
 	fireSolenoid(CHIME_10)
 	delay(SHORT_PAUSE)
 	fireSolenoid(CHIME_10)
 	delay(SHORT_PAUSE)
 	fireSolenoid(CHIME_10)
-	delay(SHORT_PAUSE*2)
+	delay(200)
 	
 	fireSolenoid(CHIME_10)
 	delay(SHORT_PAUSE)
 	fireSolenoid(CHIME_10)
 	delay(SHORT_PAUSE)
 	fireSolenoid(CHIME_10)
-	delay(SHORT_PAUSE*2)
+	delay(200)
 	
 	fireSolenoid(CHIME_10)
 	delay(SHORT_PAUSE)
 	fireSolenoid(CHIME_10)
 	delay(SHORT_PAUSE)
 	fireSolenoid(CHIME_100)
-	delay(SHORT_PAUSE)
+	delay(200)
 	fireSolenoid(CHIME_1000)
-	delay(SHORT_PAUSE)
+	delay(200)
 	fireSolenoid(CHIME_10k)
-	delay(SHORT_PAUSE)
+	delay(150)
 	
 	
 	enablePf
 	
-	fireSolenoid(2)
-	fireSolenoid(3)
+	fireSolenoid(DROP_TIP)
+	delay(75)
+	fireSolenoid(DROP_HOT)
+	delay(125)
 	
 	; clear lights
 	ldX	lampCol1
@@ -153,8 +154,10 @@ lClearLights:
 	ldaA	sr(1) ; check outhole
 	bitA	>sc(2)
 	ifne ; ball in hole
-		fireSolenoid(5)
+		fireSolenoid(OUTHOLE)
 	endif
+	
+	lampOff(6,8) ; game over
 	
 	rts
 	
@@ -241,6 +244,11 @@ swOuthole:
 			oraA	>flc(8)
 			staA	flc(8)
 			
+			fireSolenoid(DROP_TIP)
+			delay(75)
+			fireSolenoid(DROP_HOT)
+			delay(125)
+			
 			
 			enablePf
 			
@@ -266,8 +274,9 @@ swTopEject:
 	done(1)
 	
 swHotTip:
-	delay(400)
+	delay(75)
 	fireSolenoid(DROP_HOT)
+	delay(75)
 	fireSolenoid(DROP_TIP)
 	done(1)
 swLeftOutlane:
@@ -324,14 +333,15 @@ callbackTable: 	.org $6000 ; note: TRANSPOSED
 ; on = how many cycles it must be on for before registering (1 cycle = 64ms (?)) (max 7)
 ; off = how many cycles it must be off for
 ; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
-; gameover = whether the switch is active in gameover or tilt mode (these callbacks must check whether in game over when triggered if they want to act different)
+; gameover = whether the switch is active in gameover + tilt mode (these callbacks must check whether in game over when triggered if they want to act different)
+; TRANSPOSED (?)
 #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
 settleTable: ; must be right after callbackTable
-	SW(0,7,1,0)\SW(0,7,1,0)\SW(1,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
-	SW(7,7,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,0,1,0)\SW(0,7,1,0)
-	SW(0,0,1,0)\SW(0,0,1,0)\SW(0,0,1,0)\SW(0,3,1,0)\SW(0,1,1,0)\SW(7,7,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
-	SW(0,0,1,0)\SW(0,0,1,0)\SW(0,0,1,0)\SW(0,1,1,0)\SW(7,7,1,1)\SW(0,0,0,0)\SW(0,0,1,0)\SW(0,1,1,0)
-	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,7,0,1)\SW(7,0,1,0)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
+	SW(7,1,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,0,1,0)\SW(0,7,1,0)
+	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,3,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
+	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,0,0,0)\SW(0,0,1,0)\SW(0,1,1,0)
+	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,7,0,1)\SW(0,0,1,0)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)

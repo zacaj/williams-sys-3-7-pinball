@@ -7,6 +7,76 @@
 #include "game.asm"
 	
 main:		.org $7800
+
+test:
+	
+piaSetup:
+	ldaA	00000000b	;select direction (3rd bit = 0)
+	staA 	displayStrobeC
+	ldaA 	00111111b	;set LED pins to outputs
+	staA 	displayStrobe
+	ldaA 	00000100b 	;select data (3rb bit = 1)
+	staA 	displayStrobeC
+	ldaA	00000000b
+	staA	displayStrobe
+	
+	ldaA	00000000b	;select direction (3rd bit = 0)
+	staA 	displayBcdC
+	ldaA 	11111111b	;set display BCD to output
+	staA 	displayBcd
+	ldaA 	00000100b 	;select data (3rb bit = 1)
+	staA 	displayBcdC
+	ldaA	00000000b
+	staA	displayBcd
+	
+	ldaA	00000000b	;select direction (3rd bit = 0)
+	staA 	lampColC
+	ldaA 	11111111b	;set to output
+	staA 	lampCol
+	ldaA 	00000100b 	;select data (3rb bit = 1)
+	staA 	lampColC
+	ldaA	00000000b
+	staA	lampCol
+	
+	ldaA	00000000b	;select direction (3rd bit = 0)
+	staA 	lampStrobeC
+	ldaA 	11111111b	;set to output
+	staA 	lampStrobe
+	ldaA 	00000100b 	;select data (3rb bit = 1)
+	staA 	lampStrobeC
+	ldaA	00000000b
+	staA	lampStrobe
+	
+	ldaA	00000000b	;select direction (3rd bit = 0)
+	staA 	switchStrobeC
+	ldaA 	11111111b	;set to output
+	staA 	switchStrobe
+	ldaA 	00000100b 	;select data (3rb bit = 1)
+	staA 	switchStrobeC
+	ldaA	00000000b
+	staA	switchStrobe
+	
+	ldaA	00000000b	;select direction (3rd bit = 0)
+	staA 	switchRowC
+	ldaA 	00000000b	;set to input
+	staA 	switchRow
+	ldaA 	00000100b 	;select data (3rb bit = 1)
+	staA 	switchRowC
+	ldaA	00000000b
+	staA	switchRow
+	
+	ldaA	00000000b	;select direction (3rd bit = 0)
+	staA 	solenoidAC
+	staA	solenoidBC
+	ldaA 	11111111b	;set to output
+	staA 	solenoidA
+	staA 	solenoidB
+	ldaA 	00000100b 	;select data (3rb bit = 1)
+	staA 	solenoidAC
+	ldaA 	00110100b 	;select data (3rb bit = 1), enable CB2 output low
+	staA 	solenoidBC
+	
+
 resetRam:
 	ldX	RAM
 	ldaA	0
@@ -22,62 +92,6 @@ resetRamLoop:
 	ldaA	$FF
 	staA	temp + 1
 	ldS	>temp
-
-test:
-	
-piaSetup:
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	displayStrobeC
-	ldaA 	00111111b	;set LED pins to outputs
-	staA 	displayStrobe
-	ldaA 	00000100b 	;select data (3rb bit = 1)
-	staA 	displayStrobeC
-	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	displayBcdC
-	ldaA 	11111111b	;set display BCD to output
-	staA 	displayBcd
-	ldaA 	00000100b 	;select data (3rb bit = 1)
-	staA 	displayBcdC
-	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	lampColC
-	ldaA 	11111111b	;set to output
-	staA 	lampCol
-	ldaA 	00000100b 	;select data (3rb bit = 1)
-	staA 	lampColC
-	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	lampStrobeC
-	ldaA 	11111111b	;set to output
-	staA 	lampStrobe
-	ldaA 	00000100b 	;select data (3rb bit = 1)
-	staA 	lampStrobeC
-	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	switchStrobeC
-	ldaA 	11111111b	;set to output
-	staA 	switchStrobe
-	ldaA 	00000100b 	;select data (3rb bit = 1)
-	staA 	switchStrobeC
-	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	switchRowC
-	ldaA 	00000000b	;set to input
-	staA 	switchRow
-	ldaA 	00000100b 	;select data (3rb bit = 1)
-	staA 	switchRowC
-	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	solenoidAC
-	staA	solenoidBC
-	ldaA 	11111111b	;set to output
-	staA 	solenoidA
-	staA 	solenoidB
-	ldaA 	00000100b 	;select data (3rb bit = 1)
-	staA 	solenoidAC
-	ldaA 	00110100b 	;select data (3rb bit = 1), enable CB2 output low
-	staA 	solenoidBC
 	
 ;
 
@@ -200,24 +214,21 @@ decWaitTimers:
 	ldX	>tempQ
 	
 	ldaB	settleTable - callbackTable, X ; B has settle settings
-	andB 	10000000b ; B set if switch limited to closures
-	ifne
-		ldX	>queueHead
-		andB	0, X	; B set if switch limited to closures and event was not a closure
+	bitB 	10000000b ; B.8 set if switch limited to closures
+	ifne ; if closure only
+		bitA	10000000b ; A.8 set if item was a switch opening
 		bne	skipEvent
 	endif
 	
-	ldaB	>lc(8)	; gameover mask
-	bitB	lr(6)
-	bne	inGameover
-	ldaB	>lc(8) ; tilt bit
-	bitB	lr(5)
-	bne	inGameover
-	bra gameoverPassed
-inGameover:
-	bitA 	01000000b
-	beq	skipEvent	; skip if callback not active in game over
-gameoverPassed:
+	bitB	01000000b ; B.7 = active in game over
+	ifeq 	 ; not active in game over
+		ldaB	>lc(8)	; gameover mask
+		bitB	lr(6)
+		bne	skipEvent
+		ldaB	>lc(8) ; tilt bit
+		bitB	lr(5)
+		bne	skipEvent
+	endif
 	
 	; checked passed, do callback
 	lsl	tempQ + 1 ; double LSB because callback table is 2b wide
@@ -341,13 +352,19 @@ swNext:
 	ifne		; if bit set, switch different
 		pshA ; store changed switches left
 		ldX	>tempX
-		ldaA	11000b
+		ldaA	11000b ; want to skip decrementing settle counter 7/8 IRQs
+				; but checking 'multiple of 8' would miss 7/8 switch
+				; columns completely since they're in sync
+				; so instead the lowest bits are empty (so that it'll
+				; get all switch cols) and instead it skips 7/8 groups 
+				; of 8 IRQs
 		bitA	>counter
-		beq checkSettled ;  skip settling (multiplies settle time by 8)
-			; just check if it's currently settled
+		beq checkSettled ; counter not multiple of 8, skip settling (multiplies settle time by 8)
+			; just check if this is the beginning of the settle
+			;  (want to react right away when a switch closes)
 			ldaA	0, X ; A now how long the switch has left to settle
 			andA	00001111b ; need to remove upper F ( sets Z if A = 0)
-			beq 	notSettled; A=0 -> settled
+			beq 	notSettled; A=0 -> was settled, so can begin
 			bra settledEnd
 checkSettled:
 		ldaA	0, X ; A now how long the switch has left to settle
@@ -388,7 +405,7 @@ notSettled: ; =0 -> was settled, so now it's not
 			; get the settle time
 			ldaA	>tempX + 1
 			staA	temp + 1 	; get temp in sync with tempX LSB
-			ldX	temp
+			ldX	>temp
 			
 			; temp contains half the address of the callback, so add diff between settleTable and callbackTable
 			ldaA	settleTable - callbackTable, X ; A has settle settings
