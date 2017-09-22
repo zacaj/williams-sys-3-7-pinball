@@ -14,10 +14,10 @@
 
 ; Hot Tip solenoids
 #DEFINE SOL(n,t)	(n<<8)|t
-#DEFINE TOP_EJECT 	SOL(01, 32)
+#DEFINE TOP_EJECT 	SOL(01, 24)
 #DEFINE DROP_TIP	SOL(02, 100)
 #DEFINE DROP_HOT	SOL(03, 100)
-#DEFINE LEFT_EJECT	SOL(04, 32)
+#DEFINE LEFT_EJECT	SOL(04, 24)
 #DEFINE OUTHOLE		SOL(05, 20)
 #DEFINE CHIME_10	SOL(09, 16)
 #DEFINE CHIME_100	SOL(10, 16)
@@ -78,12 +78,76 @@ _addScore1000N:
 #DEFCONT	\ fireSolenoid(CHIME_100)	
 #DEFCONT	\ delay(SHORT_PAUSE)
 
-#DEFINE advBonus()
+#DEFINE advBonus()	inc p_Bonus
 	
 ; switch callbacks:
 
 none:	.org $6000 + 192 ; size of callback table
 	done(1)
+	
+bonusLights:
+	ldaA	0
+	staA	lc(5)
+	staA	lc(6)
+	tst	p_Bonus
+	beq	bonusLights_done
+	
+	lampOn(8,5) ; 1k
+	
+	ldaA	>p_Bonus
+bonusLights_loop:
+	decA
+	beq 	bonusLights_done
+	seC
+	rol	lc(6)
+	bra	bonusLights_loop
+	
+bonusLights_done
+
+	ldaA	9
+	cmpA	>p_Bonus
+	ifge	
+	else	; bonus >= 10?
+		ldaA	10
+		staA	p_Bonus
+		lampOn(7,5) ; 10k light
+	endif
+	
+	rts
+	
+startBall:
+	ldaA	1
+	staA	p_Bonus
+	enablePf
+	
+	fireSolenoid(DROP_TIP)
+	delay(75)
+	fireSolenoid(DROP_HOT)
+	delay(125)
+	
+	; clear lights
+	ldX	lampCol1
+	ldaA	0b
+lClearLights:
+	staA	0, X
+	staA	flashLampCol1 - lampCol1, X
+	inX
+	cpX	lc(6) + 1
+	bne	lClearLights
+	;
+	
+	; flash player light
+	ldaA	00001111b ; player up lights
+	oraA	>flc(8)
+	staA	flc(8)
+	
+	ldaA	sr(1) ; check outhole
+	bitA	>sc(2)
+	ifne ; ball in hole
+		fireSolenoid(OUTHOLE)
+	endif
+	
+	rts
 	
 	
 startGame:
@@ -113,25 +177,6 @@ startGame:
 	fireSolenoid(CHIME_10k)
 	delay(150)
 	
-	
-	enablePf
-	
-	fireSolenoid(DROP_TIP)
-	delay(75)
-	fireSolenoid(DROP_HOT)
-	delay(125)
-	
-	; clear lights
-	ldX	lampCol1
-	ldaA	0b
-lClearLights:
-	staA	0, X
-	staA	flashLampCol1 - lampCol1, X
-	inX
-	cpX	lampCol8 + 1
-	bne	lClearLights
-	;
-	
 	; reset scores
 	jsr 	resetScores
 	
@@ -142,20 +187,19 @@ lClearLights:
 	ldaB	0
 	staB	curPlayer + 1
 	
+	staB	lc(7)
+	staB	lc(8)
+	staB	flc(7)
+	staB	flc(8)
+	
+	jsr	startBall
+	
 	; invalidate playfield
 	ldaA	lr(1)
-	oraA	>flc(8)
-	staA	flc(8)
 	oraA	>lc(8)
 	staA	lc(8)
 	
 	lampOn(2,7) ; one player
-	
-	ldaA	sr(1) ; check outhole
-	bitA	>sc(2)
-	ifne ; ball in hole
-		fireSolenoid(OUTHOLE)
-	endif
 	
 	lampOff(6,8) ; game over
 	
@@ -210,8 +254,18 @@ swOuthole:
 			enablePf
 			fireSolenoid(OUTHOLE)
 		else ; none flashing -> playfield valid -> end ball
-			andA	>lc(8)
-			ldaB	>lc(3)
+			tAB
+			
+swOuthole_bonusLoop:
+			score1000()
+			dec	p_Bonus
+			jsr	bonusLights
+			delay(200)
+			tst	p_Bonus
+			bne	swOuthole_bonusLoop
+		
+			andA	>lc(8) ; remove non-player up lights from col 8 for processing
+			ldaB	>lc(3) ; check shoot again light
 			bitB	lr(1)
 			ifeq ; shoot again not lit
 				; go to next player
@@ -239,25 +293,14 @@ swOuthole:
 				staA	lc(8)
 			endif
 			
-			; flash player light
-			ldaA	00001111b ; player up lights
-			oraA	>flc(8)
-			staA	flc(8)
-			
-			fireSolenoid(DROP_TIP)
-			delay(75)
-			fireSolenoid(DROP_HOT)
-			delay(125)
-			
-			
-			enablePf
-			
-			fireSolenoid(OUTHOLE)
+			jsr	startBall
 		endif
 	endif		
 	done(0)
 	
 swLeftEject:
+	advBonus()
+	fireSolenoid(KNOCKER)
 	ldaA	>lc(8)
 	bitA	lr(6)
 	ifeq ; in game
@@ -269,6 +312,7 @@ swLeftEject:
 	done(1)
 	
 swTopEject:
+	advBonus()
 	score500()
 	fireSolenoid(TOP_EJECT)
 	done(1)
@@ -283,6 +327,7 @@ swLeftOutlane:
 swRightOutlane:
 swLeftInlane:
 swRightInlane:
+	advBonus()
 	score1000()
 	done(1)
 sw10pt:
@@ -316,6 +361,26 @@ swSpinner:
 	staA	solenoid1 + CLICKER - 1
 	done(1)
 
+swCaptiveRollover:
+	ldaA	>lc(2)
+	bitA	lr(7)
+	ifeq ; light off
+		score10()
+	else
+		score1000()
+	endif
+	done(1)
+
+swCaptiveTarget:
+	advBonus()
+	ldaA	>lc(2)
+	bitA	lr(7)
+	ifeq ; light off
+		score10()
+	else
+		score1000()
+	endif
+	done(1)
 	
 	
 ; end callbacks
@@ -323,7 +388,7 @@ swSpinner:
 ; needs to be on $**00 address
 callbackTable: 	.org $6000 ; note: TRANSPOSED
 	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
-	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw none\.dw none
+	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw swCaptiveRollover\.dw swCaptiveTarget
 	.dw swDropTip	\.dw swDropTip\.dw swDropTip\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
 	.dw swDropHot	\.dw swDropHot\.dw swDropHot\.dw sw10pt\.dw swLeftEject\.dw swSpinner\.dw sw100pt\.dw sw500pt
 	.dw swLeftOutlane\.dw swLeftInlane\.dw sw10pt\.dw none\.dw swHotTip\.dw none\.dw none\.dw none

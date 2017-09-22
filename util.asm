@@ -248,7 +248,7 @@ _zeroScores:
 	jsr	refreshPlayerScores
 	rts
 
-; trash all
+; trash ~B
 ; delay for ms (8-2000)
 #DEFINE delay(ms) ldaA ms/8\ jsr _delay
 	

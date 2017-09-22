@@ -237,6 +237,8 @@ decWaitTimers:
 	jmp	0, X
 	; everything trashed
 afterQueueEvent:
+	jsr 	bonusLights
+
 	ldaA	10b ; no validate bit
 	bitA	>state
 	ifeq ; validate pf
