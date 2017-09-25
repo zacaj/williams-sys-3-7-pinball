@@ -126,6 +126,9 @@ startBall:
 	fireSolenoid(DROP_HOT)
 	delay(125)
 	
+	ldaA	$FF
+	staA	lastSwitch
+	
 	; clear lights
 	ldX	lampCol1
 	ldaA	0b
@@ -141,6 +144,12 @@ lClearLights:
 	ldX	>curPlayer
 	ldaA	p_Ejects, X
 	staA	lc(4)
+	
+	ldaA	lr(7) ; shoot again
+	bitA	>lc(8)
+	ifne
+		lampOn(1,3) ; shoot again
+	endif
 	
 	; flash player light
 	ldaA	00001111b ; player up lights
@@ -188,7 +197,7 @@ startGame:
 	
 	; reset ball count
 	ldaA	$10
-	staA	ballCount
+	staA	ballCount	
 
 	ldaB	0
 	staB	curPlayer + 1
@@ -259,67 +268,97 @@ swOuthole:
 	delay(600)
 	ldaA	>lc(8) ; !game over
 	bitA	lr(6)
-	ifeq ; !game over
-		ldaA	00001111b ; player up lights
-		bitA	>flc(8)	; check if any player is flashing
-		ifne ; any flashing -> playfield invalid
-			lampOff(5,8) ; tilt
-			
-			enablePf
-			fireSolenoid(OUTHOLE)
-		else ; none flashing -> playfield valid -> end ball			
-swOuthole_bonusLoop:
-			score1000()
-			ldaA	>lc(2) ; double bonus
-			bitA	lr(3)
-			ifne 
-				delay(100)
-				score1000()
+	ifne ; game over
+		done(0)
+	endif
+	
+	; check ballsave
+	ldaA	lr(1)
+	bitA	>lc(3)
+	ifne	; shoot again on
+		bitA	>flc(3)
+		ifne ; shoot again flashing
+			; turn off used special
+			ldaA	lr(8) ; right special
+			bitA	>lc(2)
+			ifne
+				lampOff(8,2)
+				flashOff(8,2)
 			endif
-			dec	p_Bonus
-			;jsr	bonusLights
-			delay(200)
-			tst	p_Bonus
-			bne	swOuthole_bonusLoop
-		
+			ldaA	lr(2) ; right special
+			bitA	>lc(3)
+			ifne
+				lampOff(2,3)
+				flashOff(2,3)
+			endif
+			
+			; flash player light
 			ldaA	00001111b ; player up lights
-			andA	>lc(8) ; remove non-player up lights from col 8 for processing
-			ldaB	>lc(3) ; check shoot again light
-			bitB	lr(1)
-			ifeq ; shoot again not lit
-				; store player's data
-				ldX	>curPlayer
-				ldaB	>lc(4)
-				staB	p_Ejects, X
-			
-				; go to next player
-				aslA
-				inc	curPlayer + 1
-				bitA	>lc(7)	; is player count < player #
-				ifne ; last player
-					ldaA	00000001b; ; back to player 1
-					ldaB	0
-					staB	curPlayer + 1
-					
-					; increase ball count
-					ldaB	>ballCount
-					addB	$10
-					cmpB	$40
-					ifeq ; game over
-						lampOn(6,8)
-						disablePf
-						done(1)
-					else
-						staB	ballCount
-					endif		
-				endif
+			oraA	>flc(8)
+			staA	flc(8)
+		endif
+	endif
+	
+	ldaA	00001111b ; player up lights
+	bitA	>flc(8)	; check if any player is flashing
+	ifne ; any flashing -> playfield invalid
+swOuthole_save:
+		lampOff(5,8) ; tilt
+		
+		enablePf
+		fireSolenoid(OUTHOLE)
+	else ; none flashing -> playfield valid -> end ball			
+swOuthole_bonusLoop:
+		score1000()
+		ldaA	>lc(2) ; double bonus
+		bitA	lr(3)
+		ifne 
+			delay(100)
+			score1000()
+		endif
+		dec	p_Bonus
+		;jsr	bonusLights
+		delay(200)
+		tst	p_Bonus
+		bne	swOuthole_bonusLoop
+	
+		ldaA	00001111b ; player up lights
+		andA	>lc(8) ; remove non-player up lights from col 8 for processing
+		ldaB	>lc(3) ; check shoot again light
+		bitB	lr(1)
+		ifeq ; shoot again not lit
+			; store player's data
+			ldX	>curPlayer
+			ldaB	>lc(4)
+			staB	p_Ejects, X
+		
+			; go to next player
+			aslA
+			inc	curPlayer + 1
+			bitA	>lc(7)	; is player count < player #
+			ifne ; last player
+				ldaA	00000001b; ; back to player 1
+				ldaB	0
+				staB	curPlayer + 1
 				
-				staA	lc(8)
+				; increase ball count
+				ldaB	>ballCount
+				addB	$10
+				cmpB	$40
+				ifeq ; game over
+					lampOn(6,8)
+					disablePf
+					done(1)
+				else
+					staB	ballCount
+				endif		
 			endif
 			
-			jsr	startBall
+			staA	lc(8)
 		endif
-	endif		
+		
+		jsr	startBall
+	endif	
 	done(0)
 	
 swLeftEject:
@@ -383,7 +422,27 @@ swHotTip:
 	fireSolenoid(DROP_TIP)
 	done(1)
 swLeftOutlane:
+	ldaA	lr(2) ; left special
+	bitA	>lc(3)
+	ifne
+		lampOn(1,3) ; shoot again
+		flashLamp(1,3)
+		fireSolenoid(BUZZER)
+		flashLamp(8,2)
+	endif
+	done(1)
+	
 swRightOutlane:
+	ldaA	lr(8) ; right special
+	bitA	>lc(2)
+	ifne
+		lampOn(1,3) ; shoot again
+		flashLamp(1,3)
+		fireSolenoid(BUZZER)
+		flashLamp(8,2)
+	endif
+	done(1)
+	
 swLeftInlane:
 swRightInlane:
 	advBonus()
@@ -401,7 +460,12 @@ sw100pt:
 	score100()
 	done(1)
 sw500pt:
-	score500();
+	jsr	alternate
+	score500()
+	done(1)
+swPop:
+	jsr	alternate
+	score100()
 	done(1)
 swDropTip:
 	score10()
@@ -432,6 +496,11 @@ swCaptiveRollover:
 		score10()
 	else
 		score1000()
+		ldaA	14 ; captive rollover switch number
+		cmpA	>lastSwitch
+		ifne
+			jsr	captiveAward
+		endif
 	endif
 	done(1)
 
@@ -441,10 +510,36 @@ swCaptiveTarget:
 	bitA	lr(7)
 	ifeq ; light off
 		score10()
+		jsr	captiveAward
 	else
 		score1000()
 	endif
 	done(1)
+	
+captiveAward:
+	lampOn(8,2) ; right special
+	
+	rts
+	
+alternate:
+	ldaB	0 ; turn on left?
+	ldaA	lr(8) ; right special
+	bitA	>lc(2)
+	ifne
+		ldaB	1
+		lampOff(8,2) ; right special
+	endif
+	ldaA	lr(2) ; left special
+	bitA	>lc(3)
+	ifne
+		lampOn(8,2) ; right special
+		lampOff(2,3) ; left special
+	endif
+	tstB
+	ifne
+		lampOn(2,3) ; left special
+	endif
+	rts
 	
 	
 ; end callbacks
@@ -454,7 +549,7 @@ callbackTable: 	.org $6000 ; note: TRANSPOSED
 	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
 	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw swCaptiveRollover\.dw swCaptiveTarget
 	.dw swDropTip	\.dw swDropTip\.dw swDropTip\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
-	.dw swDropHot	\.dw swDropHot\.dw swDropHot\.dw sw10pt\.dw swLeftEject\.dw swSpinner\.dw sw100pt\.dw sw500pt
+	.dw swDropHot	\.dw swDropHot\.dw swDropHot\.dw sw10pt\.dw swLeftEject\.dw swSpinner\.dw swPop\.dw sw500pt
 	.dw swLeftOutlane\.dw swLeftInlane\.dw sw10pt\.dw none\.dw swHotTip\.dw none\.dw none\.dw none
 	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none

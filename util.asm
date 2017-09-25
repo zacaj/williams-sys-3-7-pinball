@@ -270,4 +270,6 @@ _zeroScores:
 #define enablePf ldaA 	>solenoidBC\ oraA 00111000b\ staA solenoidBC
 
 #define lampOn(r,c) ldaA lr(r)\ oraA >lc(c)\ staA lc(c)
+#define flashLamp(r,c) ldaA lr(r)\ oraA >flc(c)\ staA flc(c)
 #define lampOff(r,c) ldaA ~lr(r)\ andA >lc(c)\ staA lc(c)
+#define flashOff(r,c) ldaA ~lr(r)\ andA >flc(c)\ staA flc(c)

@@ -56,6 +56,7 @@ waitReg:		.equ RAM + $98 ; -> 9F
 flashLampCol1:		.equ RAM + $A0
 flashLampCol8:		.equ RAM + $A7
 #DEFINE flc(x) 		flashLampCol1 + (x - 1)
+lastSwitch:		.equ RAM + $A8
 
 p_Bonus:		.equ RAM + $B0
 p_Ejects:		.equ RAM + $B1 ; -> B4

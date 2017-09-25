@@ -200,7 +200,9 @@ decWaitTimers:
 ; pop queue
 	ldaB	>queueTail + 1
 	cmpB	>queueHead + 1
-	beq 	skipQueue
+	ifeq
+		jmp skipQueue
+	endif
 	
 	ldX	>queueHead
 	ldaA	0, X	; A now contains the first queue item
@@ -238,6 +240,11 @@ decWaitTimers:
 	; everything trashed
 afterQueueEvent:
 	jsr 	bonusLights
+	
+	; update last switch
+	ldaA	> tempQ + 1
+	lsrA 	; got doubled earlier
+	staA	lastSwitch
 
 	ldaA	10b ; no validate bit
 	bitA	>state
@@ -249,8 +256,21 @@ afterQueueEvent:
 			comA	; turn off flashing
 			andA	>flc(8)
 			staA	flc(8)
-			lampOff(1,3) ; shoot again
-			lampOff(7,8)
+			
+			ldaA	lr(1) ; shoot again pf flashing
+			bitA	>flc(3)
+			ifne
+				; turn off ball save
+				flashOff(1,3)
+				ldaA	lr(7) ; shoot again backbox
+				bitA	>lc(8)
+				ifeq
+					lampOff(1,3) ; shoot again pf
+				endif
+			else
+				lampOff(1,3) ; shoot again
+				lampOff(7,8)
+			endif
 		endif
 	else
 		; clear don't validate bit
@@ -446,9 +466,9 @@ updateLamps:
 	ldaA	>strobe
 	staA	lampStrobe
 	
-	ldaB	>counter2
+	ldaB	>counter
 	ldaA	lampCol1, X
-	bitB	1b 
+	bitB	10000000b 
 	ifeq
 		eorA	flashLampCol1, X
 		andA	lampCol1, X
