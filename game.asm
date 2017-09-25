@@ -253,17 +253,22 @@ swOuthole:
 			
 			enablePf
 			fireSolenoid(OUTHOLE)
-		else ; none flashing -> playfield valid -> end ball
-			tAB
-			
+		else ; none flashing -> playfield valid -> end ball			
 swOuthole_bonusLoop:
 			score1000()
+			ldaA	>lc(2) ; double bonus
+			bitA	lr(3)
+			ifne 
+				delay(100)
+				score1000()
+			endif
 			dec	p_Bonus
 			jsr	bonusLights
 			delay(200)
 			tst	p_Bonus
 			bne	swOuthole_bonusLoop
 		
+			ldaA	00001111b ; player up lights
 			andA	>lc(8) ; remove non-player up lights from col 8 for processing
 			ldaB	>lc(3) ; check shoot again light
 			bitB	lr(1)
@@ -312,6 +317,7 @@ swLeftEject:
 	done(1)
 	
 swTopEject:
+	lampOn(3,2)
 	advBonus()
 	score500()
 	fireSolenoid(TOP_EJECT)

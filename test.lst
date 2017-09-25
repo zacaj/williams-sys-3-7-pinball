@@ -1473,783 +1473,801 @@
 0110+  60E7~            	else	; bonus >= 10?
 0110+  60E7~            	else	; bonus >= 10?
 0110+  60E7             
-0111+  60E7 97 B0       		staA	p_Bonus
-0112+  60E9 86 40       		lampOn(7,5) ; 10k light
-0112+  60EB 9A 0C       
-0112+  60ED 97 0C       
-0113+  60EF             	endif
-0113+  60EF             
-0113+  60EF             
-0113+  60EF             
-0113+  60EF             
-0113+  60EF             
-0113+  60EF~            	endif
-0113+  60EF~            	endif
-0113+  60EF             
-0113+  60EF~            	endif
-0113+  60EF~            	endif
-0113+  60EF             
-0113+  60E6             
-0113+  60E6 08          
-0113+  60E7             
-0113+  60E7             
-0113+  60E7~            	endif
-0113+  60E7~            	endif
-0113+  60E7~            	endif
-0113+  60E7             
-0113+  60EF             
-0113+  60EF~            	endif
-0113+  60EF~            	endif
-0113+  60EF             
-0114+  60EF             	
-0115+  60EF 39          	rts
-0116+  60F0             	
-0117+  60F0             startBall:
-0118+  60F0 86 01       	ldaA	1
-0119+  60F2 97 B0       	staA	p_Bonus
-0120+  60F4 B6 22 03    	enablePf
-0120+  60F7 8A 38       
-0120+  60F9 B7 22 03    
-0121+  60FC             	
-0122+  60FC C6 0C       	fireSolenoid(DROP_TIP)
-0122+  60FE F7 01 41    
-0123+  6101 86 09       	delay(75)
-0123+  6103 BD 7D 2F    
-0124+  6106 C6 0C       	fireSolenoid(DROP_HOT)
-0124+  6108 F7 01 42    
-0125+  610B 86 0F       	delay(125)
-0125+  610D BD 7D 2F    
-0126+  6110             	
-0127+  6110             	; clear lights
-0128+  6110 CE 00 08    	ldX	lampCol1
-0129+  6113 86 00       	ldaA	0b
-0130+  6115             lClearLights:
-0131+  6115 A7 00       	staA	0, X
-0132+  6117 A7 98       	staA	flashLampCol1 - lampCol1, X
-0133+  6119 08          	inX
-0134+  611A 8C 00 0E    	cpX	lc(6) + 1
-0135+  611D 26 F6       	bne	lClearLights
-0136+  611F             	;
-0137+  611F             	
-0138+  611F             	; flash player light
-0139+  611F 86 0F       	ldaA	00001111b ; player up lights
-0140+  6121 9A A7       	oraA	>flc(8)
-0141+  6123 97 A7       	staA	flc(8)
-0142+  6125             	
-0143+  6125 86 01       	ldaA	sr(1) ; check outhole
-0144+  6127 95 21       	bitA	>sc(2)
-0145+  6129             	ifne ; ball in hole
-0145+  6129             
-0145+  6129 27 FE       
-0146+  612B C6 02       		fireSolenoid(OUTHOLE)
-0146+  612D F7 01 44    
-0147+  6130             	endif
-0147+  6130             
-0147+  6130             
-0147+  6130             
-0147+  6130             
-0147+  6130             
-0147+  6130~            	endif
-0147+  6130~            	endif
-0147+  6130             
-0147+  6130~            	endif
-0147+  6130~            	endif
-0147+  6130             
-0147+  612A             
-0147+  612A 05          
-0147+  612B             
-0147+  612B             
-0147+  612B~            	endif
-0147+  612B~            	endif
-0147+  612B~            	endif
-0147+  612B             
-0147+  6130             
-0147+  6130~            	endif
-0147+  6130~            	endif
-0147+  6130             
-0148+  6130             	
-0149+  6130 39          	rts
-0150+  6131             	
-0151+  6131             	
-0152+  6131             startGame:
-0153+  6131             	
-0154+  6131 C6 02       	fireSolenoid(CHIME_10)
-0154+  6133 F7 01 48    
-0155+  6136 86 0E       	delay(SHORT_PAUSE)
-0155+  6138 BD 7D 2F    
-0156+  613B C6 02       	fireSolenoid(CHIME_10)
-0156+  613D F7 01 48    
-0157+  6140 86 0E       	delay(SHORT_PAUSE)
-0157+  6142 BD 7D 2F    
-0158+  6145 C6 02       	fireSolenoid(CHIME_10)
-0158+  6147 F7 01 48    
-0159+  614A 86 19       	delay(200)
-0159+  614C BD 7D 2F    
-0160+  614F             	
-0161+  614F C6 02       	fireSolenoid(CHIME_10)
-0161+  6151 F7 01 48    
-0162+  6154 86 0E       	delay(SHORT_PAUSE)
-0162+  6156 BD 7D 2F    
-0163+  6159 C6 02       	fireSolenoid(CHIME_10)
-0163+  615B F7 01 48    
-0164+  615E 86 0E       	delay(SHORT_PAUSE)
-0164+  6160 BD 7D 2F    
-0165+  6163 C6 02       	fireSolenoid(CHIME_10)
-0165+  6165 F7 01 48    
-0166+  6168 86 19       	delay(200)
-0166+  616A BD 7D 2F    
-0167+  616D             	
-0168+  616D C6 02       	fireSolenoid(CHIME_10)
-0168+  616F F7 01 48    
-0169+  6172 86 0E       	delay(SHORT_PAUSE)
-0169+  6174 BD 7D 2F    
-0170+  6177 C6 02       	fireSolenoid(CHIME_10)
-0170+  6179 F7 01 48    
-0171+  617C 86 0E       	delay(SHORT_PAUSE)
-0171+  617E BD 7D 2F    
-0172+  6181 C6 02       	fireSolenoid(CHIME_100)
-0172+  6183 F7 01 49    
-0173+  6186 86 19       	delay(200)
-0173+  6188 BD 7D 2F    
-0174+  618B C6 02       	fireSolenoid(CHIME_1000)
-0174+  618D F7 01 4A    
-0175+  6190 86 19       	delay(200)
-0175+  6192 BD 7D 2F    
-0176+  6195 C6 02       	fireSolenoid(CHIME_10k)
-0176+  6197 F7 01 4B    
-0177+  619A 86 12       	delay(150)
-0177+  619C BD 7D 2F    
-0178+  619F             	
-0179+  619F             	; reset scores
-0180+  619F BD 7D 44    	jsr 	resetScores
-0181+  61A2             	
-0182+  61A2             	; reset ball count
-0183+  61A2 86 10       	ldaA	$10
-0184+  61A4 97 77       	staA	ballCount
-0185+  61A6             
-0186+  61A6 C6 00       	ldaB	0
-0187+  61A8 D7 13       	staB	curPlayer + 1
-0188+  61AA             	
-0189+  61AA D7 0E       	staB	lc(7)
-0190+  61AC D7 0F       	staB	lc(8)
-0191+  61AE D7 A6       	staB	flc(7)
-0192+  61B0 D7 A7       	staB	flc(8)
-0193+  61B2             	
-0194+  61B2 BD 60 F0    	jsr	startBall
-0195+  61B5             	
-0196+  61B5             	; invalidate playfield
-0197+  61B5 86 01       	ldaA	lr(1)
-0198+  61B7 9A 0F       	oraA	>lc(8)
-0199+  61B9 97 0F       	staA	lc(8)
-0200+  61BB             	
-0201+  61BB 86 02       	lampOn(2,7) ; one player
-0201+  61BD 9A 0E       
-0201+  61BF 97 0E       
-0202+  61C1             	
-0203+  61C1 86 DF       	lampOff(6,8) ; game over
-0203+  61C3 94 0F       
-0203+  61C5 97 0F       
-0204+  61C7             	
-0205+  61C7 39          	rts
-0206+  61C8             	
-0207+  61C8             
-0208+  61C8             	
-0209+  61C8             swTilt: 
-0210+  61C8 86 10       	lampOn(5,8) ; tilt
-0210+  61CA 9A 0F       
-0210+  61CC 97 0F       
-0211+  61CE B6 22 03    	disablePf
-0211+  61D1 84 F7       
-0211+  61D3 B7 22 03    
-0212+  61D6             	done(0)
-0212+  61D6             
-0212+  61D6 86 02       
-0212+  61D8 BA 01 69    
-0212+  61DB B7 01 69    
-0212+  61DE             
-0212+  61DE 7E 79 77    
-0213+  61E1             	
-0214+  61E1             swStart: 
-0215+  61E1 96 0F       	ldaA >lc(8)
-0216+  61E3 85 20       	bitA lr(6)
-0217+  61E5             	ifne ; in game over
-0217+  61E5             
-0217+  61E5 27 FE       
-0218+  61E7 BD 61 31    		jsr startGame
-0219+  61EA             	else 
-0219+  61EA             
-0219+  61EA             
-0219+  61EA             
-0219+  61EA             
-0219+  61E6             
-0219+  61E6             
-0219+  61E6             
-0219+  61E6~            	else 
-0219+  61E6~            	else 
-0219+  61E6~            	else 
-0219+  61E6~            	else 
-0219+  61E6             
-0219+  61E6~            	else 
-0219+  61E6~            	else 
-0219+  61E6~            	else 
-0219+  61E6~            	else 
-0219+  61E6             
-0219+  61E6             
-0219+  61E6 05          
-0219+  61EA             
-0219+  61EA 20 FE       
-0219+  61EC             
-0219+  61EC             
-0219+  61EC             
-0219+  61EC~            	else 
-0219+  61EC~            	else 
-0219+  61EC~            	else 
-0219+  61EC~            	else 
-0219+  61EC~            	else 
-0219+  61EC             
-0219+  61EC~            	else 
-0219+  61EC~            	else 
-0219+  61EC             
-0219+  61EC~            	else 
-0219+  61EC~            	else 
-0219+  61EC             
-0220+  61EC 86 10       		ldaA	$10
-0221+  61EE 91 77       		cmpA	>ballCount
-0222+  61F0             		ifeq ; add player
-0222+  61F0             
-0222+  61F0 26 FE       
-0223+  61F2 86 1E       			ldaA	00011110b
-0224+  61F4 94 0E       			andA	>lc(7) ; player count lights
-0225+  61F6 85 10       			bitA	lr(5)
-0226+  61F8             			ifeq	; if not on P4 already, add player
-0226+  61F8             
-0226+  61F8 26 FE       
-0227+  61FA 48          				aslA
-0228+  61FB C6 E1       				ldaB	11100001b
-0229+  61FD D4 0E       				andB	>lc(7)
-0230+  61FF D7 0E       				staB	lc(7)
-0231+  6201 9A 0E       				oraA	>lc(7)
-0232+  6203 97 0E       				staA	lc(7)
-0233+  6205             			endif
-0233+  6205             
-0233+  6205             
-0233+  6205             
-0233+  6205             
-0233+  6205             
-0233+  6205~            			endif
-0233+  6205~            			endif
-0233+  6205             
-0233+  6205~            			endif
-0233+  6205~            			endif
-0233+  6205             
-0233+  61F9             
-0233+  61F9 0B          
-0233+  61FA             
-0233+  61FA             
-0233+  61FA~            			endif
-0233+  61FA~            			endif
-0233+  61FA~            			endif
-0233+  61FA             
-0233+  6205             
-0233+  6205~            			endif
-0233+  6205~            			endif
-0233+  6205             
-0234+  6205             		else ; restart game
-0234+  6205             
-0234+  6205             
-0234+  6205             
-0234+  6205             
-0234+  61F1             
-0234+  61F1             
-0234+  61F1             
-0234+  61F1~            		else ; restart game
-0234+  61F1~            		else ; restart game
-0234+  61F1~            		else ; restart game
-0234+  61F1~            		else ; restart game
-0234+  61F1             
-0234+  61F1~            		else ; restart game
-0234+  61F1~            		else ; restart game
-0234+  61F1~            		else ; restart game
-0234+  61F1~            		else ; restart game
-0234+  61F1             
-0234+  61F1             
-0234+  61F1 15          
-0234+  6205             
-0234+  6205 20 FE       
+0111+  60E7 86 0A       		ldaA	10
+0112+  60E9 97 B0       		staA	p_Bonus
+0113+  60EB 86 40       		lampOn(7,5) ; 10k light
+0113+  60ED 9A 0C       
+0113+  60EF 97 0C       
+0114+  60F1             	endif
+0114+  60F1             
+0114+  60F1             
+0114+  60F1             
+0114+  60F1             
+0114+  60F1             
+0114+  60F1~            	endif
+0114+  60F1~            	endif
+0114+  60F1             
+0114+  60F1~            	endif
+0114+  60F1~            	endif
+0114+  60F1             
+0114+  60E6             
+0114+  60E6 0A          
+0114+  60E7             
+0114+  60E7             
+0114+  60E7~            	endif
+0114+  60E7~            	endif
+0114+  60E7~            	endif
+0114+  60E7             
+0114+  60F1             
+0114+  60F1~            	endif
+0114+  60F1~            	endif
+0114+  60F1             
+0115+  60F1             	
+0116+  60F1 39          	rts
+0117+  60F2             	
+0118+  60F2             startBall:
+0119+  60F2 86 01       	ldaA	1
+0120+  60F4 97 B0       	staA	p_Bonus
+0121+  60F6 B6 22 03    	enablePf
+0121+  60F9 8A 38       
+0121+  60FB B7 22 03    
+0122+  60FE             	
+0123+  60FE C6 0C       	fireSolenoid(DROP_TIP)
+0123+  6100 F7 01 41    
+0124+  6103 86 09       	delay(75)
+0124+  6105 BD 7D 2F    
+0125+  6108 C6 0C       	fireSolenoid(DROP_HOT)
+0125+  610A F7 01 42    
+0126+  610D 86 0F       	delay(125)
+0126+  610F BD 7D 2F    
+0127+  6112             	
+0128+  6112             	; clear lights
+0129+  6112 CE 00 08    	ldX	lampCol1
+0130+  6115 86 00       	ldaA	0b
+0131+  6117             lClearLights:
+0132+  6117 A7 00       	staA	0, X
+0133+  6119 A7 98       	staA	flashLampCol1 - lampCol1, X
+0134+  611B 08          	inX
+0135+  611C 8C 00 0E    	cpX	lc(6) + 1
+0136+  611F 26 F6       	bne	lClearLights
+0137+  6121             	;
+0138+  6121             	
+0139+  6121             	; flash player light
+0140+  6121 86 0F       	ldaA	00001111b ; player up lights
+0141+  6123 9A A7       	oraA	>flc(8)
+0142+  6125 97 A7       	staA	flc(8)
+0143+  6127             	
+0144+  6127 86 01       	ldaA	sr(1) ; check outhole
+0145+  6129 95 21       	bitA	>sc(2)
+0146+  612B             	ifne ; ball in hole
+0146+  612B             
+0146+  612B 27 FE       
+0147+  612D C6 02       		fireSolenoid(OUTHOLE)
+0147+  612F F7 01 44    
+0148+  6132             	endif
+0148+  6132             
+0148+  6132             
+0148+  6132             
+0148+  6132             
+0148+  6132             
+0148+  6132~            	endif
+0148+  6132~            	endif
+0148+  6132             
+0148+  6132~            	endif
+0148+  6132~            	endif
+0148+  6132             
+0148+  612C             
+0148+  612C 05          
+0148+  612D             
+0148+  612D             
+0148+  612D~            	endif
+0148+  612D~            	endif
+0148+  612D~            	endif
+0148+  612D             
+0148+  6132             
+0148+  6132~            	endif
+0148+  6132~            	endif
+0148+  6132             
+0149+  6132             	
+0150+  6132 39          	rts
+0151+  6133             	
+0152+  6133             	
+0153+  6133             startGame:
+0154+  6133             	
+0155+  6133 C6 02       	fireSolenoid(CHIME_10)
+0155+  6135 F7 01 48    
+0156+  6138 86 0E       	delay(SHORT_PAUSE)
+0156+  613A BD 7D 2F    
+0157+  613D C6 02       	fireSolenoid(CHIME_10)
+0157+  613F F7 01 48    
+0158+  6142 86 0E       	delay(SHORT_PAUSE)
+0158+  6144 BD 7D 2F    
+0159+  6147 C6 02       	fireSolenoid(CHIME_10)
+0159+  6149 F7 01 48    
+0160+  614C 86 19       	delay(200)
+0160+  614E BD 7D 2F    
+0161+  6151             	
+0162+  6151 C6 02       	fireSolenoid(CHIME_10)
+0162+  6153 F7 01 48    
+0163+  6156 86 0E       	delay(SHORT_PAUSE)
+0163+  6158 BD 7D 2F    
+0164+  615B C6 02       	fireSolenoid(CHIME_10)
+0164+  615D F7 01 48    
+0165+  6160 86 0E       	delay(SHORT_PAUSE)
+0165+  6162 BD 7D 2F    
+0166+  6165 C6 02       	fireSolenoid(CHIME_10)
+0166+  6167 F7 01 48    
+0167+  616A 86 19       	delay(200)
+0167+  616C BD 7D 2F    
+0168+  616F             	
+0169+  616F C6 02       	fireSolenoid(CHIME_10)
+0169+  6171 F7 01 48    
+0170+  6174 86 0E       	delay(SHORT_PAUSE)
+0170+  6176 BD 7D 2F    
+0171+  6179 C6 02       	fireSolenoid(CHIME_10)
+0171+  617B F7 01 48    
+0172+  617E 86 0E       	delay(SHORT_PAUSE)
+0172+  6180 BD 7D 2F    
+0173+  6183 C6 02       	fireSolenoid(CHIME_100)
+0173+  6185 F7 01 49    
+0174+  6188 86 19       	delay(200)
+0174+  618A BD 7D 2F    
+0175+  618D C6 02       	fireSolenoid(CHIME_1000)
+0175+  618F F7 01 4A    
+0176+  6192 86 19       	delay(200)
+0176+  6194 BD 7D 2F    
+0177+  6197 C6 02       	fireSolenoid(CHIME_10k)
+0177+  6199 F7 01 4B    
+0178+  619C 86 12       	delay(150)
+0178+  619E BD 7D 2F    
+0179+  61A1             	
+0180+  61A1             	; reset scores
+0181+  61A1 BD 7D 44    	jsr 	resetScores
+0182+  61A4             	
+0183+  61A4             	; reset ball count
+0184+  61A4 86 10       	ldaA	$10
+0185+  61A6 97 77       	staA	ballCount
+0186+  61A8             
+0187+  61A8 C6 00       	ldaB	0
+0188+  61AA D7 13       	staB	curPlayer + 1
+0189+  61AC             	
+0190+  61AC D7 0E       	staB	lc(7)
+0191+  61AE D7 0F       	staB	lc(8)
+0192+  61B0 D7 A6       	staB	flc(7)
+0193+  61B2 D7 A7       	staB	flc(8)
+0194+  61B4             	
+0195+  61B4 BD 60 F2    	jsr	startBall
+0196+  61B7             	
+0197+  61B7             	; invalidate playfield
+0198+  61B7 86 01       	ldaA	lr(1)
+0199+  61B9 9A 0F       	oraA	>lc(8)
+0200+  61BB 97 0F       	staA	lc(8)
+0201+  61BD             	
+0202+  61BD 86 02       	lampOn(2,7) ; one player
+0202+  61BF 9A 0E       
+0202+  61C1 97 0E       
+0203+  61C3             	
+0204+  61C3 86 DF       	lampOff(6,8) ; game over
+0204+  61C5 94 0F       
+0204+  61C7 97 0F       
+0205+  61C9             	
+0206+  61C9 39          	rts
+0207+  61CA             	
+0208+  61CA             
+0209+  61CA             	
+0210+  61CA             swTilt: 
+0211+  61CA 86 10       	lampOn(5,8) ; tilt
+0211+  61CC 9A 0F       
+0211+  61CE 97 0F       
+0212+  61D0 B6 22 03    	disablePf
+0212+  61D3 84 F7       
+0212+  61D5 B7 22 03    
+0213+  61D8             	done(0)
+0213+  61D8             
+0213+  61D8 86 02       
+0213+  61DA BA 01 69    
+0213+  61DD B7 01 69    
+0213+  61E0             
+0213+  61E0 7E 79 77    
+0214+  61E3             	
+0215+  61E3             swStart: 
+0216+  61E3 96 0F       	ldaA >lc(8)
+0217+  61E5 85 20       	bitA lr(6)
+0218+  61E7             	ifne ; in game over
+0218+  61E7             
+0218+  61E7 27 FE       
+0219+  61E9 BD 61 33    		jsr startGame
+0220+  61EC             	else 
+0220+  61EC             
+0220+  61EC             
+0220+  61EC             
+0220+  61EC             
+0220+  61E8             
+0220+  61E8             
+0220+  61E8             
+0220+  61E8~            	else 
+0220+  61E8~            	else 
+0220+  61E8~            	else 
+0220+  61E8~            	else 
+0220+  61E8             
+0220+  61E8~            	else 
+0220+  61E8~            	else 
+0220+  61E8~            	else 
+0220+  61E8~            	else 
+0220+  61E8             
+0220+  61E8             
+0220+  61E8 05          
+0220+  61EC             
+0220+  61EC 20 FE       
+0220+  61EE             
+0220+  61EE             
+0220+  61EE             
+0220+  61EE~            	else 
+0220+  61EE~            	else 
+0220+  61EE~            	else 
+0220+  61EE~            	else 
+0220+  61EE~            	else 
+0220+  61EE             
+0220+  61EE~            	else 
+0220+  61EE~            	else 
+0220+  61EE             
+0220+  61EE~            	else 
+0220+  61EE~            	else 
+0220+  61EE             
+0221+  61EE 86 10       		ldaA	$10
+0222+  61F0 91 77       		cmpA	>ballCount
+0223+  61F2             		ifeq ; add player
+0223+  61F2             
+0223+  61F2 26 FE       
+0224+  61F4 86 1E       			ldaA	00011110b
+0225+  61F6 94 0E       			andA	>lc(7) ; player count lights
+0226+  61F8 85 10       			bitA	lr(5)
+0227+  61FA             			ifeq	; if not on P4 already, add player
+0227+  61FA             
+0227+  61FA 26 FE       
+0228+  61FC 48          				aslA
+0229+  61FD C6 E1       				ldaB	11100001b
+0230+  61FF D4 0E       				andB	>lc(7)
+0231+  6201 D7 0E       				staB	lc(7)
+0232+  6203 9A 0E       				oraA	>lc(7)
+0233+  6205 97 0E       				staA	lc(7)
+0234+  6207             			endif
 0234+  6207             
 0234+  6207             
 0234+  6207             
-0234+  6207~            		else ; restart game
-0234+  6207~            		else ; restart game
-0234+  6207~            		else ; restart game
-0234+  6207~            		else ; restart game
-0234+  6207~            		else ; restart game
 0234+  6207             
-0234+  6207~            		else ; restart game
-0234+  6207~            		else ; restart game
 0234+  6207             
-0234+  6207~            		else ; restart game
-0234+  6207~            		else ; restart game
+0234+  6207~            			endif
+0234+  6207~            			endif
 0234+  6207             
-0235+  6207 BD 61 31    			jsr startGame
-0236+  620A             		endif		
-0236+  620A             
-0236+  620A             
-0236+  620A             
-0236+  620A             
-0236+  620A             
-0236+  620A~            		endif		
-0236+  620A~            		endif		
-0236+  620A             
-0236+  620A~            		endif		
-0236+  620A~            		endif		
-0236+  620A             
-0236+  6206             
-0236+  6206 03          
-0236+  6207             
-0236+  6207             
-0236+  6207~            		endif		
-0236+  6207~            		endif		
-0236+  6207~            		endif		
-0236+  6207             
-0236+  620A             
-0236+  620A~            		endif		
-0236+  620A~            		endif		
-0236+  620A             
-0237+  620A             	endif
-0237+  620A             
-0237+  620A             
-0237+  620A             
-0237+  620A             
-0237+  620A             
-0237+  620A~            	endif
-0237+  620A~            	endif
-0237+  620A             
-0237+  620A~            	endif
-0237+  620A~            	endif
-0237+  620A             
-0237+  61EB             
-0237+  61EB 1E          
-0237+  61EC             
-0237+  61EC             
-0237+  61EC~            	endif
-0237+  61EC~            	endif
-0237+  61EC~            	endif
-0237+  61EC             
-0237+  620A             
-0237+  620A~            	endif
-0237+  620A~            	endif
-0237+  620A             
-0238+  620A             	
-0239+  620A BD 7C CF    	jsr refreshPlayerScores
-0240+  620D             	
-0241+  620D             	done(0)
-0241+  620D             
-0241+  620D 86 02       
-0241+  620F BA 01 69    
-0241+  6212 B7 01 69    
-0241+  6215             
-0241+  6215 7E 79 77    
-0242+  6218             	
-0243+  6218             swOuthole: 
-0244+  6218 86 4B       	delay(600)
-0244+  621A BD 7D 2F    
-0245+  621D 96 0F       	ldaA	>lc(8) ; !game over
-0246+  621F 85 20       	bitA	lr(6)
-0247+  6221             	ifeq ; !game over
-0247+  6221             
-0247+  6221 26 FE       
-0248+  6223 86 0F       		ldaA	00001111b ; player up lights
-0249+  6225 95 A7       		bitA	>flc(8)	; check if any player is flashing
-0250+  6227             		ifne ; any flashing -> playfield invalid
-0250+  6227             
-0250+  6227 27 FE       
-0251+  6229 86 EF       			lampOff(5,8) ; tilt
-0251+  622B 94 0F       
-0251+  622D 97 0F       
-0252+  622F             			
-0253+  622F B6 22 03    			enablePf
-0253+  6232 8A 38       
-0253+  6234 B7 22 03    
-0254+  6237 C6 02       			fireSolenoid(OUTHOLE)
-0254+  6239 F7 01 44    
-0255+  623C             		else ; none flashing -> playfield valid -> end ball
-0255+  623C             
-0255+  623C             
-0255+  623C             
-0255+  623C             
-0255+  6228             
-0255+  6228             
-0255+  6228             
-0255+  6228~            		else ; none flashing -> playfield valid -> end ball
-0255+  6228~            		else ; none flashing -> playfield valid -> end ball
-0255+  6228~            		else ; none flashing -> playfield valid -> end ball
-0255+  6228~            		else ; none flashing -> playfield valid -> end ball
-0255+  6228             
-0255+  6228~            		else ; none flashing -> playfield valid -> end ball
-0255+  6228~            		else ; none flashing -> playfield valid -> end ball
-0255+  6228~            		else ; none flashing -> playfield valid -> end ball
-0255+  6228~            		else ; none flashing -> playfield valid -> end ball
-0255+  6228             
-0255+  6228             
-0255+  6228 15          
-0255+  623C             
-0255+  623C 20 FE       
-0255+  623E             
-0255+  623E             
-0255+  623E             
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E             
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E             
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E~            		else ; none flashing -> playfield valid -> end ball
-0255+  623E             
-0256+  623E 16          			tAB
-0257+  623F             			
-0258+  623F             swOuthole_bonusLoop:
-0259+  623F BD 7D 80    			score1000()
-0260+  6242 7A 00 B0    			dec	p_Bonus
-0261+  6245 BD 60 C3    			jsr	bonusLights
-0262+  6248 86 19       			delay(200)
-0262+  624A BD 7D 2F    
-0263+  624D 7D 00 B0    			tst	p_Bonus
-0264+  6250 26 ED       			bne	swOuthole_bonusLoop
-0265+  6252             		
-0266+  6252 94 0F       			andA	>lc(8) ; remove non-player up lights from col 8 for processing
-0267+  6254 D6 0A       			ldaB	>lc(3) ; check shoot again light
-0268+  6256 C5 01       			bitB	lr(1)
-0269+  6258             			ifeq ; shoot again not lit
-0269+  6258             
-0269+  6258 26 FE       
-0270+  625A             				; go to next player
-0271+  625A 48          				aslA
-0272+  625B 7C 00 13    				inc	curPlayer + 1
-0273+  625E 95 0E       				bitA	>lc(7)	; is player count < player #
-0274+  6260             				ifne ; last player
-0274+  6260             
-0274+  6260 27 FE       
-0275+  6262 86 01       					ldaA	00000001b; ; back to player 1
-0276+  6264 C6 00       					ldaB	0
-0277+  6266 D7 13       					staB	curPlayer + 1
-0278+  6268             					
-0279+  6268             					; increase ball count
-0280+  6268 D6 77       					ldaB	>ballCount
-0281+  626A CB 10       					addB	$10
-0282+  626C C1 40       					cmpB	$40
-0283+  626E             					ifeq ; game over
-0283+  626E             
-0283+  626E 26 FE       
-0284+  6270 86 20       						lampOn(6,8)
-0284+  6272 9A 0F       
-0284+  6274 97 0F       
-0285+  6276 B6 22 03    						disablePf
-0285+  6279 84 F7       
-0285+  627B B7 22 03    
-0286+  627E             						done(1)
-0286+  627E~            						done(1)
-0286+  627E~            						done(1)
-0286+  627E~            						done(1)
-0286+  627E~            						done(1)
-0286+  627E             
-0286+  627E 7E 79 77    
-0287+  6281             					else
-0287+  6281             
-0287+  6281             
-0287+  6281             
-0287+  6281             
-0287+  626F             
-0287+  626F             
-0287+  626F             
-0287+  626F~            					else
-0287+  626F~            					else
-0287+  626F~            					else
-0287+  626F~            					else
-0287+  626F             
-0287+  626F~            					else
-0287+  626F~            					else
-0287+  626F~            					else
-0287+  626F~            					else
-0287+  626F             
-0287+  626F             
-0287+  626F 13          
-0287+  6281             
-0287+  6281 20 FE       
-0287+  6283             
-0287+  6283             
-0287+  6283             
-0287+  6283~            					else
-0287+  6283~            					else
-0287+  6283~            					else
-0287+  6283~            					else
-0287+  6283~            					else
-0287+  6283             
-0287+  6283~            					else
-0287+  6283~            					else
-0287+  6283             
-0287+  6283~            					else
-0287+  6283~            					else
-0287+  6283             
-0288+  6283 D7 77       						staB	ballCount
-0289+  6285             					endif		
-0289+  6285             
-0289+  6285             
-0289+  6285             
-0289+  6285             
-0289+  6285             
-0289+  6285~            					endif		
-0289+  6285~            					endif		
-0289+  6285             
-0289+  6285~            					endif		
-0289+  6285~            					endif		
-0289+  6285             
-0289+  6282             
-0289+  6282 02          
-0289+  6283             
-0289+  6283             
-0289+  6283~            					endif		
-0289+  6283~            					endif		
-0289+  6283~            					endif		
-0289+  6283             
-0289+  6285             
-0289+  6285~            					endif		
-0289+  6285~            					endif		
-0289+  6285             
-0290+  6285             				endif
-0290+  6285             
-0290+  6285             
-0290+  6285             
-0290+  6285             
-0290+  6285             
-0290+  6285~            				endif
-0290+  6285~            				endif
-0290+  6285             
-0290+  6285~            				endif
-0290+  6285~            				endif
-0290+  6285             
-0290+  6261             
-0290+  6261 23          
-0290+  6262             
-0290+  6262             
-0290+  6262~            				endif
-0290+  6262~            				endif
-0290+  6262~            				endif
-0290+  6262             
-0290+  6285             
-0290+  6285~            				endif
-0290+  6285~            				endif
-0290+  6285             
-0291+  6285             				
-0292+  6285 97 0F       				staA	lc(8)
-0293+  6287             			endif
-0293+  6287             
-0293+  6287             
-0293+  6287             
-0293+  6287             
-0293+  6287             
-0293+  6287~            			endif
-0293+  6287~            			endif
-0293+  6287             
-0293+  6287~            			endif
-0293+  6287~            			endif
-0293+  6287             
-0293+  6259             
-0293+  6259 2D          
-0293+  625A             
-0293+  625A             
-0293+  625A~            			endif
-0293+  625A~            			endif
-0293+  625A~            			endif
-0293+  625A             
-0293+  6287             
-0293+  6287~            			endif
-0293+  6287~            			endif
-0293+  6287             
-0294+  6287             			
-0295+  6287 BD 60 F0    			jsr	startBall
-0296+  628A             		endif
-0296+  628A             
-0296+  628A             
-0296+  628A             
-0296+  628A             
-0296+  628A             
-0296+  628A~            		endif
-0296+  628A~            		endif
-0296+  628A             
-0296+  628A~            		endif
-0296+  628A~            		endif
-0296+  628A             
-0296+  623D             
-0296+  623D 4C          
-0296+  623E             
-0296+  623E             
-0296+  623E~            		endif
-0296+  623E~            		endif
-0296+  623E~            		endif
-0296+  623E             
-0296+  628A             
-0296+  628A~            		endif
-0296+  628A~            		endif
-0296+  628A             
-0297+  628A             	endif		
-0297+  628A             
-0297+  628A             
-0297+  628A             
-0297+  628A             
-0297+  628A             
-0297+  628A~            	endif		
-0297+  628A~            	endif		
-0297+  628A             
-0297+  628A~            	endif		
-0297+  628A~            	endif		
-0297+  628A             
-0297+  6222             
-0297+  6222 67          
-0297+  6223             
-0297+  6223             
-0297+  6223~            	endif		
-0297+  6223~            	endif		
-0297+  6223~            	endif		
-0297+  6223             
-0297+  628A             
-0297+  628A~            	endif		
-0297+  628A~            	endif		
-0297+  628A             
-0298+  628A             	done(0)
-0298+  628A             
-0298+  628A 86 02       
-0298+  628C BA 01 69    
-0298+  628F B7 01 69    
-0298+  6292             
-0298+  6292 7E 79 77    
-0299+  6295             	
-0300+  6295             swLeftEject:
-0301+  6295 7C 00 B0    	advBonus()
-0302+  6298 C6 06       	fireSolenoid(KNOCKER)
-0302+  629A F7 01 4D    
-0303+  629D 96 0F       	ldaA	>lc(8)
-0304+  629F 85 20       	bitA	lr(6)
-0305+  62A1             	ifeq ; in game
-0305+  62A1             
-0305+  62A1 26 FE       
-0306+  62A3 86 01       		lampOn(1,3)
-0306+  62A5 9A 0A       
-0306+  62A7 97 0A       
-0307+  62A9 86 40       		lampOn(7,8)
-0307+  62AB 9A 0F       
-0307+  62AD 97 0F       
-0308+  62AF             	endif
-0308+  62AF             
-0308+  62AF             
-0308+  62AF             
-0308+  62AF             
-0308+  62AF             
-0308+  62AF~            	endif
-0308+  62AF~            	endif
-0308+  62AF             
-0308+  62AF~            	endif
-0308+  62AF~            	endif
-0308+  62AF             
-0308+  62A2             
-0308+  62A2 0C          
-0308+  62A3             
-0308+  62A3             
-0308+  62A3~            	endif
-0308+  62A3~            	endif
-0308+  62A3~            	endif
-0308+  62A3             
-0308+  62AF             
-0308+  62AF~            	endif
-0308+  62AF~            	endif
-0308+  62AF             
-0309+  62AF             	score500()
-0309+  62AF BD 7D 71    
-0309+  62B2 C6 02       
-0309+  62B4 F7 01 49    
-0309+  62B7 86 0E       
-0309+  62B9 BD 7D 2F    
-0309+  62BC BD 7D 71    
-0309+  62BF C6 02       
-0309+  62C1 F7 01 49    
-0309+  62C4 86 0E       
-0309+  62C6 BD 7D 2F    
-0309+  62C9 BD 7D 71    
-0309+  62CC C6 02       
-0309+  62CE F7 01 49    
-0309+  62D1 86 0E       
-0309+  62D3 BD 7D 2F    
-0309+  62D6 BD 7D 71    
-0309+  62D9 C6 02       
-0309+  62DB F7 01 49    
-0309+  62DE 86 0E       
-0309+  62E0 BD 7D 2F    
-0309+  62E3 BD 7D 71    
-0309+  62E6 C6 02       
-0309+  62E8 F7 01 49    
-0309+  62EB 86 0E       
-0309+  62ED BD 7D 2F    
-0310+  62F0 C6 03       	fireSolenoid(LEFT_EJECT)
-0310+  62F2 F7 01 43    
-0311+  62F5             	done(1)
-0311+  62F5~            	done(1)
-0311+  62F5~            	done(1)
-0311+  62F5~            	done(1)
-0311+  62F5~            	done(1)
-0311+  62F5             
-0311+  62F5 7E 79 77    
-0312+  62F8             	
-0313+  62F8             swTopEject:
-0314+  62F8 7C 00 B0    	advBonus()
-0315+  62FB             	score500()
-0315+  62FB BD 7D 71    
-0315+  62FE C6 02       
-0315+  6300 F7 01 49    
-0315+  6303 86 0E       
-0315+  6305 BD 7D 2F    
-0315+  6308 BD 7D 71    
-0315+  630B C6 02       
-0315+  630D F7 01 49    
-0315+  6310 86 0E       
-0315+  6312 BD 7D 2F    
-0315+  6315 BD 7D 71    
-0315+  6318 C6 02       
-0315+  631A F7 01 49    
-0315+  631D 86 0E       
-0315+  631F BD 7D 2F    
-0315+  6322 BD 7D 71    
-0315+  6325 C6 02       
-0315+  6327 F7 01 49    
-0315+  632A 86 0E       
-0315+  632C BD 7D 2F    
-0315+  632F BD 7D 71    
-0315+  6332 C6 02       
-0315+  6334 F7 01 49    
-0315+  6337 86 0E       
-0315+  6339 BD 7D 2F    
-0316+  633C C6 03       	fireSolenoid(TOP_EJECT)
-0316+  633E F7 01 40    
-0317+  6341             	done(1)
-0317+  6341~            	done(1)
-0317+  6341~            	done(1)
-0317+  6341~            	done(1)
-0317+  6341~            	done(1)
-0317+  6341             
-0317+  6341 7E 79 77    
-0318+  6344             	
-0319+  6344             swHotTip:
-0320+  6344 86 09       	delay(75)
-0320+  6346 BD 7D 2F    
-0321+  6349 C6 0C       	fireSolenoid(DROP_HOT)
-0321+  634B F7 01 42    
-0322+  634E 86 09       	delay(75)
+0234+  6207~            			endif
+0234+  6207~            			endif
+0234+  6207             
+0234+  61FB             
+0234+  61FB 0B          
+0234+  61FC             
+0234+  61FC             
+0234+  61FC~            			endif
+0234+  61FC~            			endif
+0234+  61FC~            			endif
+0234+  61FC             
+0234+  6207             
+0234+  6207~            			endif
+0234+  6207~            			endif
+0234+  6207             
+0235+  6207             		else ; restart game
+0235+  6207             
+0235+  6207             
+0235+  6207             
+0235+  6207             
+0235+  61F3             
+0235+  61F3             
+0235+  61F3             
+0235+  61F3~            		else ; restart game
+0235+  61F3~            		else ; restart game
+0235+  61F3~            		else ; restart game
+0235+  61F3~            		else ; restart game
+0235+  61F3             
+0235+  61F3~            		else ; restart game
+0235+  61F3~            		else ; restart game
+0235+  61F3~            		else ; restart game
+0235+  61F3~            		else ; restart game
+0235+  61F3             
+0235+  61F3             
+0235+  61F3 15          
+0235+  6207             
+0235+  6207 20 FE       
+0235+  6209             
+0235+  6209             
+0235+  6209             
+0235+  6209~            		else ; restart game
+0235+  6209~            		else ; restart game
+0235+  6209~            		else ; restart game
+0235+  6209~            		else ; restart game
+0235+  6209~            		else ; restart game
+0235+  6209             
+0235+  6209~            		else ; restart game
+0235+  6209~            		else ; restart game
+0235+  6209             
+0235+  6209~            		else ; restart game
+0235+  6209~            		else ; restart game
+0235+  6209             
+0236+  6209 BD 61 33    			jsr startGame
+0237+  620C             		endif		
+0237+  620C             
+0237+  620C             
+0237+  620C             
+0237+  620C             
+0237+  620C             
+0237+  620C~            		endif		
+0237+  620C~            		endif		
+0237+  620C             
+0237+  620C~            		endif		
+0237+  620C~            		endif		
+0237+  620C             
+0237+  6208             
+0237+  6208 03          
+0237+  6209             
+0237+  6209             
+0237+  6209~            		endif		
+0237+  6209~            		endif		
+0237+  6209~            		endif		
+0237+  6209             
+0237+  620C             
+0237+  620C~            		endif		
+0237+  620C~            		endif		
+0237+  620C             
+0238+  620C             	endif
+0238+  620C             
+0238+  620C             
+0238+  620C             
+0238+  620C             
+0238+  620C             
+0238+  620C~            	endif
+0238+  620C~            	endif
+0238+  620C             
+0238+  620C~            	endif
+0238+  620C~            	endif
+0238+  620C             
+0238+  61ED             
+0238+  61ED 1E          
+0238+  61EE             
+0238+  61EE             
+0238+  61EE~            	endif
+0238+  61EE~            	endif
+0238+  61EE~            	endif
+0238+  61EE             
+0238+  620C             
+0238+  620C~            	endif
+0238+  620C~            	endif
+0238+  620C             
+0239+  620C             	
+0240+  620C BD 7C CF    	jsr refreshPlayerScores
+0241+  620F             	
+0242+  620F             	done(0)
+0242+  620F             
+0242+  620F 86 02       
+0242+  6211 BA 01 69    
+0242+  6214 B7 01 69    
+0242+  6217             
+0242+  6217 7E 79 77    
+0243+  621A             	
+0244+  621A             swOuthole: 
+0245+  621A 86 4B       	delay(600)
+0245+  621C BD 7D 2F    
+0246+  621F 96 0F       	ldaA	>lc(8) ; !game over
+0247+  6221 85 20       	bitA	lr(6)
+0248+  6223             	ifeq ; !game over
+0248+  6223             
+0248+  6223 26 FE       
+0249+  6225 86 0F       		ldaA	00001111b ; player up lights
+0250+  6227 95 A7       		bitA	>flc(8)	; check if any player is flashing
+0251+  6229             		ifne ; any flashing -> playfield invalid
+0251+  6229             
+0251+  6229 27 FE       
+0252+  622B 86 EF       			lampOff(5,8) ; tilt
+0252+  622D 94 0F       
+0252+  622F 97 0F       
+0253+  6231             			
+0254+  6231 B6 22 03    			enablePf
+0254+  6234 8A 38       
+0254+  6236 B7 22 03    
+0255+  6239 C6 02       			fireSolenoid(OUTHOLE)
+0255+  623B F7 01 44    
+0256+  623E             		else ; none flashing -> playfield valid -> end ball			
+0256+  623E             
+0256+  623E             
+0256+  623E             
+0256+  623E             
+0256+  622A             
+0256+  622A             
+0256+  622A             
+0256+  622A~            		else ; none flashing -> playfield valid -> end ball			
+0256+  622A~            		else ; none flashing -> playfield valid -> end ball			
+0256+  622A~            		else ; none flashing -> playfield valid -> end ball			
+0256+  622A~            		else ; none flashing -> playfield valid -> end ball			
+0256+  622A             
+0256+  622A~            		else ; none flashing -> playfield valid -> end ball			
+0256+  622A~            		else ; none flashing -> playfield valid -> end ball			
+0256+  622A~            		else ; none flashing -> playfield valid -> end ball			
+0256+  622A~            		else ; none flashing -> playfield valid -> end ball			
+0256+  622A             
+0256+  622A             
+0256+  622A 15          
+0256+  623E             
+0256+  623E 20 FE       
+0256+  6240             
+0256+  6240             
+0256+  6240             
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240             
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240             
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240~            		else ; none flashing -> playfield valid -> end ball			
+0256+  6240             
+0257+  6240             swOuthole_bonusLoop:
+0258+  6240 BD 7D 80    			score1000()
+0259+  6243 96 09       			ldaA	>lc(2) ; double bonus
+0260+  6245 85 04       			bitA	lr(3)
+0261+  6247             			ifne 
+0261+  6247             
+0261+  6247 27 FE       
+0262+  6249 86 0C       				delay(100)
+0262+  624B BD 7D 2F    
+0263+  624E BD 7D 80    				score1000()
+0264+  6251             			endif
+0264+  6251             
+0264+  6251             
+0264+  6251             
+0264+  6251             
+0264+  6251             
+0264+  6251~            			endif
+0264+  6251~            			endif
+0264+  6251             
+0264+  6251~            			endif
+0264+  6251~            			endif
+0264+  6251             
+0264+  6248             
+0264+  6248 08          
+0264+  6249             
+0264+  6249             
+0264+  6249~            			endif
+0264+  6249~            			endif
+0264+  6249~            			endif
+0264+  6249             
+0264+  6251             
+0264+  6251~            			endif
+0264+  6251~            			endif
+0264+  6251             
+0265+  6251 7A 00 B0    			dec	p_Bonus
+0266+  6254 BD 60 C3    			jsr	bonusLights
+0267+  6257 86 19       			delay(200)
+0267+  6259 BD 7D 2F    
+0268+  625C 7D 00 B0    			tst	p_Bonus
+0269+  625F 26 DF       			bne	swOuthole_bonusLoop
+0270+  6261             		
+0271+  6261 86 0F       			ldaA	00001111b ; player up lights
+0272+  6263 94 0F       			andA	>lc(8) ; remove non-player up lights from col 8 for processing
+0273+  6265 D6 0A       			ldaB	>lc(3) ; check shoot again light
+0274+  6267 C5 01       			bitB	lr(1)
+0275+  6269             			ifeq ; shoot again not lit
+0275+  6269             
+0275+  6269 26 FE       
+0276+  626B             				; go to next player
+0277+  626B 48          				aslA
+0278+  626C 7C 00 13    				inc	curPlayer + 1
+0279+  626F 95 0E       				bitA	>lc(7)	; is player count < player #
+0280+  6271             				ifne ; last player
+0280+  6271             
+0280+  6271 27 FE       
+0281+  6273 86 01       					ldaA	00000001b; ; back to player 1
+0282+  6275 C6 00       					ldaB	0
+0283+  6277 D7 13       					staB	curPlayer + 1
+0284+  6279             					
+0285+  6279             					; increase ball count
+0286+  6279 D6 77       					ldaB	>ballCount
+0287+  627B CB 10       					addB	$10
+0288+  627D C1 40       					cmpB	$40
+0289+  627F             					ifeq ; game over
+0289+  627F             
+0289+  627F 26 FE       
+0290+  6281 86 20       						lampOn(6,8)
+0290+  6283 9A 0F       
+0290+  6285 97 0F       
+0291+  6287 B6 22 03    						disablePf
+0291+  628A 84 F7       
+0291+  628C B7 22 03    
+0292+  628F             						done(1)
+0292+  628F~            						done(1)
+0292+  628F~            						done(1)
+0292+  628F~            						done(1)
+0292+  628F~            						done(1)
+0292+  628F             
+0292+  628F 7E 79 77    
+0293+  6292             					else
+0293+  6292             
+0293+  6292             
+0293+  6292             
+0293+  6292             
+0293+  6280             
+0293+  6280             
+0293+  6280             
+0293+  6280~            					else
+0293+  6280~            					else
+0293+  6280~            					else
+0293+  6280~            					else
+0293+  6280             
+0293+  6280~            					else
+0293+  6280~            					else
+0293+  6280~            					else
+0293+  6280~            					else
+0293+  6280             
+0293+  6280             
+0293+  6280 13          
+0293+  6292             
+0293+  6292 20 FE       
+0293+  6294             
+0293+  6294             
+0293+  6294             
+0293+  6294~            					else
+0293+  6294~            					else
+0293+  6294~            					else
+0293+  6294~            					else
+0293+  6294~            					else
+0293+  6294             
+0293+  6294~            					else
+0293+  6294~            					else
+0293+  6294             
+0293+  6294~            					else
+0293+  6294~            					else
+0293+  6294             
+0294+  6294 D7 77       						staB	ballCount
+0295+  6296             					endif		
+0295+  6296             
+0295+  6296             
+0295+  6296             
+0295+  6296             
+0295+  6296             
+0295+  6296~            					endif		
+0295+  6296~            					endif		
+0295+  6296             
+0295+  6296~            					endif		
+0295+  6296~            					endif		
+0295+  6296             
+0295+  6293             
+0295+  6293 02          
+0295+  6294             
+0295+  6294             
+0295+  6294~            					endif		
+0295+  6294~            					endif		
+0295+  6294~            					endif		
+0295+  6294             
+0295+  6296             
+0295+  6296~            					endif		
+0295+  6296~            					endif		
+0295+  6296             
+0296+  6296             				endif
+0296+  6296             
+0296+  6296             
+0296+  6296             
+0296+  6296             
+0296+  6296             
+0296+  6296~            				endif
+0296+  6296~            				endif
+0296+  6296             
+0296+  6296~            				endif
+0296+  6296~            				endif
+0296+  6296             
+0296+  6272             
+0296+  6272 23          
+0296+  6273             
+0296+  6273             
+0296+  6273~            				endif
+0296+  6273~            				endif
+0296+  6273~            				endif
+0296+  6273             
+0296+  6296             
+0296+  6296~            				endif
+0296+  6296~            				endif
+0296+  6296             
+0297+  6296             				
+0298+  6296 97 0F       				staA	lc(8)
+0299+  6298             			endif
+0299+  6298             
+0299+  6298             
+0299+  6298             
+0299+  6298             
+0299+  6298             
+0299+  6298~            			endif
+0299+  6298~            			endif
+0299+  6298             
+0299+  6298~            			endif
+0299+  6298~            			endif
+0299+  6298             
+0299+  626A             
+0299+  626A 2D          
+0299+  626B             
+0299+  626B             
+0299+  626B~            			endif
+0299+  626B~            			endif
+0299+  626B~            			endif
+0299+  626B             
+0299+  6298             
+0299+  6298~            			endif
+0299+  6298~            			endif
+0299+  6298             
+0300+  6298             			
+0301+  6298 BD 60 F2    			jsr	startBall
+0302+  629B             		endif
+0302+  629B             
+0302+  629B             
+0302+  629B             
+0302+  629B             
+0302+  629B             
+0302+  629B~            		endif
+0302+  629B~            		endif
+0302+  629B             
+0302+  629B~            		endif
+0302+  629B~            		endif
+0302+  629B             
+0302+  623F             
+0302+  623F 5B          
+0302+  6240             
+0302+  6240             
+0302+  6240~            		endif
+0302+  6240~            		endif
+0302+  6240~            		endif
+0302+  6240             
+0302+  629B             
+0302+  629B~            		endif
+0302+  629B~            		endif
+0302+  629B             
+0303+  629B             	endif		
+0303+  629B             
+0303+  629B             
+0303+  629B             
+0303+  629B             
+0303+  629B             
+0303+  629B~            	endif		
+0303+  629B~            	endif		
+0303+  629B             
+0303+  629B~            	endif		
+0303+  629B~            	endif		
+0303+  629B             
+0303+  6224             
+0303+  6224 76          
+0303+  6225             
+0303+  6225             
+0303+  6225~            	endif		
+0303+  6225~            	endif		
+0303+  6225~            	endif		
+0303+  6225             
+0303+  629B             
+0303+  629B~            	endif		
+0303+  629B~            	endif		
+0303+  629B             
+0304+  629B             	done(0)
+0304+  629B             
+0304+  629B 86 02       
+0304+  629D BA 01 69    
+0304+  62A0 B7 01 69    
+0304+  62A3             
+0304+  62A3 7E 79 77    
+0305+  62A6             	
+0306+  62A6             swLeftEject:
+0307+  62A6 7C 00 B0    	advBonus()
+0308+  62A9 C6 06       	fireSolenoid(KNOCKER)
+0308+  62AB F7 01 4D    
+0309+  62AE 96 0F       	ldaA	>lc(8)
+0310+  62B0 85 20       	bitA	lr(6)
+0311+  62B2             	ifeq ; in game
+0311+  62B2             
+0311+  62B2 26 FE       
+0312+  62B4 86 01       		lampOn(1,3)
+0312+  62B6 9A 0A       
+0312+  62B8 97 0A       
+0313+  62BA 86 40       		lampOn(7,8)
+0313+  62BC 9A 0F       
+0313+  62BE 97 0F       
+0314+  62C0             	endif
+0314+  62C0             
+0314+  62C0             
+0314+  62C0             
+0314+  62C0             
+0314+  62C0             
+0314+  62C0~            	endif
+0314+  62C0~            	endif
+0314+  62C0             
+0314+  62C0~            	endif
+0314+  62C0~            	endif
+0314+  62C0             
+0314+  62B3             
+0314+  62B3 0C          
+0314+  62B4             
+0314+  62B4             
+0314+  62B4~            	endif
+0314+  62B4~            	endif
+0314+  62B4~            	endif
+0314+  62B4             
+0314+  62C0             
+0314+  62C0~            	endif
+0314+  62C0~            	endif
+0314+  62C0             
+0315+  62C0             	score500()
+0315+  62C0 BD 7D 71    
+0315+  62C3 C6 02       
+0315+  62C5 F7 01 49    
+0315+  62C8 86 0E       
+0315+  62CA BD 7D 2F    
+0315+  62CD BD 7D 71    
+0315+  62D0 C6 02       
+0315+  62D2 F7 01 49    
+0315+  62D5 86 0E       
+0315+  62D7 BD 7D 2F    
+0315+  62DA BD 7D 71    
+0315+  62DD C6 02       
+0315+  62DF F7 01 49    
+0315+  62E2 86 0E       
+0315+  62E4 BD 7D 2F    
+0315+  62E7 BD 7D 71    
+0315+  62EA C6 02       
+0315+  62EC F7 01 49    
+0315+  62EF 86 0E       
+0315+  62F1 BD 7D 2F    
+0315+  62F4 BD 7D 71    
+0315+  62F7 C6 02       
+0315+  62F9 F7 01 49    
+0315+  62FC 86 0E       
+0315+  62FE BD 7D 2F    
+0316+  6301 C6 03       	fireSolenoid(LEFT_EJECT)
+0316+  6303 F7 01 43    
+0317+  6306             	done(1)
+0317+  6306~            	done(1)
+0317+  6306~            	done(1)
+0317+  6306~            	done(1)
+0317+  6306~            	done(1)
+0317+  6306             
+0317+  6306 7E 79 77    
+0318+  6309             	
+0319+  6309             swTopEject:
+0320+  6309 86 04       	lampOn(3,2)
+0320+  630B 9A 09       
+0320+  630D 97 09       
+0321+  630F 7C 00 B0    	advBonus()
+0322+  6312             	score500()
+0322+  6312 BD 7D 71    
+0322+  6315 C6 02       
+0322+  6317 F7 01 49    
+0322+  631A 86 0E       
+0322+  631C BD 7D 2F    
+0322+  631F BD 7D 71    
+0322+  6322 C6 02       
+0322+  6324 F7 01 49    
+0322+  6327 86 0E       
+0322+  6329 BD 7D 2F    
+0322+  632C BD 7D 71    
+0322+  632F C6 02       
+0322+  6331 F7 01 49    
+0322+  6334 86 0E       
+0322+  6336 BD 7D 2F    
+0322+  6339 BD 7D 71    
+0322+  633C C6 02       
+0322+  633E F7 01 49    
+0322+  6341 86 0E       
+0322+  6343 BD 7D 2F    
+0322+  6346 BD 7D 71    
+0322+  6349 C6 02       
+0322+  634B F7 01 49    
+0322+  634E 86 0E       
 0322+  6350 BD 7D 2F    
-0323+  6353 C6 0C       	fireSolenoid(DROP_TIP)
-0323+  6355 F7 01 41    
+0323+  6353 C6 03       	fireSolenoid(TOP_EJECT)
+0323+  6355 F7 01 40    
 0324+  6358             	done(1)
 0324+  6358~            	done(1)
 0324+  6358~            	done(1)
@@ -2257,474 +2275,491 @@
 0324+  6358~            	done(1)
 0324+  6358             
 0324+  6358 7E 79 77    
-0325+  635B             swLeftOutlane:
-0326+  635B             swRightOutlane:
-0327+  635B             swLeftInlane:
-0328+  635B             swRightInlane:
-0329+  635B 7C 00 B0    	advBonus()
-0330+  635E BD 7D 80    	score1000()
-0331+  6361             	done(1)
-0331+  6361~            	done(1)
-0331+  6361~            	done(1)
-0331+  6361~            	done(1)
-0331+  6361~            	done(1)
-0331+  6361             
-0331+  6361 7E 79 77    
-0332+  6364             sw10pt:
-0333+  6364 BD 7D 63    	score10()
-0334+  6367             	done(1)
-0334+  6367~            	done(1)
-0334+  6367~            	done(1)
-0334+  6367~            	done(1)
-0334+  6367~            	done(1)
-0334+  6367             
-0334+  6367 7E 79 77    
-0335+  636A             sw100pt:
-0336+  636A BD 7D 71    	score100()
-0337+  636D             	done(1)
-0337+  636D~            	done(1)
-0337+  636D~            	done(1)
-0337+  636D~            	done(1)
-0337+  636D~            	done(1)
-0337+  636D             
-0337+  636D 7E 79 77    
-0338+  6370             sw500pt:
-0339+  6370             	score500();
-0339+  6370 BD 7D 71    
-0339+  6373 C6 02       
-0339+  6375 F7 01 49    
-0339+  6378 86 0E       
-0339+  637A BD 7D 2F    
-0339+  637D BD 7D 71    
-0339+  6380 C6 02       
-0339+  6382 F7 01 49    
-0339+  6385 86 0E       
-0339+  6387 BD 7D 2F    
-0339+  638A BD 7D 71    
-0339+  638D C6 02       
-0339+  638F F7 01 49    
-0339+  6392 86 0E       
-0339+  6394 BD 7D 2F    
-0339+  6397 BD 7D 71    
-0339+  639A C6 02       
-0339+  639C F7 01 49    
-0339+  639F 86 0E       
-0339+  63A1 BD 7D 2F    
-0339+  63A4 BD 7D 71    
-0339+  63A7 C6 02       
-0339+  63A9 F7 01 49    
-0339+  63AC 86 0E       
-0339+  63AE BD 7D 2F    
-0340+  63B1             	done(1)
-0340+  63B1~            	done(1)
-0340+  63B1~            	done(1)
-0340+  63B1~            	done(1)
-0340+  63B1~            	done(1)
-0340+  63B1             
-0340+  63B1 7E 79 77    
-0341+  63B4             swDropTip:
-0342+  63B4 BD 7D 63    	score10()
-0343+  63B7             	done(1)
-0343+  63B7~            	done(1)
-0343+  63B7~            	done(1)
-0343+  63B7~            	done(1)
-0343+  63B7~            	done(1)
-0343+  63B7             
-0343+  63B7 7E 79 77    
-0344+  63BA             swDropHot:
-0345+  63BA BD 7D 63    	score10()
-0346+  63BD             	done(1)
-0346+  63BD~            	done(1)
-0346+  63BD~            	done(1)
-0346+  63BD~            	done(1)
-0346+  63BD~            	done(1)
-0346+  63BD             
-0346+  63BD 7E 79 77    
-0347+  63C0             swAdvBonus:
-0348+  63C0 7C 00 B0    	advBonus()
-0349+  63C3             	done(1)
-0349+  63C3~            	done(1)
-0349+  63C3~            	done(1)
-0349+  63C3~            	done(1)
-0349+  63C3~            	done(1)
-0349+  63C3             
-0349+  63C3 7E 79 77    
-0350+  63C6             swSpinner:
-0351+  63C6 96 23       	ldaA	>sc(4)
-0352+  63C8 85 20       	bitA	sr(6)
-0353+  63CA             	ifne
-0353+  63CA             
-0353+  63CA 27 FE       
-0354+  63CC BD 7D 71    		score100()
-0355+  63CF 86 0E       		ldaA	$E
-0356+  63D1             	else
-0356+  63D1             
-0356+  63D1             
-0356+  63D1             
-0356+  63D1             
-0356+  63CB             
-0356+  63CB             
-0356+  63CB             
-0356+  63CB~            	else
-0356+  63CB~            	else
-0356+  63CB~            	else
-0356+  63CB~            	else
-0356+  63CB             
-0356+  63CB~            	else
-0356+  63CB~            	else
-0356+  63CB~            	else
-0356+  63CB~            	else
-0356+  63CB             
-0356+  63CB             
-0356+  63CB 07          
-0356+  63D1             
-0356+  63D1 20 FE       
-0356+  63D3             
-0356+  63D3             
-0356+  63D3             
-0356+  63D3~            	else
-0356+  63D3~            	else
-0356+  63D3~            	else
-0356+  63D3~            	else
-0356+  63D3~            	else
-0356+  63D3             
-0356+  63D3~            	else
-0356+  63D3~            	else
-0356+  63D3             
-0356+  63D3~            	else
-0356+  63D3~            	else
-0356+  63D3             
-0357+  63D3 86 02       		noValidate
-0357+  63D5 BA 01 69    
-0357+  63D8 B7 01 69    
-0358+  63DB 86 00       		ldaA	0
-0359+  63DD             	endif
-0359+  63DD             
-0359+  63DD             
-0359+  63DD             
-0359+  63DD             
-0359+  63DD             
-0359+  63DD~            	endif
-0359+  63DD~            	endif
-0359+  63DD             
-0359+  63DD~            	endif
-0359+  63DD~            	endif
-0359+  63DD             
-0359+  63D2             
-0359+  63D2 0A          
-0359+  63D3             
-0359+  63D3             
-0359+  63D3~            	endif
-0359+  63D3~            	endif
-0359+  63D3~            	endif
-0359+  63D3             
-0359+  63DD             
-0359+  63DD~            	endif
-0359+  63DD~            	endif
-0359+  63DD             
-0360+  63DD B7 0E 47    	staA	solenoid1 + CLICKER - 1
-0361+  63E0             	done(1)
-0361+  63E0~            	done(1)
-0361+  63E0~            	done(1)
-0361+  63E0~            	done(1)
-0361+  63E0~            	done(1)
-0361+  63E0             
-0361+  63E0 7E 79 77    
-0362+  63E3             
-0363+  63E3             swCaptiveRollover:
-0364+  63E3 96 09       	ldaA	>lc(2)
-0365+  63E5 85 40       	bitA	lr(7)
-0366+  63E7             	ifeq ; light off
-0366+  63E7             
-0366+  63E7 26 FE       
-0367+  63E9 BD 7D 63    		score10()
-0368+  63EC             	else
-0368+  63EC             
-0368+  63EC             
-0368+  63EC             
-0368+  63EC             
-0368+  63E8             
-0368+  63E8             
-0368+  63E8             
-0368+  63E8~            	else
-0368+  63E8~            	else
-0368+  63E8~            	else
-0368+  63E8~            	else
-0368+  63E8             
-0368+  63E8~            	else
-0368+  63E8~            	else
-0368+  63E8~            	else
-0368+  63E8~            	else
-0368+  63E8             
-0368+  63E8             
-0368+  63E8 05          
-0368+  63EC             
-0368+  63EC 20 FE       
-0368+  63EE             
-0368+  63EE             
-0368+  63EE             
-0368+  63EE~            	else
-0368+  63EE~            	else
-0368+  63EE~            	else
-0368+  63EE~            	else
-0368+  63EE~            	else
-0368+  63EE             
-0368+  63EE~            	else
-0368+  63EE~            	else
-0368+  63EE             
-0368+  63EE~            	else
-0368+  63EE~            	else
-0368+  63EE             
-0369+  63EE BD 7D 80    		score1000()
-0370+  63F1             	endif
-0370+  63F1             
-0370+  63F1             
-0370+  63F1             
-0370+  63F1             
-0370+  63F1             
-0370+  63F1~            	endif
-0370+  63F1~            	endif
-0370+  63F1             
-0370+  63F1~            	endif
-0370+  63F1~            	endif
-0370+  63F1             
-0370+  63ED             
-0370+  63ED 03          
-0370+  63EE             
-0370+  63EE             
-0370+  63EE~            	endif
-0370+  63EE~            	endif
-0370+  63EE~            	endif
-0370+  63EE             
-0370+  63F1             
-0370+  63F1~            	endif
-0370+  63F1~            	endif
-0370+  63F1             
-0371+  63F1             	done(1)
-0371+  63F1~            	done(1)
-0371+  63F1~            	done(1)
-0371+  63F1~            	done(1)
-0371+  63F1~            	done(1)
-0371+  63F1             
-0371+  63F1 7E 79 77    
-0372+  63F4             
-0373+  63F4             swCaptiveTarget:
-0374+  63F4 7C 00 B0    	advBonus()
-0375+  63F7 96 09       	ldaA	>lc(2)
-0376+  63F9 85 40       	bitA	lr(7)
-0377+  63FB             	ifeq ; light off
-0377+  63FB             
-0377+  63FB 26 FE       
-0378+  63FD BD 7D 63    		score10()
-0379+  6400             	else
-0379+  6400             
-0379+  6400             
-0379+  6400             
-0379+  6400             
-0379+  63FC             
-0379+  63FC             
-0379+  63FC             
-0379+  63FC~            	else
-0379+  63FC~            	else
-0379+  63FC~            	else
-0379+  63FC~            	else
-0379+  63FC             
-0379+  63FC~            	else
-0379+  63FC~            	else
-0379+  63FC~            	else
-0379+  63FC~            	else
-0379+  63FC             
-0379+  63FC             
-0379+  63FC 05          
-0379+  6400             
-0379+  6400 20 FE       
-0379+  6402             
-0379+  6402             
-0379+  6402             
-0379+  6402~            	else
-0379+  6402~            	else
-0379+  6402~            	else
-0379+  6402~            	else
-0379+  6402~            	else
-0379+  6402             
-0379+  6402~            	else
-0379+  6402~            	else
-0379+  6402             
-0379+  6402~            	else
-0379+  6402~            	else
-0379+  6402             
-0380+  6402 BD 7D 80    		score1000()
-0381+  6405             	endif
-0381+  6405             
-0381+  6405             
-0381+  6405             
-0381+  6405             
-0381+  6405             
-0381+  6405~            	endif
-0381+  6405~            	endif
-0381+  6405             
-0381+  6405~            	endif
-0381+  6405~            	endif
-0381+  6405             
-0381+  6401             
-0381+  6401 03          
-0381+  6402             
-0381+  6402             
-0381+  6402~            	endif
-0381+  6402~            	endif
-0381+  6402~            	endif
-0381+  6402             
-0381+  6405             
-0381+  6405~            	endif
-0381+  6405~            	endif
-0381+  6405             
-0382+  6405             	done(1)
-0382+  6405~            	done(1)
-0382+  6405~            	done(1)
-0382+  6405~            	done(1)
-0382+  6405~            	done(1)
-0382+  6405             
-0382+  6405 7E 79 77    
-0383+  6408             	
-0384+  6408             	
-0385+  6408             ; end callbacks
-0386+  6408             	.msfirst
-0387+  6408             ; needs to be on $**00 address
-0388+  6000             callbackTable: 	.org $6000 ; note: TRANSPOSED
-0389+  6000 61 C8       	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
-0389+  6002 61 C8       
-0389+  6004 61 E1       
-0389+  6006 60 C0       
-0389+  6008 60 C0       
-0389+  600A 60 C0       
-0389+  600C 61 C8       
-0389+  600E 60 C0       
-0390+  6010 62 18       	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw swCaptiveRollover\.dw swCaptiveTarget
-0390+  6012 61 C8       
-0390+  6014 63 5B       
-0390+  6016 63 5B       
-0390+  6018 63 64       
-0390+  601A 63 70       
-0390+  601C 63 E3       
-0390+  601E 63 F4       
-0391+  6020 63 B4       	.dw swDropTip	\.dw swDropTip\.dw swDropTip\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
-0391+  6022 63 B4       
-0391+  6024 63 B4       
-0391+  6026 63 C0       
-0391+  6028 63 64       
-0391+  602A 62 F8       
-0391+  602C 63 64       
-0391+  602E 60 C0       
-0392+  6030 63 BA       	.dw swDropHot	\.dw swDropHot\.dw swDropHot\.dw sw10pt\.dw swLeftEject\.dw swSpinner\.dw sw100pt\.dw sw500pt
-0392+  6032 63 BA       
-0392+  6034 63 BA       
-0392+  6036 63 64       
-0392+  6038 62 95       
-0392+  603A 63 C6       
-0392+  603C 63 6A       
-0392+  603E 63 70       
-0393+  6040 63 5B       	.dw swLeftOutlane\.dw swLeftInlane\.dw sw10pt\.dw none\.dw swHotTip\.dw none\.dw none\.dw none
-0393+  6042 63 5B       
-0393+  6044 63 64       
-0393+  6046 60 C0       
-0393+  6048 63 44       
-0393+  604A 60 C0       
-0393+  604C 60 C0       
-0393+  604E 60 C0       
-0394+  6050 60 C0       	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0394+  6052 60 C0       
-0394+  6054 60 C0       
-0394+  6056 60 C0       
-0394+  6058 60 C0       
-0394+  605A 60 C0       
-0394+  605C 60 C0       
-0394+  605E 60 C0       
-0395+  6060 60 C0       	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0395+  6062 60 C0       
-0395+  6064 60 C0       
-0395+  6066 60 C0       
-0395+  6068 60 C0       
-0395+  606A 60 C0       
-0395+  606C 60 C0       
-0395+  606E 60 C0       
-0396+  6070 60 C0       	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
-0396+  6072 60 C0       
-0396+  6074 60 C0       
-0396+  6076 60 C0       
-0396+  6078 60 C0       
-0396+  607A 60 C0       
-0396+  607C 60 C0       
-0396+  607E 60 C0       
-0397+  6080             ; on = how many cycles it must be on for before registering (1 cycle = 64ms (?)) (max 7)
-0398+  6080             ; off = how many cycles it must be off for
-0399+  6080             ; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
-0400+  6080             ; gameover = whether the switch is active in gameover + tilt mode (these callbacks must check whether in game over when triggered if they want to act different)
-0401+  6080             ; TRANSPOSED (?)
-0402+  6080             #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
-0403+  6080             settleTable: ; must be right after callbackTable
-0404+  6080 87          	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
-0404+  6081 87          
-0404+  6082 C2          
-0404+  6083 47          
-0404+  6084 47          
-0404+  6085 47          
-0404+  6086 87          
-0404+  6087 47          
-0405+  6088 F9          	SW(7,1,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,0,1,0)\SW(0,7,1,0)
-0405+  6089 87          
-0405+  608A 87          
-0405+  608B 87          
-0405+  608C 81          
-0405+  608D 81          
-0405+  608E 80          
-0405+  608F 87          
-0406+  6090 87          	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,3,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
-0406+  6091 87          
-0406+  6092 87          
-0406+  6093 83          
-0406+  6094 81          
-0406+  6095 E1          
-0406+  6096 81          
-0406+  6097 80          
-0407+  6098 87          	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,0,0,0)\SW(0,0,1,0)\SW(0,1,1,0)
-0407+  6099 87          
-0407+  609A 87          
-0407+  609B 81          
-0407+  609C E1          
-0407+  609D 00          
-0407+  609E 80          
-0407+  609F 81          
-0408+  60A0 87          	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,7,0,1)\SW(0,0,1,0)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0408+  60A1 87          
-0408+  60A2 81          
-0408+  60A3 47          
-0408+  60A4 80          
-0408+  60A5 47          
-0408+  60A6 47          
-0408+  60A7 47          
-0409+  60A8 FF          	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0409+  60A9 47          
-0409+  60AA 47          
-0409+  60AB 47          
-0409+  60AC 47          
-0409+  60AD 47          
-0409+  60AE 47          
-0409+  60AF 47          
-0410+  60B0 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
-0410+  60B1 47          
-0410+  60B2 47          
-0410+  60B3 47          
-0410+  60B4 47          
-0410+  60B5 47          
-0410+  60B6 47          
-0410+  60B7 47          
-0411+  60B8 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)0411+  60B9 47          
-0411+  60BA 47          
-0411+  60BB 47          
-0411+  60BC 47          
-0411+  60BD 47          
-0411+  60BE 47          
-0411+  60BF 47          
+0325+  635B             	
+0326+  635B             swHotTip:
+0327+  635B 86 09       	delay(75)
+0327+  635D BD 7D 2F    
+0328+  6360 C6 0C       	fireSolenoid(DROP_HOT)
+0328+  6362 F7 01 42    
+0329+  6365 86 09       	delay(75)
+0329+  6367 BD 7D 2F    
+0330+  636A C6 0C       	fireSolenoid(DROP_TIP)
+0330+  636C F7 01 41    
+0331+  636F             	done(1)
+0331+  636F~            	done(1)
+0331+  636F~            	done(1)
+0331+  636F~            	done(1)
+0331+  636F~            	done(1)
+0331+  636F             
+0331+  636F 7E 79 77    
+0332+  6372             swLeftOutlane:
+0333+  6372             swRightOutlane:
+0334+  6372             swLeftInlane:
+0335+  6372             swRightInlane:
+0336+  6372 7C 00 B0    	advBonus()
+0337+  6375 BD 7D 80    	score1000()
+0338+  6378             	done(1)
+0338+  6378~            	done(1)
+0338+  6378~            	done(1)
+0338+  6378~            	done(1)
+0338+  6378~            	done(1)
+0338+  6378             
+0338+  6378 7E 79 77    
+0339+  637B             sw10pt:
+0340+  637B BD 7D 63    	score10()
+0341+  637E             	done(1)
+0341+  637E~            	done(1)
+0341+  637E~            	done(1)
+0341+  637E~            	done(1)
+0341+  637E~            	done(1)
+0341+  637E             
+0341+  637E 7E 79 77    
+0342+  6381             sw100pt:
+0343+  6381 BD 7D 71    	score100()
+0344+  6384             	done(1)
+0344+  6384~            	done(1)
+0344+  6384~            	done(1)
+0344+  6384~            	done(1)
+0344+  6384~            	done(1)
+0344+  6384             
+0344+  6384 7E 79 77    
+0345+  6387             sw500pt:
+0346+  6387             	score500();
+0346+  6387 BD 7D 71    
+0346+  638A C6 02       
+0346+  638C F7 01 49    
+0346+  638F 86 0E       
+0346+  6391 BD 7D 2F    
+0346+  6394 BD 7D 71    
+0346+  6397 C6 02       
+0346+  6399 F7 01 49    
+0346+  639C 86 0E       
+0346+  639E BD 7D 2F    
+0346+  63A1 BD 7D 71    
+0346+  63A4 C6 02       
+0346+  63A6 F7 01 49    
+0346+  63A9 86 0E       
+0346+  63AB BD 7D 2F    
+0346+  63AE BD 7D 71    
+0346+  63B1 C6 02       
+0346+  63B3 F7 01 49    
+0346+  63B6 86 0E       
+0346+  63B8 BD 7D 2F    
+0346+  63BB BD 7D 71    
+0346+  63BE C6 02       
+0346+  63C0 F7 01 49    
+0346+  63C3 86 0E       
+0346+  63C5 BD 7D 2F    
+0347+  63C8             	done(1)
+0347+  63C8~            	done(1)
+0347+  63C8~            	done(1)
+0347+  63C8~            	done(1)
+0347+  63C8~            	done(1)
+0347+  63C8             
+0347+  63C8 7E 79 77    
+0348+  63CB             swDropTip:
+0349+  63CB BD 7D 63    	score10()
+0350+  63CE             	done(1)
+0350+  63CE~            	done(1)
+0350+  63CE~            	done(1)
+0350+  63CE~            	done(1)
+0350+  63CE~            	done(1)
+0350+  63CE             
+0350+  63CE 7E 79 77    
+0351+  63D1             swDropHot:
+0352+  63D1 BD 7D 63    	score10()
+0353+  63D4             	done(1)
+0353+  63D4~            	done(1)
+0353+  63D4~            	done(1)
+0353+  63D4~            	done(1)
+0353+  63D4~            	done(1)
+0353+  63D4             
+0353+  63D4 7E 79 77    
+0354+  63D7             swAdvBonus:
+0355+  63D7 7C 00 B0    	advBonus()
+0356+  63DA             	done(1)
+0356+  63DA~            	done(1)
+0356+  63DA~            	done(1)
+0356+  63DA~            	done(1)
+0356+  63DA~            	done(1)
+0356+  63DA             
+0356+  63DA 7E 79 77    
+0357+  63DD             swSpinner:
+0358+  63DD 96 23       	ldaA	>sc(4)
+0359+  63DF 85 20       	bitA	sr(6)
+0360+  63E1             	ifne
+0360+  63E1             
+0360+  63E1 27 FE       
+0361+  63E3 BD 7D 71    		score100()
+0362+  63E6 86 0E       		ldaA	$E
+0363+  63E8             	else
+0363+  63E8             
+0363+  63E8             
+0363+  63E8             
+0363+  63E8             
+0363+  63E2             
+0363+  63E2             
+0363+  63E2             
+0363+  63E2~            	else
+0363+  63E2~            	else
+0363+  63E2~            	else
+0363+  63E2~            	else
+0363+  63E2             
+0363+  63E2~            	else
+0363+  63E2~            	else
+0363+  63E2~            	else
+0363+  63E2~            	else
+0363+  63E2             
+0363+  63E2             
+0363+  63E2 07          
+0363+  63E8             
+0363+  63E8 20 FE       
+0363+  63EA             
+0363+  63EA             
+0363+  63EA             
+0363+  63EA~            	else
+0363+  63EA~            	else
+0363+  63EA~            	else
+0363+  63EA~            	else
+0363+  63EA~            	else
+0363+  63EA             
+0363+  63EA~            	else
+0363+  63EA~            	else
+0363+  63EA             
+0363+  63EA~            	else
+0363+  63EA~            	else
+0363+  63EA             
+0364+  63EA 86 02       		noValidate
+0364+  63EC BA 01 69    
+0364+  63EF B7 01 69    
+0365+  63F2 86 00       		ldaA	0
+0366+  63F4             	endif
+0366+  63F4             
+0366+  63F4             
+0366+  63F4             
+0366+  63F4             
+0366+  63F4             
+0366+  63F4~            	endif
+0366+  63F4~            	endif
+0366+  63F4             
+0366+  63F4~            	endif
+0366+  63F4~            	endif
+0366+  63F4             
+0366+  63E9             
+0366+  63E9 0A          
+0366+  63EA             
+0366+  63EA             
+0366+  63EA~            	endif
+0366+  63EA~            	endif
+0366+  63EA~            	endif
+0366+  63EA             
+0366+  63F4             
+0366+  63F4~            	endif
+0366+  63F4~            	endif
+0366+  63F4             
+0367+  63F4 B7 0E 47    	staA	solenoid1 + CLICKER - 1
+0368+  63F7             	done(1)
+0368+  63F7~            	done(1)
+0368+  63F7~            	done(1)
+0368+  63F7~            	done(1)
+0368+  63F7~            	done(1)
+0368+  63F7             
+0368+  63F7 7E 79 77    
+0369+  63FA             
+0370+  63FA             swCaptiveRollover:
+0371+  63FA 96 09       	ldaA	>lc(2)
+0372+  63FC 85 40       	bitA	lr(7)
+0373+  63FE             	ifeq ; light off
+0373+  63FE             
+0373+  63FE 26 FE       
+0374+  6400 BD 7D 63    		score10()
+0375+  6403             	else
+0375+  6403             
+0375+  6403             
+0375+  6403             
+0375+  6403             
+0375+  63FF             
+0375+  63FF             
+0375+  63FF             
+0375+  63FF~            	else
+0375+  63FF~            	else
+0375+  63FF~            	else
+0375+  63FF~            	else
+0375+  63FF             
+0375+  63FF~            	else
+0375+  63FF~            	else
+0375+  63FF~            	else
+0375+  63FF~            	else
+0375+  63FF             
+0375+  63FF             
+0375+  63FF 05          
+0375+  6403             
+0375+  6403 20 FE       
+0375+  6405             
+0375+  6405             
+0375+  6405             
+0375+  6405~            	else
+0375+  6405~            	else
+0375+  6405~            	else
+0375+  6405~            	else
+0375+  6405~            	else
+0375+  6405             
+0375+  6405~            	else
+0375+  6405~            	else
+0375+  6405             
+0375+  6405~            	else
+0375+  6405~            	else
+0375+  6405             
+0376+  6405 BD 7D 80    		score1000()
+0377+  6408             	endif
+0377+  6408             
+0377+  6408             
+0377+  6408             
+0377+  6408             
+0377+  6408             
+0377+  6408~            	endif
+0377+  6408~            	endif
+0377+  6408             
+0377+  6408~            	endif
+0377+  6408~            	endif
+0377+  6408             
+0377+  6404             
+0377+  6404 03          
+0377+  6405             
+0377+  6405             
+0377+  6405~            	endif
+0377+  6405~            	endif
+0377+  6405~            	endif
+0377+  6405             
+0377+  6408             
+0377+  6408~            	endif
+0377+  6408~            	endif
+0377+  6408             
+0378+  6408             	done(1)
+0378+  6408~            	done(1)
+0378+  6408~            	done(1)
+0378+  6408~            	done(1)
+0378+  6408~            	done(1)
+0378+  6408             
+0378+  6408 7E 79 77    
+0379+  640B             
+0380+  640B             swCaptiveTarget:
+0381+  640B 7C 00 B0    	advBonus()
+0382+  640E 96 09       	ldaA	>lc(2)
+0383+  6410 85 40       	bitA	lr(7)
+0384+  6412             	ifeq ; light off
+0384+  6412             
+0384+  6412 26 FE       
+0385+  6414 BD 7D 63    		score10()
+0386+  6417             	else
+0386+  6417             
+0386+  6417             
+0386+  6417             
+0386+  6417             
+0386+  6413             
+0386+  6413             
+0386+  6413             
+0386+  6413~            	else
+0386+  6413~            	else
+0386+  6413~            	else
+0386+  6413~            	else
+0386+  6413             
+0386+  6413~            	else
+0386+  6413~            	else
+0386+  6413~            	else
+0386+  6413~            	else
+0386+  6413             
+0386+  6413             
+0386+  6413 05          
+0386+  6417             
+0386+  6417 20 FE       
+0386+  6419             
+0386+  6419             
+0386+  6419             
+0386+  6419~            	else
+0386+  6419~            	else
+0386+  6419~            	else
+0386+  6419~            	else
+0386+  6419~            	else
+0386+  6419             
+0386+  6419~            	else
+0386+  6419~            	else
+0386+  6419             
+0386+  6419~            	else
+0386+  6419~            	else
+0386+  6419             
+0387+  6419 BD 7D 80    		score1000()
+0388+  641C             	endif
+0388+  641C             
+0388+  641C             
+0388+  641C             
+0388+  641C             
+0388+  641C             
+0388+  641C~            	endif
+0388+  641C~            	endif
+0388+  641C             
+0388+  641C~            	endif
+0388+  641C~            	endif
+0388+  641C             
+0388+  6418             
+0388+  6418 03          
+0388+  6419             
+0388+  6419             
+0388+  6419~            	endif
+0388+  6419~            	endif
+0388+  6419~            	endif
+0388+  6419             
+0388+  641C             
+0388+  641C~            	endif
+0388+  641C~            	endif
+0388+  641C             
+0389+  641C             	done(1)
+0389+  641C~            	done(1)
+0389+  641C~            	done(1)
+0389+  641C~            	done(1)
+0389+  641C~            	done(1)
+0389+  641C             
+0389+  641C 7E 79 77    
+0390+  641F             	
+0391+  641F             	
+0392+  641F             ; end callbacks
+0393+  641F             	.msfirst
+0394+  641F             ; needs to be on $**00 address
+0395+  6000             callbackTable: 	.org $6000 ; note: TRANSPOSED
+0396+  6000 61 CA       	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
+0396+  6002 61 CA       
+0396+  6004 61 E3       
+0396+  6006 60 C0       
+0396+  6008 60 C0       
+0396+  600A 60 C0       
+0396+  600C 61 CA       
+0396+  600E 60 C0       
+0397+  6010 62 1A       	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw swCaptiveRollover\.dw swCaptiveTarget
+0397+  6012 61 CA       
+0397+  6014 63 72       
+0397+  6016 63 72       
+0397+  6018 63 7B       
+0397+  601A 63 87       
+0397+  601C 63 FA       
+0397+  601E 64 0B       
+0398+  6020 63 CB       	.dw swDropTip	\.dw swDropTip\.dw swDropTip\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
+0398+  6022 63 CB       
+0398+  6024 63 CB       
+0398+  6026 63 D7       
+0398+  6028 63 7B       
+0398+  602A 63 09       
+0398+  602C 63 7B       
+0398+  602E 60 C0       
+0399+  6030 63 D1       	.dw swDropHot	\.dw swDropHot\.dw swDropHot\.dw sw10pt\.dw swLeftEject\.dw swSpinner\.dw sw100pt\.dw sw500pt
+0399+  6032 63 D1       
+0399+  6034 63 D1       
+0399+  6036 63 7B       
+0399+  6038 62 A6       
+0399+  603A 63 DD       
+0399+  603C 63 81       
+0399+  603E 63 87       
+0400+  6040 63 72       	.dw swLeftOutlane\.dw swLeftInlane\.dw sw10pt\.dw none\.dw swHotTip\.dw none\.dw none\.dw none
+0400+  6042 63 72       
+0400+  6044 63 7B       
+0400+  6046 60 C0       
+0400+  6048 63 5B       
+0400+  604A 60 C0       
+0400+  604C 60 C0       
+0400+  604E 60 C0       
+0401+  6050 60 C0       	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+0401+  6052 60 C0       
+0401+  6054 60 C0       
+0401+  6056 60 C0       
+0401+  6058 60 C0       
+0401+  605A 60 C0       
+0401+  605C 60 C0       
+0401+  605E 60 C0       
+0402+  6060 60 C0       	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+0402+  6062 60 C0       
+0402+  6064 60 C0       
+0402+  6066 60 C0       
+0402+  6068 60 C0       
+0402+  606A 60 C0       
+0402+  606C 60 C0       
+0402+  606E 60 C0       
+0403+  6070 60 C0       	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
+0403+  6072 60 C0       
+0403+  6074 60 C0       
+0403+  6076 60 C0       
+0403+  6078 60 C0       
+0403+  607A 60 C0       
+0403+  607C 60 C0       
+0403+  607E 60 C0       
+0404+  6080             ; on = how many cycles it must be on for before registering (1 cycle = 64ms (?)) (max 7)
+0405+  6080             ; off = how many cycles it must be off for
+0406+  6080             ; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
+0407+  6080             ; gameover = whether the switch is active in gameover + tilt mode (these callbacks must check whether in game over when triggered if they want to act different)
+0408+  6080             ; TRANSPOSED (?)
+0409+  6080             #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
+0410+  6080             settleTable: ; must be right after callbackTable
+0411+  6080 87          	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
+0411+  6081 87          
+0411+  6082 C2          
+0411+  6083 47          
+0411+  6084 47          
+0411+  6085 47          
+0411+  6086 87          
+0411+  6087 47          
+0412+  6088 F9          	SW(7,1,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,0,1,0)\SW(0,7,1,0)
+0412+  6089 87          
+0412+  608A 87          
+0412+  608B 87          
+0412+  608C 81          
+0412+  608D 81          
+0412+  608E 80          
+0412+  608F 87          
+0413+  6090 87          	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,3,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
+0413+  6091 87          
+0413+  6092 87          
+0413+  6093 83          
+0413+  6094 81          
+0413+  6095 E1          
+0413+  6096 81          
+0413+  6097 80          
+0414+  6098 87          	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,0,0,0)\SW(0,0,1,0)\SW(0,1,1,0)
+0414+  6099 87          
+0414+  609A 87          
+0414+  609B 81          
+0414+  609C E1          
+0414+  609D 00          
+0414+  609E 80          
+0414+  609F 81          
+0415+  60A0 87          	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,7,0,1)\SW(0,0,1,0)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0415+  60A1 87          
+0415+  60A2 81          
+0415+  60A3 47          
+0415+  60A4 80          
+0415+  60A5 47          
+0415+  60A6 47          
+0415+  60A7 47          
+0416+  60A8 FF          	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0416+  60A9 47          
+0416+  60AA 47          
+0416+  60AB 47          
+0416+  60AC 47          
+0416+  60AD 47          
+0416+  60AE 47          
+0416+  60AF 47          
+0417+  60B0 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+0417+  60B1 47          
+0417+  60B2 47          
+0417+  60B3 47          
+0417+  60B4 47          
+0417+  60B5 47          
+0417+  60B6 47          
+0417+  60B7 47          
+0418+  60B8 47          	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)0418+  60B9 47          
+0418+  60BA 47          
+0418+  60BB 47          
+0418+  60BC 47          
+0418+  60BD 47          
+0418+  60BE 47          
+0418+  60BF 47          
 0008   60C0             	
 0009   7800             main:		.org $7800
 0010   7800             
