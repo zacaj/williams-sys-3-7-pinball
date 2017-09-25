@@ -115,6 +115,7 @@ bonusLights_done
 	
 	rts
 	
+	
 startBall:
 	ldaA	1
 	staA	p_Bonus
@@ -135,6 +136,11 @@ lClearLights:
 	cpX	lc(6) + 1
 	bne	lClearLights
 	;
+	
+	; init lights for player data
+	ldX	>curPlayer
+	ldaA	p_Ejects, X
+	staA	lc(4)
 	
 	; flash player light
 	ldaA	00001111b ; player up lights
@@ -191,6 +197,14 @@ startGame:
 	staB	lc(8)
 	staB	flc(7)
 	staB	flc(8)
+	
+	ldX	0
+lInitPlayers:
+	ldaB	lr(1)
+	staB	p_Ejects, X
+	inX
+	cpX	4
+	bne	lInitPlayers
 	
 	jsr	startBall
 	
@@ -263,7 +277,7 @@ swOuthole_bonusLoop:
 				score1000()
 			endif
 			dec	p_Bonus
-			jsr	bonusLights
+			;jsr	bonusLights
 			delay(200)
 			tst	p_Bonus
 			bne	swOuthole_bonusLoop
@@ -273,6 +287,11 @@ swOuthole_bonusLoop:
 			ldaB	>lc(3) ; check shoot again light
 			bitB	lr(1)
 			ifeq ; shoot again not lit
+				; store player's data
+				ldX	>curPlayer
+				ldaB	>lc(4)
+				staB	p_Ejects, X
+			
 				; go to next player
 				aslA
 				inc	curPlayer + 1
@@ -317,9 +336,43 @@ swLeftEject:
 	done(1)
 	
 swTopEject:
-	lampOn(3,2)
 	advBonus()
-	score500()
+	ldaB	>lc(4)
+	asrB
+	ifeq ; 1k
+		score1000()
+		jmp	swTopEject_scored
+	endif
+	asrB
+	ifeq  ; captive
+		ldaA	lr(7)
+		bitA	>lc(2) ; captive ball
+		ifeq	; not lit
+			lampOn(7,2)
+		else
+			lampOff(7,2)
+		endif
+		jmp	swTopEject_scored
+	endif
+	asrB
+	ifeq
+		score500()
+		bra	swTopEject_scored
+	endif
+	asrB
+	ifeq ; double
+		ldaA	lr(3)
+		bitA	>lc(2) ; double bonus
+		ifeq	; not lit
+			lampOn(3,2)
+		else
+			lampOff(3,2)
+		endif
+	else
+		score500()
+	endif
+swTopEject_scored:
+		
 	fireSolenoid(TOP_EJECT)
 	done(1)
 	
@@ -338,6 +391,11 @@ swRightInlane:
 	done(1)
 sw10pt:
 	score10()
+	asr	lc(4)
+	ifeq ; shifted off the edge
+		ldaA	00010000b
+		staA	lc(4)
+	endif
 	done(1)
 sw100pt:
 	score100()

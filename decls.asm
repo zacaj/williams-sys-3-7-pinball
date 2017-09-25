@@ -58,6 +58,7 @@ flashLampCol8:		.equ RAM + $A7
 #DEFINE flc(x) 		flashLampCol1 + (x - 1)
 
 p_Bonus:		.equ RAM + $B0
+p_Ejects:		.equ RAM + $B1 ; -> B4
 
 
 settleRow1:		.equ cRAM + $00 ;must be at 0
