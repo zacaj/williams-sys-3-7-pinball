@@ -121,6 +121,10 @@ startBall:
 	staA	p_Bonus
 	enablePf
 	
+	ldaA	0
+	staA	p_DropsDown
+	ldaA	16
+	staA	dropResetTimer
 	fireSolenoid(DROP_TIP)
 	delay(75)
 	fireSolenoid(DROP_HOT)
@@ -416,10 +420,15 @@ swTopEject_scored:
 	done(1)
 	
 swHotTip:
+	ldaA	0
+	staA	p_DropsDown
+	ldaA	16
+	staA	dropResetTimer
 	delay(75)
 	fireSolenoid(DROP_HOT)
 	delay(75)
 	fireSolenoid(DROP_TIP)
+	lampOff(4,3) ; spinner
 	done(1)
 swLeftOutlane:
 	ldaA	lr(2) ; left special
@@ -468,25 +477,49 @@ swPop:
 	score100()
 	done(1)
 swDropTip:
-	score10()
-	done(1)
+	jsr	swDrop
 swDropHot:
-	score10()
-	done(1)
+	jsr	swDrop
+swDrop:
+	tst	dropResetTimer
+	ifeq
+		inc	p_DropsDown
+		ldaA	4
+		cmpA	>p_DropsDown
+		ifgt
+			lampOff(4,3) ; spinner
+		else
+			lampOn(4,3)
+		endif
+		
+		score10()
+		done(1)
+	else
+		done(0)
+	endif
 swAdvBonus:
 	advBonus()
 	done(1)
 swSpinner:
-	ldaA	>sc(4)
-	bitA	sr(6)
-	ifne
+	;ldaA	>sc(4)
+	;bitA	sr(6)
+	;ifne
+	;	score100()
+	;	ldaA	$E
+	;else
+	;	noValidate
+	;	ldaA	0
+	;endif
+	;staA	solenoid1 + CLICKER - 1
+	
+	ldaA	lr(4) ; spinner
+	bitA	>lc(3)
+	ifne ; spinner on
 		score100()
-		ldaA	$E
+		fireSolenoid(CLICKER)
 	else
-		noValidate
-		ldaA	0
+		score10()
 	endif
-	staA	solenoid1 + CLICKER - 1
 	done(1)
 
 swCaptiveRollover:
@@ -564,7 +597,7 @@ settleTable: ; must be right after callbackTable
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
 	SW(7,1,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,0,1,0)\SW(0,7,1,0)
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,3,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
-	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,0,0,0)\SW(0,0,1,0)\SW(0,1,1,0)
+	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,0,1,0)\SW(0,0,1,0)\SW(0,1,1,0)
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,7,0,1)\SW(0,0,1,0)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)

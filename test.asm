@@ -191,6 +191,11 @@ decWaitTimers:
 		cpX	waitLeftEnd
 		bne	decWaitTimers
 		
+		dec	dropResetTimer
+		ifmi
+			inc	dropResetTimer
+		endif
+		
 		ldaA	>state		; clear strobe reset bit
 		andA	11111011b
 		staA	state

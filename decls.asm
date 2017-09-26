@@ -48,7 +48,7 @@ queueEnd:		.equ RAM + $67
 displayBcd1:	.equ RAM + $70
 displayBcd16:	.equ RAM + $7F
 ballCount:		.equ displayBcd1 + 7
-waitLeft: 		.equ RAM + $80
+waitLeft: 		.equ RAM + $80 ; dec every 16ms
 waitLeftEnd:		.equ RAM + $87
 waitMsb:		.equ RAM + $88 ; -> 8F
 waitLsb:		.equ RAM + $90 ; -> 97
@@ -57,9 +57,11 @@ flashLampCol1:		.equ RAM + $A0
 flashLampCol8:		.equ RAM + $A7
 #DEFINE flc(x) 		flashLampCol1 + (x - 1)
 lastSwitch:		.equ RAM + $A8
-
+dropResetTimer:		.equ RAM + $A9
 p_Bonus:		.equ RAM + $B0
 p_Ejects:		.equ RAM + $B1 ; -> B4
+p_DropsDown:		.equ RAM + $B5
+
 
 
 settleRow1:		.equ cRAM + $00 ;must be at 0
