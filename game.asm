@@ -134,6 +134,10 @@ startBall:
 	ifne
 		fireSolenoid(DROP_HOT)
 		delay(150)
+	else
+		inc	p_DropsDown
+		inc	p_DropsDown
+		inc	p_DropsDown
 	endif
 	ldaA	>dropsDown
 	comA
@@ -141,6 +145,10 @@ startBall:
 	ifne
 		fireSolenoid(DROP_TIP)
 		delay(150)
+	else
+		inc	p_DropsDown
+		inc	p_DropsDown
+		inc	p_DropsDown
 	endif
 	
 	ldaA	$FF
@@ -446,6 +454,7 @@ swTopEject:
 		else
 			lampOff(7,2)
 		endif
+	score500()
 		jmp	swTopEject_scored
 	endif
 	asrB
@@ -500,7 +509,7 @@ swLeftOutlane:
 		lampOn(1,3) ; shoot again
 		flashLamp(1,3)
 		fireSolenoid(BUZZER)
-		flashLamp(8,2)
+		flashLamp(2,3)
 	endif
 	advBonus()
 	score1000()
@@ -622,14 +631,17 @@ swCaptiveRollover:
 		ldaA	14 ; captive rollover switch number
 		cmpA	>lastSwitch
 		ifne
-			jsr	captiveAward
+			ldaA	15 ; captive rollover switch number
+			cmpA	>lastSwitch
+			ifne
+				jsr	captiveAward
+			endif
 		endif
 	endif
 	done(1)
 
 swCaptiveTarget:
 	advBonus()
-	lampOn(8,2) ; right special
 	ldaA	>lc(2)
 	bitA	lr(7)
 	ifeq ; light off
@@ -641,6 +653,7 @@ swCaptiveTarget:
 	done(1)
 	
 captiveAward:
+	lampOn(8,2) ; right special
 	ldaA	>lc(2)
 	bitA	lr(4) ; shoe 1
 	ifeq

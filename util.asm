@@ -307,3 +307,5 @@ _zeroScores:
 #define flashLamp(r,c) ldaA lr(r)\ oraA >flc(c)\ staA flc(c)
 #define lampOff(r,c) ldaA ~lr(r)\ andA >lc(c)\ staA lc(c)
 #define flashOff(r,c) ldaA ~lr(r)\ andA >flc(c)\ staA flc(c)
+
+#include "attract.asm"

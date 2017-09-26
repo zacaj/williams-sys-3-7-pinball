@@ -98,6 +98,11 @@ resetRamLoop:
 	ldaA	00
 	staB	displayBcd1
 	
+	ldaA	attractStart >> 8
+	staA	attractX
+	ldaA	attractStart&$FF
+	staA	attractX + 1
+	
 	ldaA	$FF	
 	staA 	displayStrobe
 
@@ -315,6 +320,30 @@ interrupt:
 	ldaA	0
 	cmpA	>counter
 	bne	counterHandled
+	
+	ldaA	lr(6) ; gameover
+		bitA	> lc(8)
+		ifne
+		ldX	>attractX
+		ldaA	0, X
+		staA	lc(2)
+		ldaA	1, X
+		staA	lc(3)
+		ldaA	2, X
+		staA	lc(4)
+		ldaA	3, X
+		staA	lc(5)
+		ldaA	4, X
+		staA	lc(6)
+		ldaA	>attractX + 1
+		addA	5
+		cmpA	attractEnd&$FF
+		ifeq
+			ldaA	attractStart&$FF
+		endif
+		staA	attractX + 1
+	endif
+	
 	inc 	counter2
 	ldaA	4
 	cmpA	>counter2

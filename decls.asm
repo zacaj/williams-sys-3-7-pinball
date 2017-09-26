@@ -37,6 +37,7 @@ switchRow8:		.equ switchRow1 + 7
 #DEFINE sr(x)		(1 << (x-1))
 solAStatus:		.equ RAM + $28 ; solenoid PIA is updated once every 8 IRQ
 solBStatus:		.equ RAM + $29 ; one solenoid bit is generated per IRQ and pushed on
+attractX:		.equ RAM + $2A ; +
 curCol:			.equ RAM + $50 ; +
 tempX:			.equ RAM + $52 ; +
 queueHead:		.equ RAM + $54 ; +
