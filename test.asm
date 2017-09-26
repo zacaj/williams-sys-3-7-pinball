@@ -189,10 +189,12 @@ decWaitTimers:
 				ldaA	waitLsb - waitLeft, X
 				staA	tempQ + 1
 				ldaB	waitReg - waitLeft, X
+				stX	forkX
 				ldX	>tempQ
 				jmp	0, X
 			endif
 		endif
+afterFork:
 		cpX	waitLeftEnd
 		bne	decWaitTimers
 		
@@ -302,6 +304,9 @@ skipEvent:
 		else
 			inc	queueHead + 1
 		endif
+	else
+		ldX	>forkX
+		jmp	afterFork
 	endif
 				
 skipQueue:

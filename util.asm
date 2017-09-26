@@ -247,10 +247,10 @@ _addScore10N_p4:
 ; trashes everything but B
 _delay:	
 	ldX	waitLeft - 1
-findEmptyLoop:
+delay_findEmptyLoop:
 	inX
 	tst	0, X
-	bne 	findEmptyLoop 
+	bne 	delay_findEmptyLoop 
 	
 	; X = first waitLeft that = 0
 	staB	waitReg - waitLeft, X
@@ -261,6 +261,36 @@ findEmptyLoop:
 	staA	0, X
 	; time and add stored
 	jmp skipEvent
+	
+_fork:	
+	ldX	waitLeft - 1
+fork_findEmptyLoop:
+	inX
+	tst	0, X
+	bne 	fork_findEmptyLoop 
+	
+	; X = first waitLeft that = 0
+	staB	waitReg - waitLeft, X
+	pulB	; A = MSB of PC
+	staB	waitMsb - waitLeft, X
+	pulB	; A = LSB of PC
+	addB	3
+	ifcs
+		inc	waitMsb - waitLeft, X
+	endif
+	staB	waitLsb - waitLeft, X
+	staA	0, X
+	; time and add stored
+	subB	3
+	pshB
+	ldaB	waitMsb - waitLeft, X
+	ifcs
+		decB
+	endif
+	pshB
+	rts
+	
+	
 	
 resetScores:
 	ldaA	00
@@ -285,6 +315,10 @@ _zeroScores:
 ; trash ~B
 ; delay for ms (8-2000)
 #DEFINE delay(ms) ldaA ms/8\ jsr _delay
+; makes a second thread that will skip the next (3b) instruction
+#DEFINE fork(ms) ldaA ms/8\ jsr _fork
+#DEFINE beginFork()	
+#DEFINE endFork()	ldX >forkX\ jmp afterFork
 	
 ; trashes B (max 104ms)
 #DEFINE fireSolenoid(s)	ldaB (s&$FF)/8\ staB solenoid1+(s>>8)-1 

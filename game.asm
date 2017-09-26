@@ -78,7 +78,43 @@ _addScore1000N:
 #DEFCONT	\ fireSolenoid(CHIME_100)	
 #DEFCONT	\ delay(SHORT_PAUSE)
 
-#DEFINE advBonus()	inc p_Bonus
+#DEFINE advBonus()	jsr advanceBonus
+
+advanceBonus:
+	inc 	p_Bonus
+	lampOff(8,5) ; 1k
+	ldaB	2
+	fork(64)
+	rts
+	nop
+	nop
+	beginFork()
+advanceBonus_loop:
+	dec	p_Bonus
+	jsr 	bonusLights
+	inc	p_Bonus
+	ldaA	11111110b
+	
+	pshB
+	decB
+inner:
+	decB
+	beq	innerEnd
+	seC
+	rolA
+	bra 	inner
+innerEnd:
+	pulB
+	
+	andA	>lc(6)
+	staA	lc(6)
+	delay(64)
+	incB
+	cmpB	>p_Bonus
+	blt	advanceBonus_loop
+	ldaB	>p_Bonus
+	jsr 	bonusLights
+	endFork()
 	
 ; switch callbacks:
 
@@ -120,6 +156,7 @@ startBall:
 	ldX	>curPlayer
 	ldaA	1
 	staA	p_Bonus
+	lampOn(8,5)
 	enablePf
 	
 	ldaA	0
@@ -429,11 +466,13 @@ swLeftEject:
 	endif
 	fireSolenoid(LEFT_EJECT)
 	
-	delay(400)
+	fork(400)
+	done(1)
+	beginFork()
 	ldaA	11000111b
 	andA	>flc(2)
 	staA	flc(2)
-	done(1)
+	endFork()
 	
 swTopEject:
 	advBonus()
@@ -496,12 +535,14 @@ swHotTip:
 	fireSolenoid(DROP_TIP)
 	lampOff(4,3) ; spinner
 	
-	delay(900)
+	fork(900)
+	done(1)
+	beginFork()
 	ldaA	11000111b
 	andA	>flc(2)
 	staA	flc(2)
+	endFork()
 	
-	done(1)
 swLeftOutlane:
 	ldaA	lr(2) ; left special
 	bitA	>lc(3)
