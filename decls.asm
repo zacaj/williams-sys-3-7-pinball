@@ -43,7 +43,7 @@ queueHead:		.equ RAM + $54 ; +
 queueTail:		.equ RAM + $56 ; +
 tempQ:			.equ RAM + $58 ; +
 queue:			.equ RAM + $60	; opened | switch? | number#6
-queueEnd:		.equ RAM + $67
+queueEnd:		.equ RAM + $6D
 ;
 displayBcd1:	.equ RAM + $70
 displayBcd16:	.equ RAM + $7F
@@ -58,11 +58,13 @@ flashLampCol8:		.equ RAM + $A7
 #DEFINE flc(x) 		flashLampCol1 + (x - 1)
 lastSwitch:		.equ RAM + $A8
 dropResetTimer:		.equ RAM + $A9 ; max 127
-dropsDown:		.equ RAM + $AA
+dropsDown		.equ RAM + $AA
 p_Bonus:		.equ RAM + $B0
 p_Ejects:		.equ RAM + $B1 ; -> B4
 p_DropsDown:		.equ RAM + $B5
 p_LampCol2:		.equ RAM + $B6 ; -> B9
+p_EachDropDown:		.equ RAM + $BA ; -> BD
+p_BonusLeft:		.equ RAM + $BE
 
 
 
@@ -80,9 +82,10 @@ pB_10:			.equ pB_1m + 5
 pC_1m:			.equ pB_10 + 1
 pC_10:			.equ pC_1m + 5
 pD_1m:			.equ pC_10 + 1
-pD_10:			.equ pD_1m + 5  
-displayCol:		.equ cRAM + $68
-state:			.equ cRAM + $69	; ? | strobe reset | don't validate | ?
+pD_10:			.equ pD_1m + 5 
+; 
+displayCol:		.equ cRAM + $6A
+state:			.equ cRAM + $6B	; ? | strobe reset | don't validate | ?
 
 instant:		.equ 4
 debounce:		.equ 1

@@ -117,19 +117,31 @@ bonusLights_done
 	
 	
 startBall:
+	ldX	>curPlayer
 	ldaA	1
 	staA	p_Bonus
 	enablePf
 	
 	ldaA	0
 	staA	p_DropsDown
-	staA	dropsDown
 	ldaA	65
 	staA	dropResetTimer
-	fireSolenoid(DROP_TIP)
-	delay(75)
-	fireSolenoid(DROP_HOT)
-	delay(125)
+	
+	ldaA	p_EachDropDown, X
+	staA	dropsDown
+	comA
+	bitA	000111b
+	ifne
+		fireSolenoid(DROP_HOT)
+		delay(150)
+	endif
+	ldaA	>dropsDown
+	comA
+	bitA	111000b
+	ifne
+		fireSolenoid(DROP_TIP)
+		delay(150)
+	endif
 	
 	ldaA	$FF
 	staA	lastSwitch
@@ -149,12 +161,13 @@ lClearLights:
 	ldX	>curPlayer
 	ldaA	p_Ejects, X
 	staA	lc(4)
-	ldaA	p_LampCol2, X
-	staA	lc(2)
-	bitA	lr(2)
+	ldaB	p_LampCol2, X
+	bitB	lr(2)
 	ifne 
 		lampOn(2,3)
+		andB	11111101b
 	endif
+	staB	lc(2)
 	
 	ldaA	lr(7) ; shoot again
 	bitA	>lc(8)
@@ -177,6 +190,9 @@ lClearLights:
 	
 	
 startGame:
+	lampOn(2,7) ; one player
+	
+	lampOff(6,8) ; game over
 	
 	fireSolenoid(CHIME_10)
 	delay(SHORT_PAUSE)
@@ -224,6 +240,7 @@ lInitPlayers:
 	staB	p_Ejects, X
 	ldaB	0
 	staB	p_LampCol2, X
+	staB	p_EachDropDown, X
 	inX
 	cpX	4
 	bne	lInitPlayers
@@ -348,6 +365,8 @@ swOuthole_bonusLoop:
 			andB	lr(2)
 			oraB	>lc(2)
 			staB	p_LampCol2, X
+			ldaB	>dropsDown
+			staB	p_EachDropDown, X
 			
 		
 			; go to next player
@@ -395,13 +414,14 @@ swLeftEject:
 		lampOn(1,3) ; shoot again
 		lampOn(7,8)
 		lampOff(3,3) ; extra ball
+		delay(500)
 	else
 		jsr	addCollect
 		score500()
 	endif
 	fireSolenoid(LEFT_EJECT)
 	
-	delay(500)
+	delay(400)
 	ldaA	11000111b
 	andA	>flc(2)
 	staA	flc(2)
@@ -413,6 +433,7 @@ swTopEject:
 	asrB
 	ifeq ; 1k
 		score1000()
+		delay(200)
 		jmp	swTopEject_scored
 	endif
 	asrB
@@ -421,30 +442,30 @@ swTopEject:
 		bitA	>lc(2) ; captive ball
 		ifeq	; not lit
 			lampOn(7,2)
+			flashLamp(7,2)
 		else
 			lampOff(7,2)
 		endif
 		jmp	swTopEject_scored
 	endif
 	asrB
-	ifeq
-		score500()
-		bra	swTopEject_scored
-	endif
-	asrB
-	ifeq ; double
-		ldaA	lr(3)
-		bitA	>lc(2) ; double bonus
-		ifeq	; not lit
-			lampOn(3,2)
-		else
-			lampOff(3,2)
+	ifne	
+		asrB
+		ifeq ; double
+			ldaA	lr(3)
+			bitA	>lc(2) ; double bonus
+			ifeq	; not lit
+				lampOn(3,2)
+				flashLamp(3,2)
+			else
+				lampOff(3,2)
+			endif
 		endif
-	else
-		score500()
 	endif
+	score500()
 swTopEject_scored:
-		
+	flashOff(3,2)
+	flashOff(7,2)
 	fireSolenoid(TOP_EJECT)
 	done(1)
 	
@@ -460,13 +481,13 @@ swHotTip:
 	staA	dropsDown
 	ldaA	65
 	staA	dropResetTimer
-	delay(75)
+	delay(150)
 	fireSolenoid(DROP_HOT)
-	delay(75)
+	delay(150)
 	fireSolenoid(DROP_TIP)
 	lampOff(4,3) ; spinner
 	
-	delay(700)
+	delay(900)
 	ldaA	11000111b
 	andA	>flc(2)
 	staA	flc(2)
@@ -481,6 +502,8 @@ swLeftOutlane:
 		fireSolenoid(BUZZER)
 		flashLamp(8,2)
 	endif
+	advBonus()
+	score1000()
 	done(1)
 	
 swRightOutlane:
@@ -492,6 +515,8 @@ swRightOutlane:
 		fireSolenoid(BUZZER)
 		flashLamp(8,2)
 	endif
+	advBonus()
+	score1000()
 	done(1)
 	
 swLeftInlane:
@@ -520,22 +545,22 @@ swPop:
 	done(1)
 swDropTip:
 	ldaA	1<<3
-	jsr	swDrop
+	jmp	swDrop
 swDropHot:
 	ldaA	1<<0
-	jsr	swDrop
+	jmp	swDrop
 swDroptIp:
 	ldaA	1<<4
-	jsr	swDrop
+	jmp	swDrop
 swDrophOt:
 	ldaA	1<<1
-	jsr	swDrop
+	jmp	swDrop
 swDroptiP:
 	ldaA	1<<5
-	jsr	swDrop
+	jmp	swDrop
 swDrophoT:
 	ldaA	1<<2
-	jsr	swDrop
+	jmp	swDrop
 swDrop:
 	tst	dropResetTimer
 	ifeq
@@ -556,12 +581,14 @@ swDrop:
 		endif
 		
 		score10()
+		advBonus()
 		done(1)
 	else
 		done(0)
 	endif
 swAdvBonus:
 	advBonus()
+	score1000()
 	done(1)
 swSpinner:
 	;ldaA	>sc(4)
@@ -602,6 +629,7 @@ swCaptiveRollover:
 
 swCaptiveTarget:
 	advBonus()
+	lampOn(8,2) ; right special
 	ldaA	>lc(2)
 	bitA	lr(7)
 	ifeq ; light off
@@ -613,9 +641,52 @@ swCaptiveTarget:
 	done(1)
 	
 captiveAward:
-	lampOn(8,2) ; right special
+	ldaA	>lc(2)
+	bitA	lr(4) ; shoe 1
+	ifeq
+		rts
+	else
+		bitA	lr(6)
+		ifne
+			flashLamp(6,2)
+		else
+			bitA	lr(5)
+			ifne
+				flashLamp(5,2)
+			else
+				flashLamp(4,2)
+			endif
+		endif
+	endif
 	
-	rts
+	ldaA	lr(3)
+	bitA	>lc(2)
+	ifne ; double bonus
+		ldaA	>p_Bonus
+	else
+		ldaA	1
+	endif	
+	staA	p_BonusLeft
+	
+captiveAward_bonusLoop:
+	score1000()
+	dec	p_Bonus
+	jsr	bonusLights
+	delay(200)
+	tst	p_Bonus
+	bne	captiveAward_bonusLoop
+	
+	ldaA	00111000b
+	andA	>flc(2)
+	comA
+	andA	>lc(2)
+	staA	lc(2)
+	
+	ldaA	>p_BonusLeft
+	staA	p_Bonus
+	
+	rts	
+	
 	
 alternate:
 	ldaB	0 ; turn on left?
@@ -682,7 +753,7 @@ callbackTable: 	.org $6000 ; note: TRANSPOSED
 settleTable: ; must be right after callbackTable
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
 	SW(7,1,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,0,1,0)\SW(0,7,1,0)
-	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,3,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
+	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,3,1,0)\SW(0,3,1,0)\SW(4,1,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(4,1,1,1)\SW(0,0,1,0)\SW(0,0,1,0)\SW(0,1,1,0)
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,7,0,1)\SW(0,0,1,0)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)

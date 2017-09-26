@@ -323,19 +323,19 @@ interrupt:
 	ldaA	0
 	staA	counter2
 	ldaA	01110111b
-	cmpA	>displayBcd1
+	cmpA	>displayBcd1 + 14
 	beq	on
 	
 	ldaA	$F0
 	;staA	lampRow1
 	ldaA	01110111b
-	staA	displayBcd1	
+	staA	displayBcd1	 + 14
 	bra	counterHandled
 on:
 	ldaA	$0F
 	;staA	lampRow1
 	ldaA	00110011b
-	staA	displayBcd1	
+	staA	displayBcd1	 + 14
 
 counterHandled:
 ; move switch column
@@ -344,8 +344,14 @@ counterHandled:
 	
 ; update display 
 	
+	ldaA	>$BF
+	staA	displayBcd1 + 15
+	ldaA	>$6F
+	staA	displayBcd1 + 6
+	
 	ldX	>curCol
 	ldaA	>displayCol
+	andA	1111b
 	ldaB 	$FF
 	staB	displayBcd
 	staA	displayStrobe
@@ -546,6 +552,7 @@ updateStrobe:
 		staA	solBStatus
 		
 		ldaB	>displayCol	; reset display col only if it's > 7 
+		oraB	11110000b
 		cmpB	$F8	; since it needs to count to 15 instead of 7
 		ifgt
 			staA	displayCol
