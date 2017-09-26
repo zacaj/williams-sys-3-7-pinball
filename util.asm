@@ -9,7 +9,7 @@ copy13Loop:
 	andA	$0F
 	cmpA	$00 
 	ifeq ; if pA score = 0?
-		cpX	displayBcd1 + 4
+		cpX	displayBcd1 + 5
 		ifeq
 			andB	00001111b 
 			ldaA	$0F
@@ -31,7 +31,7 @@ copy13Loop:
 	ifeq ; pC is 0
 		bitB	1111b
 		ifne
-			cpX	displayBcd1 + 4
+			cpX	displayBcd1 + 5
 			ifeq
 				andB	11110000b
 			else
@@ -57,7 +57,7 @@ copy24Loop:
 	andA	$0F
 	cmpA	$00 ; is pA score 0?
 	ifeq ; if pA score = 0?
-		cpX	displayBcd1 + 8 + 4
+		cpX	displayBcd1 + 8 + 5
 		ifeq
 			andB	00001111b 
 			ldaA	$0F
@@ -78,7 +78,7 @@ copy24Loop:
 	ifeq ; pC is 0
 		bitB	1111b
 		ifne
-			cpX	displayBcd1 + 8 + 4
+			cpX	displayBcd1 + 8 + 5
 			ifeq
 				andB	11110000b
 			else
@@ -97,6 +97,12 @@ copy24Loop:
 	rts
 	
 blankNonPlayerScores:
+	ldaB	>lc(8) ; gameover
+	bitB	lr(6)
+	ifne
+		rts
+	endif
+	
 	ldaB	>lc(7)
 	bitB	lr(2)
 	bne	blankP2
@@ -141,8 +147,33 @@ blankDone:
 refreshPlayerScores:
 	jsr copyScores13
 	jsr copyScores24
-	jsr blankNonPlayerScores
-	rts
+	
+	ldaA	$F0
+	cmpA	>pA_1m
+	bne	refresh_1m
+	cmpA	>pB_1m
+	bne	refresh_1m	
+	cmpA	>pC_1m
+	bne	refresh_1m
+	cmpA	>pD_1m
+	bne	refresh_1m
+	
+	ldX	displayBcd1
+refresh_10xloop:
+	ldaA	1, X
+	staA	0,X
+	ldaA	8 + 1, X
+	staA	8, X
+	inX
+	cpX	displayBcd1+5
+	bne	refresh_10xloop
+	ldaA	0
+	staA	displayBcd1 + 5
+	staA	displayBcd1 + 5 + 8
+	jmp blankNonPlayerScores
+refresh_1m:
+	jmp blankNonPlayerScores
+	
 	
 ; add score instantly
 ; X = place in p*_1* to add the score to
@@ -150,12 +181,14 @@ refreshPlayerScores:
 ; tail call
 _addScoreI:
 	addA	0, X
+	oraA	11110000b
 	ifcs ; overflowed, need to increment next number
 		addA	6	; adjust A back into BCD
 		staA	0, X
 addScore_carryOver:		; loop to propagate carry
 		deX	; go to next decimal place
 		ldaA	0, X	
+		oraA	11110000b
 		cmpA	$F9
 		ifeq			; if it's already a 9, reset it and carry again
 			clr	0, X
@@ -171,6 +204,7 @@ addScore_carryOver:		; loop to propagate carry
 addScore_carryDa:
 			deX
 			ldaA	0, X
+			oraA	11110000b
 			cmpA	$F9
 			ifeq
 				clr	0, X
@@ -230,11 +264,11 @@ findEmptyLoop:
 	
 resetScores:
 	ldaA	00
-	ldX	pA_10
+	ldX	pA_1m
 _zeroScores:
 	staA	0, X
 	inX
-	cpX	pD_1m + 1
+	cpX	pD_10 + 1
 	bne	_zeroScores
 	
 	ldaA	0
