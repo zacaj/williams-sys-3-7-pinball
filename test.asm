@@ -191,6 +191,7 @@ decWaitTimers:
 		cpX	waitLeftEnd
 		bne	decWaitTimers
 		
+		
 		dec	dropResetTimer
 		ifmi
 			inc	dropResetTimer
@@ -281,7 +282,7 @@ afterQueueEvent:
 		; clear don't validate bit
 		comA
 		andA	>state
-		staA	>state
+		staA	state
 	endif
 	
 skipEvent:

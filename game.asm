@@ -123,7 +123,8 @@ startBall:
 	
 	ldaA	0
 	staA	p_DropsDown
-	ldaA	16
+	staA	dropsDown
+	ldaA	65
 	staA	dropResetTimer
 	fireSolenoid(DROP_TIP)
 	delay(75)
@@ -148,6 +149,12 @@ lClearLights:
 	ldX	>curPlayer
 	ldaA	p_Ejects, X
 	staA	lc(4)
+	ldaA	p_LampCol2, X
+	staA	lc(2)
+	bitA	lr(2)
+	ifne 
+		lampOn(2,3)
+	endif
 	
 	ldaA	lr(7) ; shoot again
 	bitA	>lc(8)
@@ -215,6 +222,8 @@ startGame:
 lInitPlayers:
 	ldaB	lr(1)
 	staB	p_Ejects, X
+	ldaB	0
+	staB	p_LampCol2, X
 	inX
 	cpX	4
 	bne	lInitPlayers
@@ -321,7 +330,7 @@ swOuthole_bonusLoop:
 			score1000()
 		endif
 		dec	p_Bonus
-		;jsr	bonusLights
+		jsr	bonusLights
 		delay(200)
 		tst	p_Bonus
 		bne	swOuthole_bonusLoop
@@ -335,6 +344,11 @@ swOuthole_bonusLoop:
 			ldX	>curPlayer
 			ldaB	>lc(4)
 			staB	p_Ejects, X
+			ldaB	>lc(3)
+			andB	lr(2)
+			oraB	>lc(2)
+			staB	p_LampCol2, X
+			
 		
 			; go to next player
 			aslA
@@ -366,16 +380,31 @@ swOuthole_bonusLoop:
 	done(0)
 	
 swLeftEject:
-	advBonus()
-	fireSolenoid(KNOCKER)
 	ldaA	>lc(8)
 	bitA	lr(6)
-	ifeq ; in game
-		lampOn(1,3)
-		lampOn(7,8)
+	ifne ; not in game
+		fireSolenoid(LEFT_EJECT)
+		done(0)
 	endif
-	score500()
+		
+	advBonus()
+	ldaA	lr(3) ; extra ball
+	bitA	>lc(3)
+	ifne
+		fireSolenoid(KNOCKER)
+		lampOn(1,3) ; shoot again
+		lampOn(7,8)
+		lampOff(3,3) ; extra ball
+	else
+		jsr	addCollect
+		score500()
+	endif
 	fireSolenoid(LEFT_EJECT)
+	
+	delay(500)
+	ldaA	11000111b
+	andA	>flc(2)
+	staA	flc(2)
 	done(1)
 	
 swTopEject:
@@ -420,15 +449,28 @@ swTopEject_scored:
 	done(1)
 	
 swHotTip:
+	tst	dropResetTimer
+	ifne
+		done(0)
+	endif
+	
+	jsr	addCollect
 	ldaA	0
 	staA	p_DropsDown
-	ldaA	16
+	staA	dropsDown
+	ldaA	65
 	staA	dropResetTimer
 	delay(75)
 	fireSolenoid(DROP_HOT)
 	delay(75)
 	fireSolenoid(DROP_TIP)
 	lampOff(4,3) ; spinner
+	
+	delay(700)
+	ldaA	11000111b
+	andA	>flc(2)
+	staA	flc(2)
+	
 	done(1)
 swLeftOutlane:
 	ldaA	lr(2) ; left special
@@ -477,12 +519,33 @@ swPop:
 	score100()
 	done(1)
 swDropTip:
+	ldaA	1<<3
 	jsr	swDrop
 swDropHot:
+	ldaA	1<<0
+	jsr	swDrop
+swDroptIp:
+	ldaA	1<<4
+	jsr	swDrop
+swDrophOt:
+	ldaA	1<<1
+	jsr	swDrop
+swDroptiP:
+	ldaA	1<<5
+	jsr	swDrop
+swDrophoT:
+	ldaA	1<<2
 	jsr	swDrop
 swDrop:
 	tst	dropResetTimer
 	ifeq
+		bitA	>dropsDown
+		ifne
+			done(0)
+		endif
+		oraA	>dropsDown
+		
+		staA	dropsDown
 		inc	p_DropsDown
 		ldaA	4
 		cmpA	>p_DropsDown
@@ -574,6 +637,29 @@ alternate:
 	endif
 	rts
 	
+addCollect:
+	ldaA	>lc(2)
+	bitA	lr(4)
+	ifeq
+		lampOn(4,2)
+		flashLamp(4,2)
+	else
+		bitA	lr(5)
+		ifeq
+			lampOn(5,2)
+			flashLamp(5,2)
+		else
+			bitA	lr(6)
+			ifeq
+				lampOn(6,2)
+				flashLamp(6,2)
+			else
+				score1000()
+				lampOn(3,3)
+			endif
+		endif
+	endif
+	rts
 	
 ; end callbacks
 	.msfirst
@@ -581,8 +667,8 @@ alternate:
 callbackTable: 	.org $6000 ; note: TRANSPOSED
 	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
 	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw swCaptiveRollover\.dw swCaptiveTarget
-	.dw swDropTip	\.dw swDropTip\.dw swDropTip\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
-	.dw swDropHot	\.dw swDropHot\.dw swDropHot\.dw sw10pt\.dw swLeftEject\.dw swSpinner\.dw swPop\.dw sw500pt
+	.dw swDropTip	\.dw swDroptIp\.dw swDroptiP\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
+	.dw swDropHot	\.dw swDrophOt\.dw swDrophoT\.dw sw10pt\.dw swLeftEject\.dw swSpinner\.dw swPop\.dw sw500pt
 	.dw swLeftOutlane\.dw swLeftInlane\.dw sw10pt\.dw none\.dw swHotTip\.dw none\.dw none\.dw none
 	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
 	.dw none	\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none\.dw none
