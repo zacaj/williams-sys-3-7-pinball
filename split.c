@@ -8,9 +8,9 @@ void write(FILE *in, FILE *out) {
 
 int main() {
 	FILE *in  = fopen("test.obj", "rb");
-	FILE *a = fopen("pinmame32_23/roms/lzbal_l2/gamerom.716", "wb");
-	FILE *b = fopen("pinmame32_23/roms/lzbal_l2/green1.716", "wb");
-	FILE *c = fopen("pinmame32_23/roms/lzbal_l2/green2.716", "wb");
+	FILE *a = fopen("pinmame32_23/roms/httip_l1/gamerom.716", "wb");
+	FILE *b = fopen("pinmame32_23/roms/httip_l1/white1.716", "wb");
+	FILE *c = fopen("pinmame32_23/roms/httip_l1/white2.716", "wb");
 	write(in, a);
 	
 	fseek(in, 0x1000, SEEK_SET);
