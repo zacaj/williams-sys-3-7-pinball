@@ -15,14 +15,17 @@ int main() {
 	FILE *c = fopen("pinmame32_23/roms/httip_l1/white2.716", "wb");
 	FILE *cc = fopen("white2.716", "wb");
 	write(in, a);
+	fseek(in, 0x0000, SEEK_SET);
 	write(in, aa);
 	
 	fseek(in, 0x1000, SEEK_SET);
 	write(in, b);
+	fseek(in, 0x1000, SEEK_SET);
 	write(in, bb);
 	
 	fseek(in, 0x1800, SEEK_SET);
 	write(in, c);
+	fseek(in, 0x1800, SEEK_SET);
 	write(in, cc);
 	
 	fseek(in, 0x0000, SEEK_END);
