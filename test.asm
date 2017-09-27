@@ -326,6 +326,7 @@ interrupt:
 	cmpA	>counter
 	bne	counterHandled
 	
+	; attract mode
 	ldaA	lr(6) ; gameover
 		bitA	> lc(8)
 		ifne
@@ -350,9 +351,15 @@ interrupt:
 	endif
 	
 	inc 	counter2
-	ldaA	4
+	ldaA	8
 	cmpA	>counter2
 	bne	counterHandled
+	
+	ldaA	10
+	cmpA	>p_Bonus
+	ifeq
+		jsr advanceBonus
+	endif
 	
 	ldaA	0
 	staA	counter2
