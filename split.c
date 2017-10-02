@@ -7,13 +7,14 @@ void write(FILE *in, FILE *out) {
 }
 
 int main() {
-	FILE *in  = fopen("test.obj", "rb");
+	FILE *in  = fopen("rom.716", "rb");
 	FILE *a = fopen("pinmame32_23/roms/httip_l1/gamerom.716", "wb");
 	FILE *aa = fopen("gamerom.716", "wb");
 	FILE *b = fopen("pinmame32_23/roms/httip_l1/white1.716", "wb");
 	FILE *bb = fopen("white1.716", "wb");
 	FILE *c = fopen("pinmame32_23/roms/httip_l1/white2.716", "wb");
 	FILE *cc = fopen("white2.716", "wb");
+	fseek(in, 0x0000, SEEK_SET);
 	write(in, a);
 	fseek(in, 0x0000, SEEK_SET);
 	write(in, aa);

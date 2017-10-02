@@ -81,6 +81,11 @@ _addScore1000N:
 #DEFINE advBonus()	jsr advanceBonus
 
 advanceBonus:
+	ldaA	1000b
+	bitA	>state
+	ifne
+		rts
+	endif
 	inc 	p_Bonus
 	lampOff(8,5) ; 1k
 	ldaB	2
@@ -164,29 +169,13 @@ startBall:
 	ldaA	65
 	staA	dropResetTimer
 	
-	ldaA	p_EachDropDown, X
+	ldaA	0
 	staA	dropsDown
-	comA
-	bitA	000111b
-	ifne
-		fireSolenoid(DROP_HOT)
-		delay(150)
-	else
-		inc	p_DropsDown
-		inc	p_DropsDown
-		inc	p_DropsDown
-	endif
-	ldaA	>dropsDown
-	comA
-	bitA	111000b
-	ifne
-		fireSolenoid(DROP_TIP)
-		delay(150)
-	else
-		inc	p_DropsDown
-		inc	p_DropsDown
-		inc	p_DropsDown
-	endif
+	
+	fireSolenoid(DROP_HOT)
+	delay(150)
+	fireSolenoid(DROP_TIP)
+	delay(150)
 	
 	ldaA	$FF
 	staA	lastSwitch
@@ -347,6 +336,14 @@ swOuthole:
 		done(0)
 	endif
 	
+	ldaA	1000b
+	bitA	>state
+	ifne
+		done(0)
+	endif
+	oraA	>state
+	staA	state
+	
 	; check ballsave
 	ldaA	lr(1)
 	bitA	>lc(3)
@@ -441,6 +438,11 @@ swOuthole_bonusLoop:
 		
 		jsr	startBall
 	endif	
+	
+	ldaA	~1000b
+	andA	>state
+	staA	state
+	
 	done(0)
 	
 swLeftEject:

@@ -87,7 +87,7 @@ pD_1m:			.equ pC_10 + 1
 pD_10:			.equ pD_1m + 5 
 ; 
 displayCol:		.equ cRAM + $6A
-state:			.equ cRAM + $6B	; ? | strobe reset | don't validate | ?
+state:			.equ cRAM + $6B	; counting bonus | strobe reset | don't validate | ?
 
 instant:		.equ 4
 debounce:		.equ 1
