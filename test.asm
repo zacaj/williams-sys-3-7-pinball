@@ -427,25 +427,21 @@ swNext:
 	ifne		; if bit set, switch different
 		pshA ; store changed switches left
 		ldX	>tempX
-		ldaA	11000b ; want to skip decrementing settle counter 7/8 IRQs
-				; but checking 'multiple of 8' would miss 7/8 switch
-				; columns completely since they're in sync
-				; so instead the lowest bits are empty (so that it'll
-				; get all switch cols) and instead it skips 7/8 groups 
-				; of 8 IRQs
-		bitA	>counter
-		beq checkSettled ; counter not multiple of 8, skip settling (multiplies settle time by 8)
-			; just check if this is the beginning of the settle
-			;  (want to react right away when a switch closes)
-			ldaA	0, X ; A now how long the switch has left to settle
-			andA	00001111b ; need to remove upper F ( sets Z if A = 0)
-			beq 	notSettled; A=0 -> was settled, so can begin
-			bra settledEnd
 checkSettled:
 		ldaA	0, X ; A now how long the switch has left to settle
 		andA	00001111b ; need to remove upper F ( sets Z if A = 0)
 		beq 	notSettled; A=0 -> settled
 		; else A > 0 -> settling
+			ldaA	11000b ; want to skip decrementing settle counter 7/8 IRQs
+				; but checking 'multiple of 8' would miss 7/8 switch
+				; columns completely since they're in sync
+				; so instead the lowest bits are empty (so that it'll
+				; get all switch cols) and instead it skips 7/8 groups 
+				; of 8 IRQs
+			bitA	>counter
+			bne	settledEnd
+			ldaA	0, X ; A now how long the switch has left to settle
+			andA	00001111b ; need to remove upper F ( sets Z if A = 0)
 			decA
 			staA	0, X	; sets Z if now A = 0
 			ifeq ; A=0 -> now settled, fire event
