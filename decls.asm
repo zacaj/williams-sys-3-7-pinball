@@ -67,6 +67,7 @@ p_DropsDown:		.equ RAM + $B5
 p_LampCol2:		.equ RAM + $B6 ; -> B9
 p_EachDropDown:		.equ RAM + $BA ; -> BD
 p_BonusLeft:		.equ RAM + $BE
+bonusTimer:		.equ RAM + $BF ; counts down from 127 during bonus
 
 
 
@@ -87,7 +88,7 @@ pD_1m:			.equ pC_10 + 1
 pD_10:			.equ pD_1m + 5 
 ; 
 displayCol:		.equ cRAM + $6A
-state:			.equ cRAM + $6B	; counting bonus | strobe reset | don't validate | ?
+state:			.equ cRAM + $6B	; _ | strobe reset | don't validate | _
 
 instant:		.equ 4
 debounce:		.equ 1

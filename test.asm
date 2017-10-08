@@ -203,6 +203,10 @@ afterFork:
 		ifmi
 			inc	dropResetTimer
 		endif
+		dec	bonusTimer
+		ifmi
+			inc	bonusTimer
+		endif
 		
 		ldaA	>state		; clear strobe reset bit
 		andA	11111011b
@@ -430,7 +434,7 @@ swNext:
 checkSettled:
 		ldaA	0, X ; A now how long the switch has left to settle
 		andA	00001111b ; need to remove upper F ( sets Z if A = 0)
-		beq 	notSettled; A=0 -> settled
+		beq 	notSettled; A=0 -> was settled
 		; else A > 0 -> settling
 			ldaA	11000b ; want to skip decrementing settle counter 7/8 IRQs
 				; but checking 'multiple of 8' would miss 7/8 switch

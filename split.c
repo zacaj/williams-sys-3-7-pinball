@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <errno.h>
 void write(FILE *in, FILE *out) {
 	char data[2048];
 	fread(data, 2048,1, in);
@@ -7,7 +7,11 @@ void write(FILE *in, FILE *out) {
 }
 
 int main() {
-	FILE *in  = fopen("rom.716", "rb");
+	FILE *in  = fopen("rom.764", "rb");
+	if(!in) {
+		fprintf(stderr, "could not open rom.764, errno %i", (errno));
+		return 3;
+	}
 	FILE *a = fopen("pinmame32_23/roms/httip_l1/gamerom.716", "wb");
 	FILE *aa = fopen("gamerom.716", "wb");
 	FILE *b = fopen("pinmame32_23/roms/httip_l1/white1.716", "wb");
@@ -31,7 +35,7 @@ int main() {
 	
 	fseek(in, 0x0000, SEEK_END);
 	if(ftell(in)!=8192) {
-		fprintf(stderr, "file overflow!");
+		fprintf(stderr, "file overflow! %i", ftell(in));
 		return 1;
 	}
 	fseek(in, 0x0800, SEEK_SET);

@@ -130,7 +130,7 @@ bonusLights:
 	ldaA	0
 	staA	lc(5)
 	staA	lc(6)
-	tst	p_Bonus
+	tst	>p_Bonus
 	beq	bonusLights_done
 	
 	lampOn(8,5) ; 1k
@@ -329,20 +329,20 @@ swStart:
 	done(0)
 	
 swOuthole: 
-	delay(600)
 	ldaA	>lc(8) ; !game over
 	bitA	lr(6)
 	ifne ; game over
 		done(0)
 	endif
 	
-	ldaA	1000b
-	bitA	>state
+	tst	>bonusTimer
 	ifne
 		done(0)
+	else
+		ldaA	127
+		staA	bonusTimer
 	endif
-	oraA	>state
-	staA	state
+	delay(600)
 	
 	; check ballsave
 	ldaA	lr(1)
@@ -391,7 +391,7 @@ swOuthole_bonusLoop:
 		dec	p_Bonus
 		jsr	bonusLights
 		delay(200)
-		tst	p_Bonus
+		tst	>p_Bonus
 		bne	swOuthole_bonusLoop
 	
 		ldaA	00001111b ; player up lights
@@ -439,9 +439,7 @@ swOuthole_bonusLoop:
 		jsr	startBall
 	endif	
 	
-	ldaA	~1000b
-	andA	>state
-	staA	state
+	clr 	bonusTimer
 	
 	done(0)
 	
@@ -520,7 +518,7 @@ swTopEject_scored:
 	done(1)
 	
 swHotTip:
-	tst	dropResetTimer
+	tst	>dropResetTimer
 	ifne
 		done(0)
 	endif
@@ -614,7 +612,7 @@ swDrophoT:
 	ldaA	1<<2
 	jmp	swDrop
 swDrop:
-	tst	dropResetTimer
+	tst	>dropResetTimer
 	ifeq
 		bitA	>dropsDown
 		ifne
@@ -696,11 +694,18 @@ swCaptiveTarget:
 	done(1)
 	
 captiveAward:
+	fork(10)
+	rts
+	nop
+	nop
+	
+	beginFork()
 	lampOn(8,2) ; right special
+	
 	ldaA	>lc(2)
 	bitA	lr(4) ; shoe 1
 	ifeq
-		rts
+		endFork()
 	else
 		bitA	lr(6)
 		ifne
@@ -729,7 +734,7 @@ captiveAward_bonusLoop:
 	dec	p_Bonus
 	jsr	bonusLights
 	delay(200)
-	tst	p_Bonus
+	tst	>p_Bonus
 	bne	captiveAward_bonusLoop
 	
 	ldaA	00111000b
@@ -741,7 +746,7 @@ captiveAward_bonusLoop:
 	ldaA	>p_BonusLeft
 	staA	p_Bonus
 	
-	rts	
+	endFork()	
 	
 	
 alternate:

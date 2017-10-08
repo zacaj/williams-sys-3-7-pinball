@@ -116,7 +116,7 @@ CLC     ""      0C      1       NOP     1
 CLI     ""      0E      1       NOP     1
 CLR     *,Y     186F    3       NOP     4
 CLR     *,X     6F      2       NOP     1
-CLR     >*       7F      3       SWAP    1
+CLR     *       7F      3       SWAP    1
 CLRA    ""      4F      1       NOP     1
 CLRB    ""      5F      1       NOP     1
 CLV     ""      0A      1       NOP     1
@@ -329,7 +329,7 @@ TEST    ""      00      1       NOP     1
 TPA     ""      07      1       NOP     1
 TST     *,Y     186D    3       NOP     4
 TST     *,X     6D      2       NOP     1
-TST     *       7D      3       SWAP    1
+TST     >*       7D      3       SWAP    1
 TSTA    ""      4D      1       NOP     1
 TSTB    ""      5D      1       NOP     1
 TSX     ""      30      1       NOP     1
