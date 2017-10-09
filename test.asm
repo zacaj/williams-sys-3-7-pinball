@@ -207,6 +207,21 @@ afterFork:
 		ifmi
 			inc	bonusTimer
 		endif
+		tst	>spinnerTimer
+		ifne
+			dec	spinnerTimer
+			ifeq
+				flashOff(4,3)
+				lampOff(4,3)
+				ldaA	4
+				cmpA	>p_DropsDown
+				ifgt
+					lampOff(4,3) ; spinner
+				else
+					lampOn(4,3)
+				endif
+			endif
+		endif
 		
 		ldaA	>state		; clear strobe reset bit
 		andA	11111011b

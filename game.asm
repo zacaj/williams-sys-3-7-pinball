@@ -274,7 +274,6 @@ lInitPlayers:
 	staB	p_Ejects, X
 	ldaB	0
 	staB	p_LampCol2, X
-	staB	p_EachDropDown, X
 	inX
 	cpX	4
 	bne	lInitPlayers
@@ -407,8 +406,6 @@ swOuthole_bonusLoop:
 			andB	lr(2)
 			oraB	>lc(2)
 			staB	p_LampCol2, X
-			ldaB	>dropsDown
-			staB	p_EachDropDown, X
 			
 		
 			; go to next player
@@ -570,9 +567,16 @@ swRightOutlane:
 	done(1)
 	
 swLeftInlane:
+	advBonus()
+	score1000()
+	done(1)
 swRightInlane:
 	advBonus()
 	score1000()
+	ldaA	255
+	staA	spinnerTimer
+	flashLamp(4,3) ; spinner
+	lampOn(4,3)
 	done(1)
 sw10pt:
 	score10()
@@ -655,10 +659,28 @@ swSpinner:
 	ldaA	lr(4) ; spinner
 	bitA	>lc(3)
 	ifne ; spinner on
+		tst	>spinnerTimer
+		ifne
+			ldaA	32
+			staA	spinnerTimer
+			ldaA	10
+			bitA	>counter
+			ifeq
+				advBonus()
+			endif
+		endif
 		score100()
 		fireSolenoid(CLICKER)
 	else
-		score10()
+		tst	>spinnerTimer
+		ifne
+			ldaA	32
+			staA	spinnerTimer
+			score100()
+			fireSolenoid(CLICKER)
+		else
+			score10()
+		endif
 	endif
 	done(1)
 

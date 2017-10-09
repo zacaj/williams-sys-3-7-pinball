@@ -65,7 +65,8 @@ p_Bonus:		.equ RAM + $B0
 p_Ejects:		.equ RAM + $B1 ; -> B4
 p_DropsDown:		.equ RAM + $B5
 p_LampCol2:		.equ RAM + $B6 ; -> B9
-p_EachDropDown:		.equ RAM + $BA ; -> BD
+spinnerTimer:		.equ RAM + $BA 
+
 p_BonusLeft:		.equ RAM + $BE
 bonusTimer:		.equ RAM + $BF ; counts down from 127 during bonus
 
