@@ -163,6 +163,12 @@ lEmptyQueue:
 	
 ; test numbers
 	lampOn(6,8) ; game over
+	
+	ldaA	62
+	cmpA	>6000
+	ifne
+		lampOn(7,5)
+	endif
 
 	
 	jsr resetScores

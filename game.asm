@@ -123,7 +123,7 @@ innerEnd:
 	
 ; switch callbacks:
 
-none:	.org $6000 + 192 ; size of callback table
+none:	.org $7000 + 192 ; size of callback table
 	done(1)
 	
 bonusLights:
@@ -818,7 +818,7 @@ addCollect:
 ; end callbacks
 	.msfirst
 ; needs to be on $**00 address
-callbackTable: 	.org $6000 ; note: TRANSPOSED
+callbackTable: 	.org $7000 ; note: TRANSPOSED
 	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
 	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw swCaptiveRollover\.dw swCaptiveTarget
 	.dw swDropTip	\.dw swDroptIp\.dw swDroptiP\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
@@ -842,3 +842,6 @@ settleTable: ; must be right after callbackTable
 	SW(7,7,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
 	SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
+	
+.org $6000
+	nop
