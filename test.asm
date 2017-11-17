@@ -113,9 +113,6 @@ resetRamLoop:
 	ldX 	0
 	stX		curCol
 	
-	ldaA	0
-	staA	curSwitchRowLsb
-	
 ; fill solenoid status with off
 	ldaA	$F
 	ldX	solenoid1
@@ -161,6 +158,14 @@ lEmptyQueue:
 	staA	queueHead + 1
 	staA	queueTail + 1
 	
+	
+	ldaA	0
+	staA	curSwitchRowLsb
+	staA	switchLsbX
+	staA	switchLsbX + 1
+	ldaA	00000001b
+	staA 	curSwitchStrobe
+	
 ; test numbers
 	lampOn(6,8) ; game over
 
@@ -175,6 +180,8 @@ end:
 	ldaA	>state
 	bitA	100b
 	ifne
+		oraA	1000b
+		staA	state
 		; dec wait timers
 		ldX	waitLeft - 1
 decWaitTimers:
@@ -224,7 +231,7 @@ afterFork:
 		endif
 		
 		ldaA	>state		; clear strobe reset bit
-		andA	11111011b
+		andA	11110011b
 		staA	state
 	endif
 
@@ -313,7 +320,7 @@ afterQueueEvent:
 	
 skipEvent:
 	ldaA	>state
-	bitA	100b
+	bitA	1000b
 	ifeq	; don't process queue if still finishing timers
 		ldaB	queueEnd
 		cmpB	>queueHead + 1
@@ -398,9 +405,6 @@ on:
 	staA	displayBcd1	 + 14
 
 counterHandled:
-; move switch column
-	ldaA	>strobe
-	staA	switchStrobe
 	
 ; update display 
 	
@@ -425,21 +429,54 @@ counterHandled:
 	
 ; read switches
 	;jmp updateLamps
-	ldX	>curCol
-	ldaA	>switchRow
-	tab
-	eorA	switchRow1, X ; A contains any switches that have changed state
 	
-	ldaB	>curSwitchRowLsb 	;	B now contains LSB of callbackTable row addr
+
+	
+	
+; init switch column scan
+	ldaA	>curSwitchStrobe
+	staA	switchStrobe
+	ldaB	>curSwitchRowLsb
+	ldX	>switchLsbX
+	
+l_scanSwitches:	
+; read current row
+	ldaA	>switchRow
+	eorA	switchRow1, X ; A contains any switches that have changed state
+	ifeq ; no closures this row
+		asl	curSwitchStrobe
+		ldaA	>curSwitchStrobe
+		staA	switchStrobe
+		ifeq
+			ldaA	0
+			staA	curSwitchRowLsb
+			staA	switchLsbX
+			staA	switchLsbX + 1
+			ldaA	00000001b
+			staA 	curSwitchStrobe
+			jmp	switchesDone
+		endif
+		ldaA	8
+		aBA
+		tAB
+		staB	curSwitchRowLsb
+		inX
+		stX	switchLsbX
+		bra	l_scanSwitches
+	endif
+	; closure in this row:
+	
+	
+	; B  contains LSB of callbackTable row addr (0-7)x8
 	staB	temp + 1 			; temp = switch / 2
 	staB	tempX + 1			; tempX = cRAM
+	
 	ldaB	callbackTable >> 8
 	staB	temp
 	ldaB	cRAM >> 8
 	staB	tempX
 	
 	ldaB	00000001b ; B is the bit of the current switch in row
-	
 	; temp now contains the beginning of the row in the callbackTable
 swNext:
 	bitA	00000001b	 ; Z set if switch not different
@@ -451,21 +488,28 @@ checkSettled:
 		andA	00001111b ; need to remove upper F ( sets Z if A = 0)
 		beq 	notSettled; A=0 -> was settled
 		; else A > 0 -> settling
-			ldaA	11000b ; want to skip decrementing settle counter 7/8 IRQs
+			;ldaA	11000b ; want to skip decrementing settle counter 7/8 IRQs
 				; but checking 'multiple of 8' would miss 7/8 switch
 				; columns completely since they're in sync
 				; so instead the lowest bits are empty (so that it'll
 				; get all switch cols) and instead it skips 7/8 groups 
 				; of 8 IRQs
-			bitA	>counter
+			;bitA	>counter
+			ldaA	>counter
+			asrA
+			asrA
+			asrA
+			andA	11b
+			cmpA	>switchLsbX+1
 			bne	settledEnd
+			
 			ldaA	0, X ; A now how long the switch has left to settle
 			andA	00001111b ; need to remove upper F ( sets Z if A = 0)
 			decA
 			staA	0, X	; sets Z if now A = 0
 			ifeq ; A=0 -> now settled, fire event
 settled:		
-				ldX	>curCol
+				ldX	>switchLsbX
 				tBA	; A now the bit in row
 				eorA	switchRow1, X ; toggle bit in row
 				staA	switchRow1, X ; A now state of row
@@ -521,7 +565,7 @@ settledEnd:
 	aslB
 	lsrA			; pop lowest bit off, set Z if A is empty
 	bne		swNext 	; more 'switched' bits, keep processing 
-	
+switchesDone:
 	
 ; update lamps
 updateLamps:
@@ -580,11 +624,6 @@ updateLamps:
 	
 ; update strobe	
 updateStrobe:
-	;ldX		curCol
-	;inX 	
-	ldaA	8 	; pitch
-	addA	>curSwitchRowLsb
-	staA	curSwitchRowLsb
 	asl	strobe
 	inc	displayCol
 	ldaA	0
@@ -603,7 +642,6 @@ updateStrobe:
 		ldaA	0
 		staA	curCol
 		staA	curCol + 1
-		staA	curSwitchRowLsb
 		staA	solAStatus
 		staA	solBStatus
 		

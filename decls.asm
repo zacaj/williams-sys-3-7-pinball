@@ -27,8 +27,6 @@ lampCol1:		.equ RAM + $08
 lampCol8:		.equ lampCol1 + 7 
 #DEFINE lc(x) 		lampCol1 + (x-1)
 #DEFINE lr(x)		((1 << (x-1))
-curSwitchRowLsb:	.equ RAM + $10 
-; 
 curPlayer:		.equ RAM + $12 ; + 0-3
 ;;;
 switchRow1:		.equ RAM + $20
@@ -38,7 +36,10 @@ switchRow8:		.equ switchRow1 + 7
 solAStatus:		.equ RAM + $28 ; solenoid PIA is updated once every 8 IRQ
 solBStatus:		.equ RAM + $29 ; one solenoid bit is generated per IRQ and pushed on
 attractX:		.equ RAM + $2A ; +
-forkX			.equ RAM + $2C ; +
+forkX:			.equ RAM + $2C ; +
+switchLsbX:		.equ RAM + $2E ; + 0-7
+curSwitchStrobe:	.equ RAM + $30 ; single bit
+curSwitchRowLsb:	.equ RAM + $31 ; (0-7)*8
 curCol:			.equ RAM + $50 ; +
 tempX:			.equ RAM + $52 ; +
 queueHead:		.equ RAM + $54 ; +
@@ -89,7 +90,7 @@ pD_1m:			.equ pC_10 + 1
 pD_10:			.equ pD_1m + 5 
 ; 
 displayCol:		.equ cRAM + $6A
-state:			.equ cRAM + $6B	; _ | strobe reset | don't validate | _
+state:			.equ cRAM + $6B	; processing timers | strobe reset | don't validate | _
 
 instant:		.equ 4
 debounce:		.equ 1
