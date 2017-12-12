@@ -39,6 +39,12 @@ solAStatus:		.equ RAM + $28 ; solenoid PIA is updated once every 8 IRQ
 solBStatus:		.equ RAM + $29 ; one solenoid bit is generated per IRQ and pushed on
 attractX:		.equ RAM + $2A ; +
 forkX			.equ RAM + $2C ; +
+scanCurCol:		.equ RAM + $2E ; +
+scanCurSwitchRowLsb:	.equ RAM + $30
+scanStrobe:		.equ RAM + $31
+scanX:			.equ RAM + $32 ; +
+scanTempX:		.equ RAM + $34 ; +
+irqSwitchRow:		.equ RAM + $36
 curCol:			.equ RAM + $50 ; +
 tempX:			.equ RAM + $52 ; +
 queueHead:		.equ RAM + $54 ; +
@@ -89,7 +95,8 @@ pD_1m:			.equ pC_10 + 1
 pD_10:			.equ pD_1m + 5 
 ; 
 displayCol:		.equ cRAM + $6A
-state:			.equ cRAM + $6B	; _ | strobe reset | don't validate | _
+state:			.equ cRAM + $6B	; loop processing performed | strobe reset | don't validate | quick scanning switches
+strobeReset:		.equ cRAM + $6C
 
 instant:		.equ 4
 debounce:		.equ 1

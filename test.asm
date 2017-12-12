@@ -109,12 +109,15 @@ resetRamLoop:
 	ldaA	00
 	staA	strobe
 	staA	displayCol
+	staA	scanStrobe
 	
 	ldX 	0
-	stX		curCol
+	stX	curCol
+	stX	scanCurCol
 	
 	ldaA	0
 	staA	curSwitchRowLsb
+	staA	scanCurSwitchRowLsb
 	
 ; fill solenoid status with off
 	ldaA	$F
@@ -172,9 +175,17 @@ lEmptyQueue:
 	
 	
 end:
-	ldaA	>state
-	bitA	100b
+	ldaA	11110111b
+	andA	>state
+	staA	state
+
+	ldaA	>strobeReset
+	bitA	1111b
 	ifne
+		ldaA	1000b
+		oraA	>state
+		staA	state
+		
 		; dec wait timers
 		ldX	waitLeft - 1
 decWaitTimers:
@@ -223,9 +234,10 @@ afterFork:
 			endif
 		endif
 		
-		ldaA	>state		; clear strobe reset bit
-		andA	11111011b
-		staA	state
+		;ldaA	>state		; clear strobe reset bit
+		;andA	11111011b
+		;staA	state
+		clr	strobeReset
 	endif
 
 		
@@ -235,9 +247,22 @@ afterFork:
 	ifeq
 		jmp skipQueue
 	endif
+	ldaA	1000b
+	oraA	>state
+	staA	state
 	
 	ldX	>queueHead
 	ldaA	0, X	; A now contains the first queue item
+	
+	; step queue
+	ldaB	queueEnd
+	cmpB	>queueHead + 1
+	ifeq
+		ldaB	queue
+		staB	queueHead + 1
+	else
+		inc	queueHead + 1
+	endif
 	
 	tAB
 	andB	00111111b ; B = callback index
@@ -311,18 +336,14 @@ afterQueueEvent:
 		staA	state
 	endif
 	
+	ldaA	1000b
+	oraA	>state
+	staA	state
+	
 skipEvent:
-	ldaA	>state
-	bitA	100b
+	ldaA	>strobeReset
+	bitA	1111b
 	ifeq	; don't process queue if still finishing timers
-		ldaB	queueEnd
-		cmpB	>queueHead + 1
-		ifeq
-			ldaB	queue
-			staB	queueHead + 1
-		else
-			inc	queueHead + 1
-		endif
 	else
 		ldX	>forkX
 		jmp	afterFork
@@ -330,7 +351,124 @@ skipEvent:
 				
 skipQueue:
 				
+		
+	;	jmp 	quickScanDone		
+	ldaB	>lc(8)	; gameover mask
+	bitB	lr(6)
+	ifne
+		jmp 	quickScanDone
+	endif
+	ldaB	>lc(8) ; tilt bit
+	bitB	lr(5)
+	ifne
+		jmp 	quickScanDone
+	endif
+	ldaA	>state
+	bitA	1000b
+	ifne
+		jmp 	quickScanDone
+	endif
 	
+	ldaA	1
+	oraA	>state
+	staA	state
+	
+	ldaA	>scanStrobe
+	staA	switchStrobe
+	ldX	>scanCurCol
+	ldaA	>switchRow
+	tab
+	eorA	switchRow1, X ; A contains any switches that have changed state
+	andA	>switchRow	; A contains any switches that are closed but not processed
+	ifne
+	
+	ldaB	>scanCurSwitchRowLsb 	;	B now contains LSB of callbackTable row addr
+	staB	scanTempX + 1 			; scanTempX = switch / 2
+	staB	scanX + 1			; scanX = cRAM
+	ldaB	callbackTable >> 8
+	staB	scanTempX
+	ldaB	cRAM >> 8
+	staB	scanX
+	
+	ldaB	00000001b ; B is the bit of the current switch in row
+	
+	; scanTempX now contains the beginning of the row in the callbackTable
+scanSwNext:
+	bitA	00000001b	 ; Z set if switch not different
+	ifne		; if bit set, switch different
+		pshA ; store changed switches left
+		ldX	>scanX
+		ldaA	0, X ; A now how long the switch has left to settle
+		andA	00001111b ; need to remove upper F ( sets Z if A = 0)
+		ifeq ; =0 -> was settled, so now it's not
+			; get the settle time
+			ldaA	>scanX + 1
+			staA	scanTempX + 1 	; get scanTempX in sync with scanX LSB
+			ldX	>scanTempX
+			
+			; scanTempX contains half the address of the callback, so add diff between settleTable and callbackTable
+			ldaA	settleTable - callbackTable, X ; A has settle settings
+			
+			; need to get correct 3 bits from switch settings
+			andA	111000b
+			
+			ifeq
+				ldX	>scanCurCol
+				tBA	; A now the bit in row
+				bitA	switchRow1, X
+				ifeq
+					oraA	switchRow1, X ; toggle bit in row
+					staA	switchRow1, X ; A now state of row
+					;lsl	scanTempX + 1 ; double LSB because callback table is 2b wide
+					;ldX	>scanTempX
+					;ldX	0, X
+					;jmp	0, X
+					bitB	>switchRow
+					ldaA	01000000b
+					oraA	>scanX + 1 ; A now contains the event per queue schema
+					
+					; store event
+					ldX	>queueTail
+					staA	0, X
+					inc	queueTail + 1
+					
+					; wrap queueTail if necessary
+					cpX	queueEnd 
+					ifeq
+						ldaA	queue 
+						staA	queueTail + 1
+					endif
+				endif
+			endif
+		endif
+		pulA
+	endif
+	inc scanX + 1
+	aslB
+	lsrA			; pop lowest bit off, set Z if A is empty
+	bne	scanSwNext 	; more 'switched' bits, keep processing 
+	
+	endif ; switch closed in row
+	
+	ldaA	8 	; pitch
+	addA	>scanCurSwitchRowLsb
+	staA	scanCurSwitchRowLsb
+	asl	scanStrobe
+	ifeq			
+		ldaA	00000001b
+		staA	scanStrobe
+		clr	scanCurCol
+		clr	scanCurCol + 1
+		clr	scanCurSwitchRowLsb
+	else
+		inc	scanCurCol + 1
+	endif
+	
+	ldaA	1110b
+	andA	>state
+	staA	state
+	
+quickScanDone:
 				
 	jmp		end
 	.dw 0
@@ -398,9 +536,6 @@ on:
 	staA	displayBcd1	 + 14
 
 counterHandled:
-; move switch column
-	ldaA	>strobe
-	staA	switchStrobe
 	
 ; update display 
 	
@@ -424,9 +559,14 @@ counterHandled:
 	staB	displayBcd
 	
 ; read switches
-	;jmp updateLamps
+	
+	ldaB	>switchStrobe	; save for later
+	ldaA	>strobe
+	staA	switchStrobe
 	ldX	>curCol
 	ldaA	>switchRow
+	staA	irqSwitchRow
+	staB	switchStrobe	; restore
 	tab
 	eorA	switchRow1, X ; A contains any switches that have changed state
 	
@@ -470,8 +610,8 @@ settled:
 				eorA	switchRow1, X ; toggle bit in row
 				staA	switchRow1, X ; A now state of row
 				
-				bitB	>switchRow
-				ifne ; switch now on
+				bitB	>irqSwitchRow
+				ifne ; switch just closed
 					ldaA	01000000b
 				else
 					ldaA	11000000b
@@ -501,7 +641,7 @@ notSettled: ; =0 -> was settled, so now it's not
 			ldaA	settleTable - callbackTable, X ; A has settle settings
 			
 			; need to get correct 3 bits from switch settings
-			bitB	>switchRow
+			bitB	>irqSwitchRow
 			ifne ; switch just turned on
 				lsrA
 				lsrA
@@ -580,15 +720,11 @@ updateLamps:
 	
 ; update strobe	
 updateStrobe:
-	;ldX		curCol
-	;inX 	
 	ldaA	8 	; pitch
 	addA	>curSwitchRowLsb
 	staA	curSwitchRowLsb
-	asl	strobe
 	inc	displayCol
-	ldaA	0
-	cmpA	>strobe ; strobe done?  reset
+	asl	strobe ; strobe done?  reset
 	ifeq		
 		ldaA	>solAStatus
 		staA	solenoidA
@@ -598,25 +734,23 @@ updateStrobe:
 		ldaA	00000001b
 		staA	strobe
 		
-		;ldX 	#0
-		
-		ldaA	0
-		staA	curCol
-		staA	curCol + 1
-		staA	curSwitchRowLsb
-		staA	solAStatus
-		staA	solBStatus
+		clr	curCol
+		clr	curCol + 1
+		clr	curSwitchRowLsb
+		clr	solAStatus
+		clr	solBStatus
 		
 		ldaB	>displayCol	; reset display col only if it's > 7 
 		oraB	11110000b
 		cmpB	$F8	; since it needs to count to 15 instead of 7
 		ifgt
-			staA	displayCol
+			clr	displayCol
 		endif
 	
-		ldaA	>state
-		oraA	100b
-		staA	state
+		;ldaA	>state
+		;oraA	100b
+		;staA	state
+		inc	strobeReset
 	else
 		inc	curCol + 1
 	endif

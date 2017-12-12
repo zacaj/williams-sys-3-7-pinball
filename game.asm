@@ -81,11 +81,11 @@ _addScore1000N:
 #DEFINE advBonus()	jsr advanceBonus
 
 advanceBonus:
-	ldaA	1000b
-	bitA	>state
-	ifne
-		rts
-	endif
+	;ldaA	1000b
+	;bitA	>state
+	;ifne
+	;	rts
+	;endif
 	inc 	p_Bonus
 	lampOff(8,5) ; 1k
 	ldaB	2
