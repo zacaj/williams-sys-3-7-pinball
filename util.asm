@@ -1,4 +1,4 @@
-utils:	.org $7800 + $400
+utils:	.org $7800 + $500
 
 ; copy players' scores to display 
 copyScores13:
