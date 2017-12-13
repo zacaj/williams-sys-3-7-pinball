@@ -532,6 +532,10 @@ swHotTip:
 	fireSolenoid(DROP_TIP)
 	lampOff(4,3) ; spinner
 	
+	ldaA	~11110000b
+	andA	>lc(3)
+	staA	lc(3)
+	
 	fork(900)
 	done(1)
 	beginFork()
@@ -622,6 +626,56 @@ swDrop:
 		ifne
 			done(0)
 		endif
+		
+		pshA
+		bitA	111b ; was it HOT
+		ifne	; it was HOT
+			ldaB	>lc(3)
+			bitB	lr(5)
+			ifne
+				score1000()
+			else
+				bitB	lr(6)
+				ifne
+					score100()
+				else
+					score10()
+				endif
+			endif
+			bitB	lr(7)
+			ifeq
+				bitB	lr(8)
+				ifne	; was 100
+					lampOn(7,3) ; on 1000
+					lampOff(8,4) ; 100
+				else ; was 10
+					lampOn(8,4)
+				endif
+			endif
+		else
+			ldaB	>lc(3)
+			bitB	lr(7)
+			ifne
+				score1000()
+			else
+				bitB	lr(8)
+				ifne
+					score100()
+				else
+					score10()
+				endif
+			endif
+			bitB	lr(5)
+			ifeq
+				bitB	lr(6)
+				ifne	; was 100
+					lampOn(5,3) ; on 1000
+					lampOff(6,4) ; 100
+				else ; was 10
+					lampOn(6,4)
+				endif
+			endif
+		endif
 		oraA	>dropsDown
 		
 		staA	dropsDown
@@ -634,7 +688,6 @@ swDrop:
 			lampOn(4,3)
 		endif
 		
-		score10()
 		advBonus()
 		done(1)
 	else
