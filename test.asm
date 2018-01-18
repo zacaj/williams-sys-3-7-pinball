@@ -214,9 +214,9 @@ afterFork:
 		ifmi
 			inc	dropResetTimer
 		endif
-		dec	bonusTimer
-		ifmi
-			inc	bonusTimer
+		tst	>bonusTimer
+		ifne
+			dec	bonusTimer
 		endif
 		tst	>spinnerTimer
 		ifne
@@ -539,9 +539,18 @@ counterHandled:
 	
 ; update display 
 	
-	ldaA	>$BF
+	; for debugging
+	ldaA	>$C0
+	lslA
+	lslA
+	lslA
+	lslA
 	staA	displayBcd1 + 15
-	ldaA	>$6F
+	ldaA	>$87
+	lslA
+	lslA
+	lslA
+	lslA
 	staA	displayBcd1 + 6
 	
 	ldX	>curCol

@@ -179,6 +179,7 @@ refresh_1m:
 ; X = place in p*_1* to add the score to
 ; A = amount to add (max 9)
 ; tail call
+; trashes ABX
 _addScoreI:
 	addA	0, X
 	oraA	11110000b
@@ -254,9 +255,9 @@ delay_findEmptyLoop:
 	
 	; X = first waitLeft that = 0
 	staB	waitReg - waitLeft, X
-	pulB	; A = MSB of PC
+	pulB	; B = MSB of PC
 	staB	waitMsb - waitLeft, X
-	pulB	; A = LSB of PC
+	pulB	; B = LSB of PC
 	staB	waitLsb - waitLeft, X
 	staA	0, X
 	; time and add stored
@@ -271,9 +272,9 @@ fork_findEmptyLoop:
 	
 	; X = first waitLeft that = 0
 	staB	waitReg - waitLeft, X
-	pulB	; A = MSB of PC
+	pulB	; B = MSB of PC
 	staB	waitMsb - waitLeft, X
-	pulB	; A = LSB of PC
+	pulB	; B = LSB of PC
 	addB	3
 	ifcs
 		inc	waitMsb - waitLeft, X

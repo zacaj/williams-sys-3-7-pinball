@@ -62,20 +62,15 @@ _addScore1000N:
 #DEFINE score10() jsr _addScore10N
 #DEFINE score100() jsr _addScore100N
 #DEFINE score1000() jsr _addScore1000N
-#DEFINE score500() \ jsr _addScore100N
-#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFINE score500() \ jsr _addScore100N	
 #DEFCONT	\ delay(SHORT_PAUSE)
-#DEFCONT	\ jsr _addScore100N
-#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ jsr _addScore100N	
 #DEFCONT	\ delay(SHORT_PAUSE)
-#DEFCONT	\ jsr _addScore100N
-#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ jsr _addScore100N	
 #DEFCONT	\ delay(SHORT_PAUSE)
-#DEFCONT	\ jsr _addScore100N
-#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ jsr _addScore100N	
 #DEFCONT	\ delay(SHORT_PAUSE)
-#DEFCONT	\ jsr _addScore100N
-#DEFCONT	\ fireSolenoid(CHIME_100)	
+#DEFCONT	\ jsr _addScore100N	
 #DEFCONT	\ delay(SHORT_PAUSE)
 
 #DEFINE advBonus()	jsr advanceBonus
@@ -127,9 +122,8 @@ none:	.org $6000 + 192 ; size of callback table
 	done(1)
 	
 bonusLights:
-	ldaA	0
-	staA	lc(5)
-	staA	lc(6)
+	clr	lc(5)
+	clr	lc(6)
 	tst	>p_Bonus
 	beq	bonusLights_done
 	
@@ -164,13 +158,11 @@ startBall:
 	lampOn(8,5)
 	enablePf
 	
-	ldaA	0
-	staA	p_DropsDown
+	clr	p_DropsDown
 	ldaA	65
 	staA	dropResetTimer
 	
-	ldaA	0
-	staA	dropsDown
+	clr	dropsDown
 	
 	fireSolenoid(DROP_HOT)
 	delay(150)
@@ -182,10 +174,9 @@ startBall:
 	
 	; clear lights
 	ldX	lampCol1
-	ldaA	0b
 lClearLights:
-	staA	0, X
-	staA	flashLampCol1 - lampCol1, X
+	clr	0, X
+	clr	flashLampCol1 - lampCol1, X
 	inX
 	cpX	lc(6) + 1
 	bne	lClearLights
@@ -216,9 +207,9 @@ lClearLights:
 	
 	ldaA	sr(1) ; check outhole
 	bitA	>sc(2)
-	ifne ; ball in hole
+	;ifne ; ball in hole
 		fireSolenoid(OUTHOLE)
-	endif
+	;endif
 	
 	rts
 	
@@ -328,6 +319,7 @@ swStart:
 	done(0)
 	
 swOuthole: 
+	inc	$C0
 	ldaA	>lc(8) ; !game over
 	bitA	lr(6)
 	ifne ; game over
@@ -472,6 +464,13 @@ swLeftEject:
 	endFork()
 	
 swTopEject:
+	ldaA	>lc(8)
+	bitA	lr(6)
+	ifne ; not in game
+		fireSolenoid(TOP_EJECT)
+		done(0)
+	endif
+	
 	advBonus()
 	ldaB	>lc(4)
 	asrB
@@ -490,7 +489,7 @@ swTopEject:
 		else
 			lampOff(7,2)
 		endif
-	score500()
+		score500()
 		jmp	swTopEject_scored
 	endif
 	asrB
@@ -521,9 +520,8 @@ swHotTip:
 	endif
 	
 	jsr	addCollect
-	ldaA	0
-	staA	p_DropsDown
-	staA	dropsDown
+	clr	p_DropsDown
+	clr	dropsDown
 	ldaA	65
 	staA	dropResetTimer
 	delay(150)
@@ -620,14 +618,19 @@ swDrophoT:
 	ldaA	1<<2
 	jmp	swDrop
 swDrop:
+	;done(0)
 	tst	>dropResetTimer
 	ifeq
 		bitA	>dropsDown
 		ifne
 			done(0)
 		endif
+		tAB
+		oraA	>dropsDown
+		staA	dropsDown
+		inc	p_DropsDown
+		tBA
 		
-		pshA
 		bitA	111b ; was it HOT
 		ifne	; it was HOT
 			ldaB	>lc(3)
@@ -642,14 +645,15 @@ swDrop:
 					score10()
 				endif
 			endif
+			ldaB	>lc(3)
 			bitB	lr(7)
 			ifeq
 				bitB	lr(8)
 				ifne	; was 100
 					lampOn(7,3) ; on 1000
-					lampOff(8,4) ; 100
+					lampOff(8,3) ; 100
 				else ; was 10
-					lampOn(8,4)
+					lampOn(8,3)
 				endif
 			endif
 		else
@@ -665,21 +669,18 @@ swDrop:
 					score10()
 				endif
 			endif
+			ldaB	>lc(3)
 			bitB	lr(5)
 			ifeq
 				bitB	lr(6)
 				ifne	; was 100
 					lampOn(5,3) ; on 1000
-					lampOff(6,4) ; 100
+					lampOff(6,3) ; 100
 				else ; was 10
-					lampOn(6,4)
+					lampOn(6,3)
 				endif
 			endif
 		endif
-		oraA	>dropsDown
-		
-		staA	dropsDown
-		inc	p_DropsDown
 		ldaA	4
 		cmpA	>p_DropsDown
 		ifgt
@@ -866,6 +867,28 @@ addCollect:
 			endif
 		endif
 	endif
+	
+;	ldaA	lr(6)
+;	bitA	>lc(2)
+;	ifne
+;		score1000()
+;		lampOn(3,3)
+;	else
+;		asrA
+;		bitA	>lc(2)
+;		bne	lightCollect
+;		asrA
+;		bitA	>lc(2)
+;		bne	lightCollect
+;		asrA
+;lightCollect:
+;		aslA
+;		tAB
+;		oraB	>lc(2)
+;		staB	lc(2)
+;		oraA	>flc(2)
+;		staA	flc(2)
+;	endif	
 	rts
 	
 ; end callbacks
@@ -888,7 +911,7 @@ callbackTable: 	.org $6000 ; note: TRANSPOSED
 #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
 settleTable: ; must be right after callbackTable
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,2,1,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,1,0)\SW(0,7,0,1)
-	SW(7,1,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,0,1,0)\SW(0,7,1,0)
+	SW(7,1,1,1)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,1,1,0)\SW(0,3,1,0)\SW(0,7,1,0)
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,3,1,0)\SW(0,3,1,0)\SW(4,1,1,1)\SW(0,1,1,0)\SW(0,0,1,0)
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,7,1,0)\SW(0,3,1,0)\SW(4,1,1,1)\SW(0,0,1,0)\SW(0,0,1,0)\SW(0,1,1,0)
 	SW(0,7,1,0)\SW(0,7,1,0)\SW(0,1,1,0)\SW(0,7,0,1)\SW(0,0,1,0)\SW(0,7,0,1)\SW(0,7,0,1)\SW(0,7,0,1)
