@@ -12,11 +12,11 @@ int main() {
 		fprintf(stderr, "could not open rom.764, errno %i", (errno));
 		return 3;
 	}
-	FILE *a = fopen("pinmame32_23/roms/httip_l1/gamerom.716", "wb");
+	FILE *a = fopen("pinmame32_23/roms/alpok_l6/gamerom6.716", "wb");
 	FILE *aa = fopen("gamerom.716", "wb");
-	FILE *b = fopen("pinmame32_23/roms/httip_l1/white1.716", "wb");
+	FILE *b = fopen("pinmame32_23/roms/alpok_l6/green1.716", "wb");
 	FILE *bb = fopen("white1.716", "wb");
-	FILE *c = fopen("pinmame32_23/roms/httip_l1/white2.716", "wb");
+	FILE *c = fopen("pinmame32_23/roms/alpok_l6/green2.716", "wb");
 	FILE *cc = fopen("white2.716", "wb");
 	fseek(in, 0x0000, SEEK_SET);
 	write(in, a);

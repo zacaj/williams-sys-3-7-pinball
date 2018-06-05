@@ -1,2 +1,2 @@
 
-PinMAME32_md.exe -debug httip_l1
+PinMAME32_md.exe -debug alpok_l6

@@ -109,14 +109,6 @@ bonusLights:
 	tst	>p_Bonus
 	beq	bonusLights_done
 	
-	ldaA	10
-	subA	>p_Bonus
-
-
-
-
-	lampOn(8,5) ; 1k
-
 	; turn on 20k,10k,1k if necessary
 	ldaA	19
 	cmpA	>p_Bonus
@@ -385,6 +377,7 @@ swDrop3:
 swDrop4:
 	done(1)
 swDrop5:
+	score1000x(9)
 	done(1)
 swLeftOutlane:
 	done(1)
@@ -444,7 +437,7 @@ callbackTable: 	.org $6000 ; note: TRANSPOSED
 ; off = how many cycles it must be off for
 ; onOnly = if true, don't notify of an off event (also set off = 0 for efficiency)
 ; gameover = whether the switch is active in gameover + tilt mode (these callbacks must check whether in game over when triggered if they want to act different)
-; TRANSPOSED (?)
+; TRANSPOSED 
 #define SW(on,off,onOnly,gameover) .db (onOnly<<7)|(gameover<<6)|(on<<3)|(off) 
 #define LANE 	SW(0,3,1,0)
 #define HOLE 	SW(5,7,1,1)

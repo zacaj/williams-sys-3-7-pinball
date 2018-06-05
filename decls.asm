@@ -55,7 +55,7 @@ queueEnd:		.equ RAM + $6D
 ;
 displayBcd1:	.equ RAM + $70
 displayBcd16:	.equ RAM + $7F
-ballCount:		.equ displayBcd1 + 7
+ballCount:		.equ displayBcd1 + 8
 waitLeft: 		.equ RAM + $80 ; dec every 8ms
 waitLeftEnd:		.equ RAM + $86
 waitMsb:		.equ RAM + $88 ; -> 8F

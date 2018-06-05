@@ -11,14 +11,14 @@ utils:	.org $7800 + $500
 
 ; copy players' scores to display 
 copyScores13:
-	ldX	displayBcd1
+	ldX	displayBcd1 + 1
 	ldaB	$FF	; blank(F) until a number >0 is found then 0
 copy13Loop:
-	ldaA	pA_1m - displayBcd1, X
+	ldaA	pA_1m - (displayBcd1+1), X
 	andA	$0F
 	cmpA	$00 
 	ifeq ; if pA score = 0?
-		cpX	displayBcd1 + 5
+		cpX	(displayBcd1+1) + 5
 		ifeq
 			andB	00001111b 
 			ldaA	$0F
@@ -33,14 +33,14 @@ copy13Loop:
 		andB	00001111b ; mark upper half of B as 0 since number found
 		oraA	00001111b
 	endif
-	andA	pC_1m - displayBcd1, X
+	andA	pC_1m - (displayBcd1+1), X
 	
 	;andA	$F0
 	bitA	00001111b
 	ifeq ; pC is 0
 		bitB	1111b
 		ifne
-			cpX	displayBcd1 + 5
+			cpX	(displayBcd1+1) + 5
 			ifeq
 				andB	11110000b
 			else
@@ -59,14 +59,14 @@ copy13Loop:
 	rts
 
 copyScores24:
-	ldX	displayBcd1 + 8
+	ldX	displayBcd1 + 9
 	ldaB	$FF	; blank(F) until a number >0 is found then 0
 copy24Loop:
-	ldaA	pB_1m - (displayBcd1 + 8), X
+	ldaA	pB_1m - (displayBcd1 + 9), X
 	andA	$0F
 	cmpA	$00 ; is pA score 0?
 	ifeq ; if pA score = 0?
-		cpX	displayBcd1 + 8 + 5
+		cpX	displayBcd1 + 9 + 5
 		ifeq
 			andB	00001111b 
 			ldaA	$0F
@@ -81,13 +81,13 @@ copy24Loop:
 		andB	00001111b ; mark upper half of B as 0 since number found
 		oraA	00001111b
 	endif
-	andA	pD_1m - (displayBcd1 + 8), X
+	andA	pD_1m - (displayBcd1 + 9), X
 	;andA	$F0
 	bitA	00001111b
 	ifeq ; pC is 0
 		bitB	1111b
 		ifne
-			cpX	displayBcd1 + 8 + 5
+			cpX	displayBcd1 + 9 + 5
 			ifeq
 				andB	11110000b
 			else
@@ -100,7 +100,7 @@ copy24Loop:
 	staA  0, X 
 	
 	inX
-	cpX	displayBcd1 + 14
+	cpX	displayBcd1 + 15
 	bne copy24Loop	
 	
 	rts
@@ -124,32 +124,32 @@ blankNonPlayerScores:
 	bra	blankP1
 blankP1:
 	ldaA	$F0
-	oraA	>displayBcd1 + 4
-	staA	displayBcd1 + 4
+	oraA	>displayBcd1 + 7 - 1
+	staA	displayBcd1 + 7 - 1
 	ldaA	$F0
-	oraA	>displayBcd1 + 5
-	staA	displayBcd1 + 5
+	oraA	>displayBcd1 + 7 - 1
+	staA	displayBcd1 + 7 - 1
 blankP2:
 	ldaA	$F0
-	oraA	>displayBcd1 + 12
-	staA	displayBcd1 + 12
+	oraA	>displayBcd1 + 15 - 1
+	staA	displayBcd1 + 15 - 1
 	ldaA	$F0
-	oraA	>displayBcd1 + 13
-	staA	displayBcd1 + 13
+	oraA	>displayBcd1 + 16 - 1
+	staA	displayBcd1 + 16 - 1
 blankP3:
 	ldaA	$0F
-	oraA	>displayBcd1 + 4
-	staA	displayBcd1 + 4
+	oraA	>displayBcd1 + 7 - 1
+	staA	displayBcd1 + 7 - 1
 	ldaA	$0F
-	oraA	>displayBcd1 + 5
-	staA	displayBcd1 + 5
+	oraA	>displayBcd1 + 7 - 1
+	staA	displayBcd1 + 7 - 1
 blankP4:
 	ldaA	$0F
-	oraA	>displayBcd1 + 12
-	staA	displayBcd1 + 12
+	oraA	>displayBcd1 + 16 - 1
+	staA	displayBcd1 + 16 - 1
 	ldaA	$0F
-	oraA	>displayBcd1 + 13
-	staA	displayBcd1 + 13
+	oraA	>displayBcd1 + 16 - 1
+	staA	displayBcd1 + 16 - 1
 blankDone:
 	rts
 	
@@ -157,30 +157,6 @@ refreshPlayerScores:
 	jsr copyScores13
 	jsr copyScores24
 	
-	ldaA	$F0
-	cmpA	>pA_1m
-	bne	refresh_1m
-	cmpA	>pB_1m
-	bne	refresh_1m	
-	cmpA	>pC_1m
-	bne	refresh_1m
-	cmpA	>pD_1m
-	bne	refresh_1m
-	
-	ldX	displayBcd1
-refresh_10xloop:
-	ldaA	1, X
-	staA	0,X
-	ldaA	8 + 1, X
-	staA	8, X
-	inX
-	cpX	displayBcd1+5
-	bne	refresh_10xloop
-	ldaA	0
-	staA	displayBcd1 + 5
-	staA	displayBcd1 + 5 + 8
-	jmp blankNonPlayerScores
-refresh_1m:
 	jmp blankNonPlayerScores
 	
 	
