@@ -66,15 +66,9 @@ flashLampCol8:		.equ RAM + $A7
 #DEFINE flc(x) 		flashLampCol1 + (x - 1)
 lastSwitch:		.equ RAM + $A8
 dropResetTimer:		.equ RAM + $A9 ; max 127
-dropsDown		.equ RAM + $AA
-p_Bonus:		.equ RAM + $B0
-p_Ejects:		.equ RAM + $B1 ; -> B4
-p_DropsDown:		.equ RAM + $B5
-p_LampCol2:		.equ RAM + $B6 ; -> B9
-spinnerTimer:		.equ RAM + $BA 
+bonusTimer:		.equ RAM + $AA ; counts down from 127 during bonus
+; B+: game
 
-p_BonusLeft:		.equ RAM + $BE
-bonusTimer:		.equ RAM + $BF ; counts down from 127 during bonus
 
 
 

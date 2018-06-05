@@ -4,7 +4,7 @@
 
 #include "util.asm"
 
-#include "game.asm"
+#include "alien_poker.asm"
 	
 main:		.org $7800
 
@@ -71,7 +71,7 @@ piaSetup:
 	ldaA 	11111111b	;set to output
 	staA 	solenoidA
 	staA 	solenoidB
-	ldaA 	00000100b 	;select data (3rb bit = 1)
+	ldaA 	00111100b 	;select data (3rb bit = 1)
 	staA 	solenoidAC
 	ldaA 	00110100b 	;select data (3rb bit = 1), enable CB2 output low
 	staA 	solenoidBC
@@ -217,21 +217,6 @@ afterFork:
 		tst	>bonusTimer
 		ifne
 			dec	bonusTimer
-		endif
-		tst	>spinnerTimer
-		ifne
-			dec	spinnerTimer
-			ifeq
-				flashOff(4,3)
-				lampOff(4,3)
-				ldaA	4
-				cmpA	>p_DropsDown
-				ifgt
-					lampOff(4,3) ; spinner
-				else
-					lampOn(4,3)
-				endif
-			endif
 		endif
 		
 		;ldaA	>state		; clear strobe reset bit

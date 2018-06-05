@@ -28,14 +28,14 @@
 #DEFINE BUZZER		SOL(15, 100)
 #DEFINE SHORT_PAUSE 	115
 
-#DEFINE noValidate ldaA 10b\ oraA >state\ staA state
-#DEFINE done(v)	\
-#DEFCONT	#IF (v==0)
-#DEFCONT		\ ldaA 10b
-#DEFCONT		\ oraA >state
-#DEFCONT		\ staA state
-#DEFCONT	\#ENDIF
-#DEFCONT	\ jmp afterQueueEvent
+p_Bonus:		.equ RAM + $B0
+p_Ejects:		.equ RAM + $B1 ; -> B4
+p_DropsDown:		.equ RAM + $B5
+p_LampCol2:		.equ RAM + $B6 ; -> B9
+spinnerTimer:		.equ RAM + $BA 
+
+p_BonusLeft:		.equ RAM + $BE
+dropsDown		.equ RAM + $BF
 	
 	
 _addScore10N:

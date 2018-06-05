@@ -1,4 +1,13 @@
 utils:	.org $7800 + $500
+; call at end of switch handler to jump back to loop
+#DEFINE noValidate ldaA 10b\ oraA >state\ staA state
+#DEFINE done(v)	\
+#DEFCONT	#IF (v==0)
+#DEFCONT		\ ldaA 10b
+#DEFCONT		\ oraA >state
+#DEFCONT		\ staA state
+#DEFCONT	\#ENDIF
+#DEFCONT	\ jmp afterQueueEvent
 
 ; copy players' scores to display 
 copyScores13:
