@@ -90,7 +90,6 @@ pD_10:			.equ pD_1m + 5
 ; 
 displayCol:		.equ cRAM + $6A
 state:			.equ cRAM + $6B	; loop processing performed | strobe reset | don't validate | quick scanning switches
-strobeReset:		.equ cRAM + $6C
 
 instant:		.equ 4
 debounce:		.equ 1

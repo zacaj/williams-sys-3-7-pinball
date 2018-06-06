@@ -179,8 +179,8 @@ end:
 	andA	>state
 	staA	state
 
-	ldaA	>strobeReset
-	bitA	1111b
+	ldaA	>state
+	bitA	100b
 	ifne
 		ldaA	1000b
 		oraA	>state
@@ -219,10 +219,10 @@ afterFork:
 			dec	bonusTimer
 		endif
 		
-		;ldaA	>state		; clear strobe reset bit
-		;andA	11111011b
-		;staA	state
-		clr	strobeReset
+		ldaA	>state		; clear strobe reset bit
+		andA	11111011b
+		staA	state
+		clr	forkX
 	endif
 
 		
@@ -326,8 +326,7 @@ afterQueueEvent:
 	staA	state
 	
 skipEvent:
-	ldaA	>strobeReset
-	bitA	1111b
+	tst	>forkX
 	ifeq	; don't process queue if still finishing timers
 	else
 		ldX	>forkX
@@ -336,7 +335,7 @@ skipEvent:
 				
 skipQueue:
 				
-		
+doQuickScan:
 	;	jmp 	quickScanDone		
 	ldaB	>lc(8)	; gameover mask
 	bitB	lr(6)
@@ -512,32 +511,32 @@ interrupt:
 	ldaA	$F0
 	;staA	lampRow1
 	ldaA	01110111b
-	staA	displayBcd1	 + 14
+	;staA	displayBcd1	 + 14
 	bra	counterHandled
 on:
 	ldaA	$0F
 	;staA	lampRow1
 	ldaA	00110011b
-	staA	displayBcd1	 + 14
+	;staA	displayBcd1	 + 14
 
 counterHandled:
 	
 ; update display 
 	
 	; for debugging
-	ldaA	>$C0
-	lslA
-	lslA
-	lslA
-	lslA
-	staA	displayBcd1 + 15
-	ldaA	>$87
-	lslA
-	lslA
-	lslA
-	lslA
-	staA	displayBcd1 + 6
-	
+	;ldaA	>$C0
+	;lslA
+	;lslA
+	;lslA
+	;lslA
+	;staA	displayBcd1 + 15
+	;ldaA	>$87
+	;lslA
+	;lslA
+	;lslA
+	;lslA
+	;staA	displayBcd1 + 6
+	;
 	ldX	>curCol
 	ldaA	>displayCol
 	andA	1111b
@@ -741,10 +740,9 @@ updateStrobe:
 			clr	displayCol
 		endif
 	
-		;ldaA	>state
-		;oraA	100b
-		;staA	state
-		inc	strobeReset
+		ldaA	>state
+		oraA	100b ; strobe reset
+		staA	state
 	else
 		inc	curCol + 1
 	endif

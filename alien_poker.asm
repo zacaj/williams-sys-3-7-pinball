@@ -43,10 +43,19 @@ _addScore1000N:
 	tBA
 	jsr _addScoreI
 	rts
+_addScore10kN:
+	jsr setXToCurPlayer10
+	deX
+	deX
+	deX
+	tBA
+	jsr _addScoreI
+	rts
 ; ABX
 #DEFINE score10x(x) ldaB x\ jsr _addScore10N
 #DEFINE score100x(x) ldaB x\ jsr _addScore100N
 #DEFINE score1000x(x) ldaB x\ jsr _addScore1000N
+#DEFINE score10kx(x) ldaB x\ jsr _addScore10kN
 
 #DEFINE advBonus()	jsr advanceBonus
 
@@ -154,6 +163,8 @@ startBall:
 	staA	p_Bonus
 	lampOn(8,5)	; 1k bonus
 	enablePf
+
+	;;delay(150)
 	
 	ldaA	$FF
 	staA	lastSwitch
@@ -377,7 +388,7 @@ swDrop3:
 swDrop4:
 	done(1)
 swDrop5:
-	score1000x(9)
+	score10kx(9)
 	done(1)
 swLeftOutlane:
 	done(1)

@@ -11,15 +11,16 @@ utils:	.org $7800 + $500
 
 ; copy players' scores to display 
 copyScores13:
-	ldX	displayBcd1 + 1
+	ldX	displayBcd1 + 1 ; start at strobe 2
 	ldaB	$FF	; blank(F) until a number >0 is found then 0
 copy13Loop:
 	ldaA	pA_1m - (displayBcd1+1), X
 	andA	$0F
 	cmpA	$00 
 	ifeq ; if pA score = 0?
-		cpX	(displayBcd1+1) + 5
+		cpX	(displayBcd1+1) + 5 ; at strobe 7
 		ifeq
+			; change B from F (blank) to 0 (0)
 			andB	00001111b 
 			ldaA	$0F
 		else
@@ -53,7 +54,7 @@ copy13Loop:
 	staA	0, X
 	
 	inX
-	cpX	displayBcd1 + 6
+	cpX	displayBcd1 + 8
 	bne 	copy13Loop
 	
 	rts
@@ -100,7 +101,7 @@ copy24Loop:
 	staA  0, X 
 	
 	inX
-	cpX	displayBcd1 + 15
+	cpX	displayBcd1 + 16
 	bne copy24Loop	
 	
 	rts
@@ -112,10 +113,10 @@ blankNonPlayerScores:
 		rts
 	endif
 	
-	ldaB	>lc(7)
+	ldaB	>lc(7) ; 1 can play
 	bitB	lr(2)
 	bne	blankP2
-	bitB	lr(3)
+	bitB	lr(3) ; 2 can play
 	bne	blankP3
 	bitB	lr(4)
 	bne	blankP4
@@ -124,11 +125,11 @@ blankNonPlayerScores:
 	bra	blankP1
 blankP1:
 	ldaA	$F0
-	oraA	>displayBcd1 + 7 - 1
-	staA	displayBcd1 + 7 - 1
+	oraA	>displayBcd1 + 6
+	staA	displayBcd1 + 6
 	ldaA	$F0
-	oraA	>displayBcd1 + 7 - 1
-	staA	displayBcd1 + 7 - 1
+	oraA	>displayBcd1 + 7
+	staA	displayBcd1 + 7
 blankP2:
 	ldaA	$F0
 	oraA	>displayBcd1 + 15 - 1
@@ -138,15 +139,15 @@ blankP2:
 	staA	displayBcd1 + 16 - 1
 blankP3:
 	ldaA	$0F
-	oraA	>displayBcd1 + 7 - 1
-	staA	displayBcd1 + 7 - 1
+	oraA	>displayBcd1 + 6
+	staA	displayBcd1 + 6
 	ldaA	$0F
-	oraA	>displayBcd1 + 7 - 1
-	staA	displayBcd1 + 7 - 1
+	oraA	>displayBcd1 + 7
+	staA	displayBcd1 + 7
 blankP4:
 	ldaA	$0F
-	oraA	>displayBcd1 + 16 - 1
-	staA	displayBcd1 + 16 - 1
+	oraA	>displayBcd1 + 15 - 1
+	staA	displayBcd1 + 15 - 1
 	ldaA	$0F
 	oraA	>displayBcd1 + 16 - 1
 	staA	displayBcd1 + 16 - 1
