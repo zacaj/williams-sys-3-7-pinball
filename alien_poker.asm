@@ -405,19 +405,11 @@ swOuthole:
 	ifne	; shoot again on
 		bitA	>flc(1)
 		ifne ; shoot again flashing
-			; turn off used special
-			ldaA	lr(3) ; right special
-			bitA	>lc(1)
-			ifne
-				lampOff(3,1)
-				flashOff(1,3)
-			endif
-			ldaA	lr(2) ; left special
-			bitA	>lc(1)
-			ifne
-				lampOff(2,1)
-				flashOff(2,1)
-			endif
+			; turn off  special
+			lampOff(3,1) ; right special
+			flashOff(3,1)
+			lampOff(2,1) ; left special
+			flashOff(2,1)
 			
 			; flash player light
 			ldaA	00001111b ; player up lights
@@ -640,8 +632,26 @@ swDrop_collect_dropDone:
 	rts
 
 swLeftOutlane:
+	score10kx(1)
+	ldaA	lr(2) ; left special
+	bitA	lc(1)
+	ifne
+		lampOn(1,1) ; shoot again
+		flashLamp(1,1)
+		flashLamp(2,1)
+		SOUND($17)
+	endif
 	done(1)
 swRightOutlane:
+	score10kx(1)
+	ldaA	lr(3) ; right special
+	bitA	lc(1)
+	ifne
+		lampOn(1,1) ; shoot again
+		flashLamp(1,1)
+		flashLamp(3,1)
+		SOUND($17)
+	endif
 	done(1)
 swLeftEject:
 	ldaA	lr(6) ; game over
