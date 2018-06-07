@@ -38,7 +38,7 @@ switchRow8:		.equ switchRow1 + 7
 solAStatus:		.equ RAM + $28 ; solenoid PIA is updated once every 8 IRQ
 solBStatus:		.equ RAM + $29 ; one solenoid bit is generated per IRQ and pushed on
 attractX:		.equ RAM + $2A ; +
-forkX			.equ RAM + $2C ; +
+forkX			.equ RAM + $2C ; +  if set then in a callback from a fork/delay
 scanCurCol:		.equ RAM + $2E ; +
 scanCurSwitchRowLsb:	.equ RAM + $30
 scanStrobe:		.equ RAM + $31

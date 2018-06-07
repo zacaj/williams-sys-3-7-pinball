@@ -164,8 +164,7 @@ refreshPlayerScores:
 ; add score instantly
 ; X = place in p*_1* to add the score to
 ; A = amount to add (max 9)
-; tail call
-; trashes ABX
+; trashes AX
 _addScoreI:
 	addA	0, X
 	oraA	11110000b
@@ -204,29 +203,35 @@ addScore_carryDa:
 		endif
 	endif
 
-	jmp refreshPlayerScores
-	
+	pshB
+	jsr refreshPlayerScores
+	pulB
 	rts
 	
-; t A,X
+; t X
 setXToCurPlayer10:
+	pshA
 	ldaA	>lc(8)
 	bitA	0001b
 	beq	_addScore10N_p2
 	ldX	pA_10
+	pulA
 	rts
 _addScore10N_p2:
 	bitA	0010b
 	beq	_addScore10N_p3
 	ldX	pB_10
+	pulA
 	rts
 _addScore10N_p3:
 	bitA	0100b
 	beq	_addScore10N_p4
 	ldX	pC_10
+	pulA
 	rts
 _addScore10N_p4:
 	ldX	pD_10
+	pulA
 	rts
 
 ; suspends execution for A ms and returns to queue processor
@@ -299,7 +304,7 @@ _zeroScores:
 	jsr	refreshPlayerScores
 	rts
 
-; trash ~B
+; trash AX
 ; delay for ms (8-2000)
 #DEFINE delay(ms) ldaA ms/8\ jsr _delay
 ; makes a second thread that will skip the next (3b) instruction
