@@ -581,6 +581,8 @@ swDrop:
 		oraB	>solenoidA
 		staB	solenoidA
 		tAB
+		lampOn(4,3)
+		flashLamp(4,3)
 		delay(20)
 		comB	; invert drop bit to turn it off again
 		tBA	; A + B = inverse drop bit
@@ -642,11 +644,131 @@ swLeftOutlane:
 swRightOutlane:
 	done(1)
 swLeftEject:
+	ldaA	lr(6) ; game over
+	bitA	>lc(8)
+	ifne ; in game over
+		fireSolenoid(LEFT_EJECT)
+		done(0)
+	endif
+
+	score1000x(5)
+
+	ldaA	lr(4) ; advance royal flush
+	bitA	>lc(4)
+	ifne	
+		ldaA	lr(4)
+swLeftEject_adv_loop:
+		bitA	>lc(3)
+		ifeq
+			oraA	>lc(3)
+			staA	lc(3)
+			lampOff(4,4)
+		else
+			aslA
+			bne	swLeftEject_adv_loop
+		endif
+		; end loop
+	endif
+
+	ldaA	lr(2) ; ace of spades (left eject)
+	bitA	>lc(4)
+	ifeq
+		lampOn(2,4)
+		flashLamp(2,4)
+		jsr	checkEjectsComplete
+	else
+	endif
+
+	delay(200)
+	fireSolenoid(LEFT_EJECT)
+	fork(500)
 	done(1)
+
+	beginFork()
+	flashOff(2,4)
+	endFork()
 swRightEject:
+	ldaA	lr(6) ; game over
+	bitA	>lc(8)
+	ifne ; in game over
+		fireSolenoid(RIGHT_EJECT)
+		done(0)
+	endif
+
+	score1000x(5)
+
+	ldaA	lr(1) ; ace of hearts (right eject)
+	bitA	>lc(4)
+	ifeq
+		lampOn(1,4)
+		flashLamp(1,4)
+		jsr	checkEjectsComplete
+	endif
+
+	delay(200)
+	fireSolenoid(RIGHT_EJECT)
+	fork(500)
+	done(1)
+
+	beginFork()
+	flashOff(1,4)
+	endFork()
 	done(1)
 swTopEject:
+	ldaA	lr(6) ; game over
+	bitA	>lc(8)
+	ifne ; in game over
+		fireSolenoid(TOP_EJECT)
+		done(0)
+	endif
+
+	score1000x(5)
+
+	ldaA	lr(3) ; ace of clubs (top eject)
+	bitA	>lc(4)
+	ifeq
+		lampOn(3,4)
+		flashLamp(3,4)
+		jsr	checkEjectsComplete
+	endif
+
+	delay(200)
+	fireSolenoid(TOP_EJECT)
+	fork(500)
 	done(1)
+
+	beginFork()
+	flashOff(3,4)
+	endFork()
+	done(1)
+checkEjectsComplete:
+	ldaA	>lc(4)
+	comA
+	bitA	111b ; ace lamps
+	ifeq 	; all were lit
+		; turn them off
+		ldaA	11111000b
+		andA	>lc(4)
+		staA	lc(4)
+
+		; turn on a special
+		ldaA	110b ; special lights
+		bitA	>lc(1)
+		ifeq	; specials aren't on
+			lampOn(2,1) ; left special
+			flashLamp(2,1)
+			fork(500)
+			rts
+			nop
+			nop
+			beginFork()
+			flashOff(2,1)
+			flashOff(3,1)
+			endFork()
+		endif
+	endif
+	rts
+
 swLeftInlane:
 	done(1)
 swLLJoker:
