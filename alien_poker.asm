@@ -113,6 +113,7 @@ dropsDown:	.equ RAM + $B1 ; XXXXX000, where X is 1 if that drop is down
 p_drops:	.equ RAM + $B4 ; - 7  col 3
 p_kings:	.equ RAM + $B8 ; + 3 col 2+4 upper half
 p_curDrop:	.equ RAM + $BC ; + 3 bit for the current drop, correspond to lamps in col 3
+p_jokers:	.equ RAM + $C0 ; + 3 which jokers are lit
 
 ; trashes B?
 advanceBonus:
@@ -280,6 +281,13 @@ lClearLights:
 	staA	lc(4)
 	ldaA	p_curDrop, X
 	staA	flc(3)
+	ldaA	p_jokers, X
+	oraA	>lc(5)
+	staA	lc(5)
+
+	ldaA	1111b ; jokers
+	oraA	>flc(5)
+	staA	flc(5)
 
 
 	jsr	resetDrops
@@ -329,6 +337,7 @@ lInitPlayers:
 	clr	p_kings, X
 	ldaA	00001000b ; drop 1/ 10 card
 	staA	p_curDrop, X
+	clr	p_jokers, X
 	inX
 	cpX	4
 	bne	lInitPlayers
@@ -486,6 +495,9 @@ swOuthole_bonusLoop:
 		staA	p_kings, X
 		ldaA	>flc(3)
 		staA	p_curDrop, X
+		ldaA	>flc(5)
+		andA	1111b ; jokers
+		staA	p_jokers, X
 		
 	
 		; go to next player
@@ -562,8 +574,29 @@ swDrop:
 			ldaA	11111000b
 			staA	lc(3)
 			jsr	resetDrops
+
+			; turn off jokers
+			ldaA	11110000b
+			andA	>lc(5)
+			staA	lc(5)
 		else 
 			SOUND($0C)
+
+			; light joker(s)
+			ldaA	11110000b
+			andA	>lc(5)
+			staA	lc(5)
+
+			ldaA	lr(3) ; 4x
+swDrop_joker_loop:
+			bitA	>lc(3)
+			ifne
+				jsr	lightRandomJoker
+			endif
+			lsrA
+			bne	swDrop_joker_loop
+
+			jsr	lightRandomJoker
 		endif
 		nop
 	else
@@ -630,6 +663,32 @@ swDrop_collect_dropDone:
 	bitA	>flc(3)
 	bne	l_swDrop_collect
 	rts
+
+lightRandomJoker:
+	; stop if all lit
+	ldaB	>lc(5)
+	comB
+	bitB	1111b ; joker lights
+	ifeq
+		rts
+	endif
+
+	; get random bit
+	ldaB	1111b
+	andB	>lampStrobe
+lightRandomJoker_loop:
+	bitB	>lc(5)
+	ifne	
+		oraB	>lc(5)
+		staB	lc(5)
+		rts
+	else
+		asrB
+		ifeq
+			ldaB	1000b
+		endif
+		bra	lightRandomJoker_loop
+	endif
 
 swLeftOutlane:
 	score10kx(1)
@@ -761,34 +820,136 @@ checkEjectsComplete:
 		andA	>lc(4)
 		staA	lc(4)
 
-		; turn on a special
-		ldaA	110b ; special lights
-		bitA	>lc(1)
-		ifeq	; specials aren't on
-			lampOn(2,1) ; left special
-			flashLamp(2,1)
-			fork(500)
+		; increase bonus X
+		ldaA	lr(4) ; 5x
+		bitA	>lc(2)
+		ifne
 			rts
-			nop
-			nop
-			beginFork()
-			flashOff(2,1)
-			flashOff(3,1)
-			endFork()
 		endif
+
+		ldaA	1111b ; mults
+		andA	>lc(2)
+		seC
+		rolA
+		oraA	>lc(2)
+		staA	lc(2)
+
+		ldaA	1000b
+checkEjectsComplete_loop:
+		bitA	>lc(2)
+		ifne
+			oraA	>flc(2)
+			staA	flc(2)
+		else
+			asrA
+			bra	checkEjectsComplete_loop
+		endif
+
+		fork(500)
+		rts
+		nop
+		nop
+		beginFork()
+		ldaA	11110000b
+		andA	>flc(2)
+		staA	flc(2)
+		endFork()
 	endif
 	rts
 
 swLeftInlane:
 	done(1)
 swLLJoker:
-	done(1)
+	ldaA	1b
+	jmp	swJoker
 swMLJoker:
-	done(1)
+	ldaA	10b
+	jmp	swJoker
 swULJoker:
-	done(1)
+	ldaA	100b
+	jmp	swJoker
 swRJoker:
-	done(1)
+	ldaA	1000b
+	jmp	swJoker
+swJoker:
+	bitA	>lc(5)
+	ifeq	; not lit
+		score1000x(1)
+		SOUND($10)
+		done(1)
+	endif
+
+	; turn off lamp
+	comA
+	andA	>lc(5)
+	staA	lc(5)
+
+	score10kx(1)
+	SOUND($0C)
+
+	ldaA	>lc(5)
+	comA
+	bitA	1111b ; jokers
+	ifne ; some left
+		done(1)
+	endif
+
+	ldaA	lr(1) ; 2x
+	bitA	>lc(3)
+	ifeq
+		oraA	>lc(3)
+		staA	lc(3)
+		flashLamp(1,3)
+	else
+		aslA ; 3x
+		bitA	>lc(3)
+		ifeq
+			oraA	>lc(3)
+			staA	lc(3)
+			flashLamp(2,3)
+		else
+			aslA ; 4x
+			bitA	>lc(3)
+			ifeq
+				oraA	>lc(3)
+				staA	lc(3)
+				flashLamp(3,3)
+			else
+				; turn on a special
+				ldaA	110b ; special lights
+				bitA	>lc(1)
+				ifeq	; specials aren't on
+					lampOn(2,1) ; left special
+					lampOn(3,1)
+					flashLamp(2,1)
+					flashLamp(3,1)
+					fork(500)
+					rts
+					nop
+					nop
+					beginFork()
+					flashOff(2,1)
+					flashOff(3,1)
+					endFork()
+				endif
+			endif
+		endif
+	endif
+	
+	ldaA	111b ; mults
+	bitA	>flc(3)
+	ifne ; mult flashing
+		fork(500)
+		done(1)
+		beginFork()
+		ldaA	11111000b ; not mults
+		andA	>flc(3)
+		staA	flc(3)
+		endFork()
+	else
+		done(1)
+	endif
+
 swSpinner:
 	done(1)
 swLane1:
