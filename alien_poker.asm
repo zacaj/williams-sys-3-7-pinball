@@ -411,7 +411,69 @@ swStart:
 	jsr refreshPlayerScores
 	
 	done(0)
-	
+
+collectBonus:
+	; start flashing highest x
+	ldaA	1000b ; 5x
+swOuthole_flashX_loop:
+	bitA	>lc(2)
+	ifne
+		oraA	>flc(2)
+		staA	flc(2)
+	else
+		asrA
+		bra	swOuthole_flashX_loop
+	endif
+
+	ldaB	1111b
+	staB	bonusAnim
+
+	; start bonus countdown
+	ldaB	>p_Bonus			
+swOuthole_bonusLoop:
+	score1000x(2)
+	dec	p_Bonus
+	jsr	bonusLights
+	delay(40)
+	ldaA	>bonusAnim
+	bitA	1000b
+	ifne
+		delay(20)
+	endif
+	ldaA	>bonusAnim
+	bitA	100b
+	ifne
+		delay(20)
+	endif
+	ldaA	>bonusAnim
+	bitA	10b
+	ifne
+		delay(20)
+	endif
+	ldaA	>bonusAnim
+	bitA	1b
+	ifne
+		delay(20)
+	endif
+
+	tst	>p_Bonus
+	bne	swOuthole_bonusLoop
+
+	ldaA	>lc(2) 
+	andA	1111b ; multipliers
+	ifne ; still X left to count down
+		asr	bonusAnim
+		asrA ; lower mult
+		asr	flc(2)
+		oraA	11110000b ; kings
+		andA	>lc(2)
+		staA	lc(2)
+		staB	p_Bonus
+		bra	swOuthole_bonusLoop
+	endif
+	; end loop
+	rts
+
 swOuthole: 
 	inc	$C0
 	ldaA	>lc(8) ; !game over
@@ -462,60 +524,7 @@ swOuthole:
 
 	; none flashing -> playfield valid -> end ball
 
-	; start flashing highest x
-	ldaA	1000b
-swOuthole_loop:
-	bitA	>lc(2)
-	ifne
-		oraA	>flc(2)
-		staA	flc(2)
-	else
-		asrA
-		bra	swOuthole_loop
-	endif
-
-	; start bonus countdown
-	ldaB	>p_Bonus			
-swOuthole_bonusLoop:
-	score1000x(2)
-	dec	p_Bonus
-	jsr	bonusLights
-	delay(25)
-	ldaA	>lc(2)
-	bitA	1000b
-	ifeq
-		delay(25)
-	endif
-	ldaA	>lc(2)
-	bitA	100b
-	ifeq
-		delay(25)
-	endif
-	ldaA	>lc(2)
-	bitA	10b
-	ifeq
-		delay(25)
-	endif
-	ldaA	>lc(2)
-	bitA	1b
-	ifeq
-		delay(25)
-	endif
-
-	tst	>p_Bonus
-	bne	swOuthole_bonusLoop
-	ldaA	>lc(2) 
-	andA	1111b ; multipliers
-	ifne
-		asrA ; lower mult
-		asr	flc(2)
-		oraA	11110000b ; kings
-		andA	>lc(2)
-		staA	lc(2)
-		staB	p_Bonus
-		bra	swOuthole_bonusLoop
-	endif
-	; end loop
+	jsr	collectBonus
 
 	ldaA	00001111b ; player up lights
 	andA	>lc(8) ; remove non-player up lights from col 8 for processing
@@ -1098,6 +1107,16 @@ swLane:
 		staA	lc(1)
 		andB	>lc(1)
 		staB	lc(1)
+
+		; check if poker spelled
+		andB	11111000b ; poker 
+		cmpB	11111000b
+		ifeq ; poker completed
+			SOUND($1F)
+			pshA
+			jsr collectBonus
+			pulA
+		endif
 		pulB
 	endif
 
