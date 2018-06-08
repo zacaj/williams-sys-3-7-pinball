@@ -174,22 +174,35 @@ bonusLights:
 	beq	bonusLights_done
 	
 	; turn on 20k,10k,1k if necessary
-	ldaA	19
+	ldaA	29
 	cmpA	>p_Bonus
-	ifge	
-		ldaA	9
+	ifge ; bonus < 30
+		ldaA	19
 		cmpA	>p_Bonus
-		ifge	; bonus < 10
-			ldaA	0
-		else	; bonus >= 10?
-			lampOn(6,5) ; 10k light
-			ldaA	10
+		ifge	; bonus < 20
+			ldaA	9
+			cmpA	>p_Bonus
+			ifge	; bonus < 10
+				ldaA	0
+			else	; bonus >= 10?
+				lampOn(6,5) ; 10k light
+				ldaA	10
+			endif
+		else	; bonus >= 20?
+			lampOn(7,5) ; 20k light
+			ldaA	20
 		endif
-	else	; bonus >= 20?
+	else ; bonus > 30
+		ldaA	39
+		cmpA	>p_Bonus
+		ifge
+		else	; bonus >= 39
+			staA	p_Bonus ; max at 39
+		endif
 		lampOn(6,5) ; 10k light
 		lampOn(7,5) ; 20k light
-		ldaA	20
-	endif
+		ldaA	30
+		endif
 	cmpA	>p_Bonus
 	ifge
 	else
@@ -205,6 +218,7 @@ bonusLights_loop:
 	ifcs ; 9k already lit, reset 2-9 lights
 		clr	lc(6)
 		decA 		; skip next '1'
+		beq	bonusLights_done
 	endif
 	bra	bonusLights_loop
 	
@@ -557,6 +571,7 @@ swOuthole_bonusLoop:
 sw10pt:
 	score10x(1)
 	SOUND($10)
+	inc p_Bonus
 	done(1)
 
 swDrop1:
@@ -822,6 +837,13 @@ swTopEject:
 
 	score1000x(5)
 
+	ldaA	11 ;  left inlane switch
+	cmpA	>lastSwitch
+	ifeq
+		score10kx(2)
+		;SOUND
+	endif
+
 	ldaA	lr(3) ; ace of clubs (top eject)
 	bitA	>lc(4)
 	ifeq
@@ -844,10 +866,10 @@ checkEjectsComplete:
 	comA
 	bitA	111b ; ace lamps
 	ifeq 	; all were lit
-		; turn them off
-		ldaA	11111000b
-		andA	>lc(4)
-		staA	lc(4)
+		; flash them
+		ldaA	111b
+		oraA	>flc(4)
+		staA	flc(4)
 
 		; bonus x max?
 		ldaA	lr(4) ; 5x
@@ -866,6 +888,7 @@ checkEjectsComplete:
 		oraA	>lc(2)
 		staA	lc(2)
 
+		; find lamp to flash
 		ldaA	1000b
 checkEjectsComplete_loop:
 		bitA	>lc(2)
@@ -882,14 +905,37 @@ checkEjectsComplete_loop:
 		nop
 		nop
 		beginFork()
+		; stop flashing of bonus X and ejects
 		ldaA	11110000b
 		andA	>flc(2)
 		staA	flc(2)
+		ldaA	11111000b
+		andA	>flc(4)
+		staA	flc(4)
 		endFork()
 	endif
 	rts
 
 swLeftInlane:
+	score1000x(1)
+	;SOUND
+	
+	; get random bit
+	ldaB	>lampStrobe
+	bitB	11110000b
+	ifeq
+		lslB
+		lslB
+		lslB
+		lslB
+	endif
+	oraB	>flc(2)
+	staB	flc(2)
+
+	; light lane if necessary to see flashing
+	andB	11110000b ; lanes
+	oraB	>lc(2)
+	staB	lc(2)
 	done(1)
 swLLJoker:
 	ldaA	1b
@@ -927,6 +973,7 @@ swJoker:
 
 	SOUND($1C)
 
+	; increase bank X
 	ldaA	lr(1) ; 2x
 	bitA	>lc(3)
 	ifeq
@@ -951,7 +998,7 @@ swJoker:
 				; turn on a special
 				ldaA	110b ; special lights
 				bitA	>lc(1)
-				ifeq	; specials aren't on
+				ifeq	; specials aren't on -> turn them on
 					lampOn(2,1) ; left special
 					lampOn(3,1)
 					flashLamp(2,1)
@@ -993,6 +1040,7 @@ swSpinner:
 	endif
 	SOUND($05)
 	done(1)
+.org $7000
 swLane1:
 	ldaA	10000b
 	jmp	swLane
@@ -1048,6 +1096,7 @@ swLane:
 		andB 	>flc(2)
 		staB	flc(2)
 
+		; advance bank
 		ldaB	>flc(3)
 		andB	11111000b
 		aslB
@@ -1065,7 +1114,6 @@ swLane:
 	else
 		done(1)
 	endif
-.org $7000
 swPop1:
 	ldaA	10000b
 	jmp	swPop
@@ -1087,6 +1135,12 @@ swPop:
 		score100x(1)
 		SOUND($09)
 	endif
+
+	; turn off flashing lanes
+	ldaA	>lc(3)
+	andA	1111b
+	staA	lc(3)
+
 	done(1)
 swLaneChange:
 	ldaA	>lc(4)

@@ -496,12 +496,6 @@ interrupt:
 	cmpA	>counter2
 	bne	counterHandled
 	
-	ldaA	10
-	cmpA	>p_Bonus
-	ifeq
-		jsr advanceBonus
-	endif
-	
 	ldaA	0
 	staA	counter2
 	ldaA	01110111b
