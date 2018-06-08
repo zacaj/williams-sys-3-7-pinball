@@ -281,7 +281,10 @@ afterFork:
 	jmp	0, X
 	; everything trashed
 afterQueueEvent:
-	jsr 	bonusLights
+	tst	>bonusAnim
+	ifeq
+		jsr 	bonusLights
+	endif
 	
 	; update last switch
 	ldaA	> tempQ + 1

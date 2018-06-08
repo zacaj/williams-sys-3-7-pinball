@@ -116,46 +116,34 @@ p_curDrop:	.equ RAM + $BC ; + 3 bit for the current drop, correspond to lamps in
 p_jokers:	.equ RAM + $C0 ; + 3 which jokers are lit
 p_aces:		.equ RAM + $C4 ; +  3 which aces + pops are lit
 
-; trashes B?
 advanceBonus:
-	;ldaA	1000b
-	;bitA	>state
-	;ifne
-	;	rts
-	;endif
 	inc 	p_Bonus
-	lampOff(8,5) ; 1k
-	ldaB	2
+	inc	bonusAnim
 	fork(64)
 	rts
 	nop
 	nop
 	beginFork()
+	lampOff(8,5) ; 1k
+	delay(64)
+	ldaB	11111110b
+	staB	bonusAnim
 advanceBonus_loop:
 	dec	p_Bonus
 	jsr 	bonusLights
 	inc	p_Bonus
-	ldaA	11111110b
-	
-	pshB
-	decB
-inner:
-	decB
-	beq	innerEnd
+	andB	>lc(6)
+	cmpB	>lc(6)
+	beq	advanceBonus_end
+	staB	lc(6)
 	seC
-	rolA
-	bra 	inner
-innerEnd:
-	pulB
-	
-	andA	>lc(6)
-	staA	lc(6)
+	rol	bonusAnim
 	delay(64)
-	incB
-	cmpB	>p_Bonus
-	blt	advanceBonus_loop
-	ldaB	>p_Bonus
+	ldaB	>bonusAnim
+	bra	advanceBonus_loop
+advanceBonus_end:
 	jsr 	bonusLights
+	dec	bonusAnim
 	endFork()
 	
 ; switch callbacks:
@@ -571,7 +559,7 @@ swOuthole_bonusLoop:
 sw10pt:
 	score10x(1)
 	SOUND($10)
-	inc p_Bonus
+	advBonus()
 	done(1)
 
 swDrop1:
@@ -618,6 +606,7 @@ swDrop:
 			andA	>lc(5)
 			staA	lc(5)
 		else 
+			advBonus()
 			SOUND($0C)
 
 			; light joker(s)
@@ -765,6 +754,9 @@ swLeftEject:
 	endif
 
 	score1000x(5)
+	inc	p_Bonus
+	inc	p_Bonus
+	advBonus()
 
 	ldaA	lr(4) ; advance royal flush
 	bitA	>lc(4)
@@ -809,6 +801,9 @@ swRightEject:
 	endif
 
 	score1000x(5)
+	inc	p_Bonus
+	inc	p_Bonus
+	advBonus()
 
 	ldaA	lr(1) ; ace of hearts (right eject)
 	bitA	>lc(4)
@@ -836,6 +831,9 @@ swTopEject:
 	endif
 
 	score1000x(5)
+	inc	p_Bonus
+	inc	p_Bonus
+	advBonus()
 
 	ldaA	11 ;  left inlane switch
 	cmpA	>lastSwitch
@@ -964,6 +962,7 @@ swJoker:
 
 	score10kx(1)
 	SOUND($0C)
+	advBonus()
 
 	ldaA	>lc(5)
 	bitA	1111b ; jokers
@@ -1062,6 +1061,7 @@ swLane:
 		staA	lc(4)
 	endif
 	score1000x(1)
+	advBonus()
 
 	ldaA	>lc(4)
 	andA	11110000b

@@ -67,6 +67,7 @@ flashLampCol8:		.equ RAM + $A7
 lastSwitch:		.equ RAM + $A8
 dropResetTimer:		.equ RAM + $A9 ; max 127
 bonusTimer:		.equ RAM + $AA ; counts down from 127 during bonus
+bonusAnim:		.equ RAM + $AB ; stores data for bonus anim or 0 if no animation in action
 ; B+: game
 
 
