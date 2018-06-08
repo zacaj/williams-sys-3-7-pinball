@@ -124,23 +124,37 @@ advanceBonus:
 	nop
 	nop
 	beginFork()
-	lampOff(8,5) ; 1k
-	delay(64)
-	ldaB	11111110b
-	staB	bonusAnim
-advanceBonus_loop:
-	dec	p_Bonus
-	jsr 	bonusLights
-	inc	p_Bonus
-	andB	>lc(6)
+	ldaB	$FF
 	cmpB	>lc(6)
-	beq	advanceBonus_end
-	staB	lc(6)
-	seC
-	rol	bonusAnim
-	delay(64)
-	ldaB	>bonusAnim
-	bra	advanceBonus_loop
+	ifeq
+advanceBonus_downLoop:
+		delay(64)
+		lsrB
+		staB	lc(6)
+		bne	advanceBonus_downLoop
+
+		delay(64)
+		lampOff(8,5) ; 1k
+		delay(64)
+	else
+		lampOff(8,5) ; 1k
+		delay(64)
+		ldaB	11111110b
+		staB	bonusAnim
+advanceBonus_loop:
+		dec	p_Bonus
+		jsr 	bonusLights
+		inc	p_Bonus
+		andB	>lc(6)
+		cmpB	>lc(6)
+		beq	advanceBonus_end
+		staB	lc(6)
+		seC
+		rol	bonusAnim
+		delay(64)
+		ldaB	>bonusAnim
+		bra	advanceBonus_loop
+	endif
 advanceBonus_end:
 	jsr 	bonusLights
 	dec	bonusAnim
