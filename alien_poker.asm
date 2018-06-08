@@ -440,6 +440,20 @@ swOuthole:
 	endif
 
 	; none flashing -> playfield valid -> end ball
+
+	; start flashing highest x
+	ldaA	1000b
+swOuthole_loop:
+	bitA	>lc(2)
+	ifne
+		oraA	>flc(2)
+		staA	flc(2)
+	else
+		asrA
+		bra	swOuthole_loop
+	endif
+
+	; start bonus countdown
 	ldaB	>p_Bonus			
 swOuthole_bonusLoop:
 	score1000x(2)
@@ -469,10 +483,11 @@ swOuthole_bonusLoop:
 
 	tst	>p_Bonus
 	bne	swOuthole_bonusLoop
-	ldaA	>lc(2) ; 2x light
+	ldaA	>lc(2) 
 	andA	1111b ; multipliers
 	ifne
 		asrA ; lower mult
+		asr	flc(2)
 		oraA	11110000b ; kings
 		andA	>lc(2)
 		staA	lc(2)
@@ -820,13 +835,16 @@ checkEjectsComplete:
 		andA	>lc(4)
 		staA	lc(4)
 
-		; increase bonus X
+		; bonus x max?
 		ldaA	lr(4) ; 5x
 		bitA	>lc(2)
 		ifne
+			score10kx(5)
+			SOUND($16)
 			rts
 		endif
 
+		; increase bonus X
 		ldaA	1111b ; mults
 		andA	>lc(2)
 		seC
@@ -894,6 +912,8 @@ swJoker:
 		done(1)
 	endif
 
+	SOUND($1C)
+
 	ldaA	lr(1) ; 2x
 	bitA	>lc(3)
 	ifeq
@@ -951,25 +971,132 @@ swJoker:
 	endif
 
 swSpinner:
+	ldaA	lr(2) ; spinner
+	bitA	>lc(3)
+	ifne
+		score1000x(1)
+	else
+		score100x(1)
+	endif
+	SOUND($05)
 	done(1)
 swLane1:
-	done(1)
+	ldaA	10000b
+	jmp	swLane
 swLane2:
-	done(1)
+	ldaA	100000b
+	jmp	swLane
 swLane3:
-	done(1)
+	ldaA	1000000b
+	jmp	swLane
 swLane4:
-	done(1)
+	ldaA	10000000b
+	jmp	swLane
+swLane:
+	tAB
+	bitA	>lc(4)
+	; turn on lane if not lit
+	ifeq
+		oraA	>lc(4)
+		staA	lc(4)
+	endif
+	score1000x(1)
+
+	ldaA	>lc(4)
+	andA	11110000b
+	comA
+	bitA	11110000b
+	ifeq ; all lanes lit
+		pshB
+		; turn off lanes
+		ldaB	>lc(4)
+		andB	1111b
+		staB	lc(4)
+
+		; adv poker
+		ldaA	>lc(1)
+		oraA	111b
+		seC
+		rolA
+		ldaB	>lc(1)
+		oraB	11111000b
+		staA	lc(1)
+		andB	>lc(1)
+		staB	lc(1)
+		pulB
+	endif
+
+	jsr 	syncLanes
+
+	bitB	>flc(2)
+	ifne	; lane was flashing
+		; turn off lane
+		comB
+		andB 	>flc(2)
+		staB	flc(2)
+
+		ldaB	>flc(3)
+		andB	11111000b
+		aslB
+		ldaA	>flc(3)
+		andA	111b
+		staB	flc(3)
+		oraA	>flc(3)
+		staA	flc(3)
+
+		jsr	resetDrops
+		ldaA	>flc(3)
+		andA	11111000b
+		lsrA
+		jmp	swDrop
+	else
+		done(1)
+	endif
 swPop1:
-	done(1)
+	ldaA	10000b
+	jmp	swPop
 swPop2:
-	done(1)
+	ldaA	100000b
+	jmp	swPop
 swPop3:
-	done(1)
+	ldaA	1000000b
+	jmp	swPop
 swPop4:
+	ldaA	10000000b
+	jmp	swPop
+swPop:
+	bitA	>lc(4)
+	ifne	; pop on
+		score1000x(1)
+		SOUND($06)
+	else
+		score100x(1)
+		SOUND($09)
+	endif
 	done(1)
 swLaneChange:
+	ldaA	>lc(4)
+	andA	11110000b
+	aslA
+	ifcs
+		oraA	00010000b
+	endif
+	ldaB	>lc(4)
+	andB	1111b
+	staB	lc(4)
+	oraA	>lc(4)
+	staA	lc(4)
+	jsr	syncLanes
 	done(1)
+syncLanes:
+	ldaA	>lc(2)
+	andA	1111b
+	staA	lc(2)
+	ldaA	>lc(4)
+	andA	11110000b
+	oraA	>lc(2)
+	staA	lc(2)
+	rts
 
 
 ; end callbacks
