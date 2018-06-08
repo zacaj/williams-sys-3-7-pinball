@@ -114,6 +114,7 @@ p_drops:	.equ RAM + $B4 ; - 7  col 3
 p_kings:	.equ RAM + $B8 ; + 3 col 2+4 upper half
 p_curDrop:	.equ RAM + $BC ; + 3 bit for the current drop, correspond to lamps in col 3
 p_jokers:	.equ RAM + $C0 ; + 3 which jokers are lit
+p_aces:		.equ RAM + $C4 ; +  3 which aces + pops are lit
 
 ; trashes B?
 advanceBonus:
@@ -165,7 +166,7 @@ none:	.org $6000 + 192 ; size of callback table
 ; note bonus displayed is double what is in memory
 ; A
 bonusLights:
-	ldaA	11111000b
+	ldaA	00011111b
 	andA	>lc(5)
 	staA	lc(5)
 	clr	lc(6)
@@ -284,6 +285,9 @@ lClearLights:
 	ldaA	p_jokers, X
 	oraA	>lc(5)
 	staA	lc(5)
+	ldaA	p_aces, X
+	staA	lc(4)
+	jsr	syncLanes
 
 	ldaA	1111b ; jokers
 	oraA	>flc(5)
@@ -338,6 +342,7 @@ lInitPlayers:
 	ldaA	00001000b ; drop 1/ 10 card
 	staA	p_curDrop, X
 	clr	p_jokers, X
+	clr	p_aces, X
 	inX
 	cpX	4
 	bne	lInitPlayers
@@ -513,6 +518,9 @@ swOuthole_bonusLoop:
 		ldaA	>flc(5)
 		andA	1111b ; jokers
 		staA	p_jokers, X
+		ldaA	>lc(4)
+		andA	11110111b
+		staA	p_aces, X
 		
 	
 		; go to next player
@@ -689,11 +697,17 @@ lightRandomJoker:
 	endif
 
 	; get random bit
-	ldaB	1111b
-	andB	>lampStrobe
+	ldaB	>lampStrobe
+	bitB	1111b
+	ifeq
+		lsrB
+		lsrB
+		lsrB
+		lsrB
+	endif
 lightRandomJoker_loop:
 	bitB	>lc(5)
-	ifne	
+	ifeq	
 		oraB	>lc(5)
 		staB	lc(5)
 		rts
@@ -906,7 +920,6 @@ swJoker:
 	SOUND($0C)
 
 	ldaA	>lc(5)
-	comA
 	bitA	1111b ; jokers
 	ifne ; some left
 		done(1)
@@ -959,7 +972,7 @@ swJoker:
 	ldaA	111b ; mults
 	bitA	>flc(3)
 	ifne ; mult flashing
-		fork(500)
+		fork(800)
 		done(1)
 		beginFork()
 		ldaA	11111000b ; not mults
@@ -1052,6 +1065,7 @@ swLane:
 	else
 		done(1)
 	endif
+.org $7000
 swPop1:
 	ldaA	10000b
 	jmp	swPop
