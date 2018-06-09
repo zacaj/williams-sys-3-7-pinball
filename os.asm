@@ -96,7 +96,7 @@ resetRamLoop:
 ;
 
 	ldaA	00
-	staB	displayBcd1
+	staA	displayBcd1
 	
 	ldaA	attractStart >> 8
 	staA	attractX
@@ -281,6 +281,7 @@ afterFork:
 	jmp	0, X
 	; everything trashed
 afterQueueEvent:
+	jsr refreshPlayerScores
 	tst	>bonusAnim
 	ifeq
 		jsr 	bonusLights
@@ -329,6 +330,7 @@ afterQueueEvent:
 	staA	state
 	
 skipEvent:
+	jsr refreshPlayerScores
 	tst	>forkX
 	ifeq	; don't process queue if still finishing timers
 	else
@@ -340,7 +342,7 @@ skipQueue:
 				
 doQuickScan:
 	;	jmp 	quickScanDone		
-	ldaB	>lc(8)	; gameover mask
+	ldaB	>lc(8)	; gameover mask	
 	bitB	lr(6)
 	ifne
 		jmp 	quickScanDone

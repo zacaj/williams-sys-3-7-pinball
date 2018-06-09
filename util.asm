@@ -202,10 +202,6 @@ addScore_carryDa:
 			staA	0, X
 		endif
 	endif
-
-	pshB
-	jsr refreshPlayerScores
-	pulB
 	rts
 	
 ; t X
