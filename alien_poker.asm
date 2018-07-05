@@ -1,7 +1,7 @@
 ; solenoids
 #DEFINE SOL(n,t)	(n<<8)|t
-#DEFINE OUTHOLE 	SOL(01, 50)
-#DEFINE LEFT_EJECT	SOL(02, 24)
+#DEFINE OUTHOLE 	SOL(01, 40)
+#DEFINE LEFT_EJECT	SOL(02, 16)
 #DEFINE RIGHT_EJECT	SOL(03, 24)
 #DEFINE DROP_1		SOL(04, 32)
 #DEFINE DROP_2		SOL(05, 32)
@@ -120,7 +120,7 @@ p_Bonus:	.equ RAM + $B0
 dropsDown:	.equ RAM + $B1 ; XXXXX000, where X is 1 if that drop is down
 p_drops:	.equ RAM + $B4 ; - 7  col 3
 
-p_curDrop:	.equ RAM + $BC ; + 3 bit for the current drop, correspond to lamps in col 3
+p_curDrop:	.equ RAM + $B9 ; + 3 bit for the current drop, correspond to lamps in col 3
 p_jokers:	.equ RAM + $C0 ; + 3 which jokers are lit
 p_aces:		.equ RAM + $C4 ; +  3 which aces + pops are lit
 
@@ -341,26 +341,25 @@ lClearLights:
 	ldaA	00001111b ; player up lights
 	oraA	>flc(8)
 	staA	flc(8)
-	
-	ldaA	sr(1) ; check outhole
-	bitA	>sc(2)
-	;ifne ; ball in hole
-		fireSolenoid(OUTHOLE)
-	;endif
-	
+
+	delay(700)
+	fireSolenoid(OUTHOLE)
+	;SOUND($0B)
+	delay(700)
+	SOUND($11)
 	rts
 	
 	
 startGame:
 	lampOn(2,7) ; one player
-	
+	SOUND($13)
 	
 	; reset scores
 	jsr 	resetScores
 
 	SOUND(S_ALIEN_POKER)
 
-	delay(1200)
+	delay(1300)
 	
 	; reset ball count
 	ldaA	$10 ; ball 1
@@ -404,6 +403,7 @@ lInitPlayers:
 
 	
 swTilt: 
+	SOUND($0B)
 	SOUND($01)
 	lampOn(5,8) ; tilt
 	disablePf
@@ -415,8 +415,9 @@ swStart:
 	ifne ; in game over
 		jsr startGame
 	else 
-		ldaA	$10
-		cmpA	>ballCount
+		ldaA	>ballCount
+		andA	$F0
+		cmpA	$10
 		ifeq ; add player if ball 1
 			ldaA	00011110b
 			andA	>lc(7) ; player count lights
@@ -458,9 +459,10 @@ swOuthole_flashX_loop:
 	ldaB	>p_Bonus			
 swOuthole_bonusLoop:
 	score1000x(2)
+	SOUND($02)
 	dec	p_Bonus
 	jsr	bonusLights
-	delay(40)
+	delay(30)
 	ldaA	>bonusAnim
 	bitA	1000b
 	ifne
@@ -515,7 +517,8 @@ swOuthole:
 		ldaA	127
 		staA	bonusTimer
 	endif
-	delay(600)
+	delay(300)
+	SOUND($13)
 	
 	; check ballsave
 	ldaA	lr(1) ; shoot again
@@ -552,27 +555,25 @@ swOuthole:
 
 	jsr	collectBonus
 
+	; store player's data
+	ldX	>curPlayer
+	ldaB	>lc(3) ; cards and x
+	staB	p_drops, X
+	ldaB	>flc(3)
+	andB	11111000b ; cards
+	staB	p_curDrop, X
+	ldaB	>lc(5)
+	andB	1111b ; jokers
+	staB	p_jokers, X
+	ldaB	>lc(4) ; pops and aces
+	andB	11110111b ; not adv flush
+	staB	p_aces, X
+
 	ldaA	00001111b ; player up lights
 	andA	>lc(8) ; remove non-player up lights from col 8 for processing
-	ldaB	>lc(3) ; check shoot again light
+	ldaB	>lc(1) ; check shoot again light
 	bitB	lr(1)
 	ifeq ; shoot again not lit
-		; store player's data
-		ldX	>curPlayer
-		ldaB	>lc(3) ; cards and x
-		staB	p_drops, X
-		ldaB	>lc(2)
-		andB	11110000b ; kings
-		staB	p_kings, X
-		ldaB	>flc(3)
-		andB	11111000b ; cards
-		staB	p_curDrop, X
-		ldaB	>lc(5)
-		andB	1111b ; jokers
-		staB	p_jokers, X
-		ldaB	>lc(4) ; pops and aces
-		andB	11110111b ; not adv flush
-		staB	p_aces, X
 		
 	
 		; go to next player
@@ -586,6 +587,7 @@ swOuthole:
 			
 			; increase ball count
 			ldaB	>ballCount
+			andB	$F0
 			addB	$10
 			andB	$F0
 			cmpB	$40
@@ -609,7 +611,7 @@ swOuthole:
 	
 sw10pt:
 	score10x(1)
-	SOUND($10)
+	SOUND($13)
 	done(1)
 
 swDrop1:
@@ -650,6 +652,8 @@ swDrop:
 		lsl	flc(3)
 		cmpA	lr(8)
 		ifeq	; last drop
+			SOUND($1D)
+			delay(1800)
 			jsr	doDropCollect
 
 			; collect done
@@ -665,7 +669,7 @@ swDrop:
 			staA	lc(5)
 		else 
 			advBonus()
-			SOUND($0C)
+			SOUND($05)
 
 			; light joker(s)
 			ldaA	11110000b
@@ -693,9 +697,10 @@ swDrop_joker_loop:
 		lampOn(4,4) ;  advance flush light
 		flashLamp(4,4)	
 
-		SOUND($05)	
+		SOUND($06)	
 
-		delay(200)
+		delay(400)
+		SOUND($0B)
 
 		bitB	lr(4)
 		ifne
@@ -729,25 +734,25 @@ l_swDrop_collect:
 	ldaB	>flc(3)
 	bitB	>lc(3)
 	ifne
-		;SOUND($01)
+		SOUND($0A)
 		score10kx(2)
 		delay(500)
 		ldaA	>lc(3)
 		bitA	1b ; 2x
 		beq	swDrop_collect_dropDone
-		;SOUND($01)
+		SOUND($0A)
 		score10kx(2)
 		delay(300)
 		ldaA	>lc(3)
 		bitA	10b ; 3x
 		beq 	swDrop_collect_dropDone
-		;SOUND($01)
+		SOUND($0A)
 		score10kx(2)
 		delay(200)
 		ldaA	>lc(3)
 		bitA	100b ; 3x
 		beq 	swDrop_collect_dropDone
-		;SOUND($01)
+		SOUND($0A)
 		score10kx(2)
 		delay(200)
 swDrop_collect_dropDone:
@@ -796,6 +801,7 @@ lightRandomJoker_loop:
 
 swLeftOutlane:
 	score10kx(1)
+	SOUND($0A)
 	ldaA	lr(2) ; left special
 	bitA	lc(1)
 	ifne
@@ -807,6 +813,7 @@ swLeftOutlane:
 	done(1)
 swRightOutlane:
 	score10kx(1)
+	SOUND($0A)
 	ldaA	lr(3) ; right special
 	bitA	lc(1)
 	ifne
@@ -829,22 +836,7 @@ swLeftEject:
 	inc	p_Bonus
 	advBonus()
 
-	ldaA	lr(4) ; advance royal flush
-	bitA	>lc(4)
-	ifne	
-		ldaA	lr(4)
-swLeftEject_adv_loop:
-		bitA	>lc(3)
-		ifeq
-			oraA	>lc(3)
-			staA	lc(3)
-			lampOff(4,4)
-		else
-			aslA
-			bne	swLeftEject_adv_loop
-		endif
-		; end loop
-	endif
+	jsr	advanceFlush
 
 	ldaA	lr(2) ; ace of spades (left eject)
 	bitA	>lc(4)
@@ -905,12 +897,13 @@ swTopEject:
 	inc	p_Bonus
 	inc	p_Bonus
 	advBonus()
+	SOUND($03)
 
 	ldaA	11 ;  left inlane switch
 	cmpA	>lastSwitch
 	ifeq
 		score10kx(2)
-		;SOUND
+		SOUND($04)
 	endif
 
 	ldaA	lr(3) ; ace of clubs (top eject)
@@ -945,7 +938,7 @@ checkEjectsComplete:
 		bitA	>lc(2)
 		ifne
 			score10kx(5)
-			SOUND($16)
+			SOUND($14)
 			rts
 		endif
 
@@ -987,15 +980,41 @@ checkEjectsComplete_loop:
 		endFork()
 	endif
 	rts
-
+advanceFlush:
+	ldaA	lr(4) ; advance royal flush
+	bitA	>lc(4)
+	ifne	
+		SOUND($16)
+		ldaA	lr(4)
+swLeftEject_adv_loop:
+		bitA	>lc(3)
+		ifeq
+			oraA	>lc(3)
+			staA	lc(3)
+			lampOff(4,4)
+		else
+			aslA
+			bne	swLeftEject_adv_loop
+		endif
+		; end loop
+	endif
+	rts
 swLeftInlane:
 	score1000x(1)
-	;SOUND
+	SOUND($09)
 
 	; stop if all 4 lanes are flashing
 	ldaB	>flc(2)
 	andB	11110000b
 	cmpB	11110000b
+	ifeq
+		done(1)
+	endif
+
+	; stop if flush at max
+	ldaA	>lc(3)
+	andA	11111000b
+	cmpA	11111000b
 	ifeq
 		done(1)
 	endif
@@ -1046,7 +1065,7 @@ swJoker:
 	bitA	>lc(5)
 	ifeq	; not lit
 		score1000x(1)
-		SOUND($10)
+		SOUND($09)
 		done(1)
 	endif
 
@@ -1130,7 +1149,7 @@ swSpinner:
 		SOUND($05)
 	else
 		score100x(1)
-		;SOUND
+		SOUND($03)
 	endif
 	done(1)
 swLane1:
@@ -1199,14 +1218,15 @@ swLane:
 		staB	flc(2)
 
 
-		ldaA	>flc(3)
-		andA	11111000b
-		jsr	swDrop
-		ldaA	lr(4) ; drop 1
-		bitA	>flc(3)
-		ifeq
-			jsr	resetDrops
-		endif
+		jsr	advanceFlush
+		;ldaA	>flc(3)
+		;andA	11111000b
+		;jsr	swDrop
+		;ldaA	lr(4) ; drop 1
+		;bitA	>flc(3)
+		;ifeq
+		;	jsr	resetDrops
+		;endif
 	endif
 
 	; turn off flashing lanes
@@ -1234,9 +1254,11 @@ swPop:
 	ifne	; pop on
 		score1000x(1)
 		SOUND($06)
+		delay(100)
+		SOUND($0B)
 	else
 		score100x(1)
-		SOUND($09)
+		SOUND($03)
 	endif
 
 	done(1)
