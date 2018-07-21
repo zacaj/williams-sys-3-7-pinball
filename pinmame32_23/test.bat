@@ -1,2 +1,2 @@
 
-PinMAME32_md.exe -debug alpok_l6
+PinMAME32_md.exe -debug pharo_l2

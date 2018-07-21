@@ -4,70 +4,70 @@
 
 #include "util.asm"
 
-#include "alien_poker.asm"
+#include "pharaoh.asm"
 	
 main:		.org $7800
 
 test:
 	
 piaSetup:
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	displayStrobeC
+	;ldaA	00000000b	;select direction (3rd bit = 0)
+	clr 	displayStrobeC
 	ldaA 	00111111b	;set LED pins to outputs
 	staA 	displayStrobe
 	ldaA 	00000100b 	;select data (3rb bit = 1)
 	staA 	displayStrobeC
-	ldaA	00000000b
-	staA	displayStrobe
+	;ldaA	00000000b
+	clr	displayStrobe
 	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	displayBcdC
+	;ldaA	00000000b	;select direction (3rd bit = 0)
+	clr 	displayBcdC
 	ldaA 	11111111b	;set display BCD to output
 	staA 	displayBcd
 	ldaA 	00000100b 	;select data (3rb bit = 1)
 	staA 	displayBcdC
-	ldaA	00000000b
-	staA	displayBcd
+	;ldaA	00000000b
+	clr	displayBcd
 	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	lampColC
+	;ldaA	00000000b	;select direction (3rd bit = 0)
+	clr 	lampColC
 	ldaA 	11111111b	;set to output
 	staA 	lampCol
 	ldaA 	00000100b 	;select data (3rb bit = 1)
 	staA 	lampColC
-	ldaA	00000000b
-	staA	lampCol
+	;ldaA	00000000b
+	clr	lampCol
 	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	lampStrobeC
+	;ldaA	00000000b	;select direction (3rd bit = 0)
+	clr 	lampStrobeC
 	ldaA 	11111111b	;set to output
 	staA 	lampStrobe
 	ldaA 	00000100b 	;select data (3rb bit = 1)
 	staA 	lampStrobeC
-	ldaA	00000000b
-	staA	lampStrobe
+	;ldaA	00000000b
+	clr	lampStrobe
 	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	switchStrobeC
+	;ldaA	00000000b	;select direction (3rd bit = 0)
+	clr 	switchStrobeC
 	ldaA 	11111111b	;set to output
 	staA 	switchStrobe
 	ldaA 	00000100b 	;select data (3rb bit = 1)
 	staA 	switchStrobeC
-	ldaA	00000000b
-	staA	switchStrobe
+	;ldaA	00000000b
+	clr	switchStrobe
 	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	switchRowC
-	ldaA 	00000000b	;set to input
-	staA 	switchRow
+	;ldaA	00000000b	;select direction (3rd bit = 0)
+	clr 	switchRowC
+	;ldaA 	00000000b	;set to input
+	clr 	switchRow
 	ldaA 	00000100b 	;select data (3rb bit = 1)
 	staA 	switchRowC
-	ldaA	00000000b
-	staA	switchRow
+	;ldaA	00000000b
+	clr	switchRow
 	
-	ldaA	00000000b	;select direction (3rd bit = 0)
-	staA 	solenoidAC
-	staA	solenoidBC
+	;ldaA	00000000b	;select direction (3rd bit = 0)
+	clr 	solenoidAC
+	clr	solenoidBC
 	ldaA 	11111111b	;set to output
 	staA 	solenoidA
 	staA 	solenoidB
@@ -78,25 +78,28 @@ piaSetup:
 	
 
 resetRam:
-	ldX	RAM
+	ldX	eRAM
 	ldaA	0
 resetRamLoop:
 	staA	0, X
 	inX
 	cpX	RAMEnd + 1
 	bne	resetRamLoop
+
+	ldaA	$F0
+	ldX	cRAM
+resetCRamLoop:
+	staA	0,X	
+	inX
+	cpX	cRAM + $FF + 1
+	bne	resetCRamLoop
 	
 	
-	ldaA 	0
-	staA	temp
-	ldaA	$FF
-	staA	temp + 1
-	ldS	>temp
+	ldS	RAMEnd
 	
 ;
 
 	ldaA	00
-	staA	displayBcd1
 	
 	ldaA	attractStart >> 8
 	staA	attractX
@@ -120,7 +123,7 @@ resetRamLoop:
 	staA	scanCurSwitchRowLsb
 	
 ; fill solenoid status with off
-	ldaA	$F
+	ldaA	$FF
 	ldX	solenoid1
 lSolDefault:
 	staA	0, X
@@ -140,7 +143,7 @@ lClear8:
 	bne 	lClear8
 	
 ; empty settle
-	ldaA	$00
+	ldaA	$F0
 	ldX	settleRow1
 lSettleDefault:
 	staA	0, X
@@ -165,7 +168,7 @@ lEmptyQueue:
 	staA	queueTail + 1
 	
 ; test numbers
-	lampOn(6,8) ; game over
+	lampOn(4,1) ; game over
 
 	
 	jsr resetScores
@@ -199,7 +202,8 @@ decWaitTimers:
 				staA	tempQ
 				ldaA	waitLsb - waitLeft, X
 				staA	tempQ + 1
-				ldaB	waitReg - waitLeft, X
+				ldaB	waitB - waitLeft, X
+				ldaA	waitA - waitLeft, X
 				stX	forkX
 				ldX	>tempQ
 				jmp	0, X
@@ -208,16 +212,10 @@ decWaitTimers:
 afterFork:
 		cpX	waitLeftEnd
 		bne	decWaitTimers
-		
-		
-		dec	dropResetTimer
-		ifmi
-			inc	dropResetTimer
-		endif
-		tst	>bonusTimer
-		ifne
-			dec	bonusTimer
-		endif
+
+		; timers:
+
+		;
 		
 		ldaA	>state		; clear strobe reset bit
 		andA	11111011b
@@ -266,11 +264,11 @@ afterFork:
 	
 	bitB	01000000b ; B.7 = active in game over
 	ifeq 	 ; not active in game over
-		ldaB	>lc(8)	; gameover mask
-		bitB	lr(6)
+		ldaB	>lc(1)	; gameover mask
+		bitB	lr(4)
 		bne	skipEvent
-		ldaB	>lc(8) ; tilt bit
-		bitB	lr(5)
+		ldaB	>lc(1) ; tilt bit
+		bitB	lr(3)
 		bne	skipEvent
 	endif
 	
@@ -290,33 +288,25 @@ afterQueueEvent:
 	; update last switch
 	ldaA	> tempQ + 1
 	lsrA 	; got doubled earlier
+	incA
 	staA	lastSwitch
 
 	ldaA	10b ; no validate bit
 	bitA	>state
 	ifeq ; validate pf
 		; check if playfield invalid
-		ldaA	00001111b ; player up
-		bitA	>flc(8)
-		ifne ; any flashing -> pf invalid
-			comA	; turn off flashing
-			andA	>flc(8)
-			staA	flc(8)
+		tst	>pfInvalid
+		ifne 
+			clr	pfInvalid
 			
-			ldaA	lr(1) ; shoot again pf flashing
-			bitA	>flc(3)
-			ifne
-				; turn off ball save
-				flashOff(1,3)
-				ldaA	lr(7) ; shoot again backbox
-				bitA	>lc(8)
-				ifeq
-					lampOff(1,3) ; shoot again pf
-				endif
-			else
-				lampOff(1,3) ; shoot again
-				lampOff(7,8)
-			endif
+			lampOff(1,1) ; shoot again
+			lampOff(8,1)
+
+			ldaA	>flc(2) 
+			andA	11000000b ; outlanes
+			comA
+			andA	>lc(2)
+			staA	lc(2)
 		endif
 	else
 		; clear don't validate bit
@@ -324,7 +314,17 @@ afterQueueEvent:
 		andA	>state
 		staA	state
 	endif
-	
+
+	ldaA	>lc(1)
+	bitA	lr(4) ; gameover
+	ifeq
+		; flash current score after inactivity delay
+		ldaA	001b ; flash scores id
+		jsr	cancelThreads
+
+		forkSrC(blankCurPlayer, 500, 11000001b)
+	endif
+
 	ldaA	1000b
 	oraA	>state
 	staA	state
@@ -342,13 +342,13 @@ skipQueue:
 				
 doQuickScan:
 	;	jmp 	quickScanDone		
-	ldaB	>lc(8)	; gameover mask	
-	bitB	lr(6)
+	ldaB	>lc(1)	; gameover mask	
+	bitB	lr(4)
 	ifne
 		jmp 	quickScanDone
 	endif
-	ldaB	>lc(8) ; tilt bit
-	bitB	lr(5)
+	ldaB	>lc(1) ; tilt bit
+	bitB	lr(3)
 	ifne
 		jmp 	quickScanDone
 	endif
@@ -462,6 +462,42 @@ quickScanDone:
 	jmp		end
 	.dw 0
 	.dw 0
+
+blankCurPlayer:
+	jsr	blankTempPlayer
+	ldaA	> curPlayer + 1
+	bitA	1b
+	ifeq ; bit 0 clear -> player 1/3
+		ldX	displayBcd1 + 1 + RAM
+	else ; bit 0 set -> player 2/4
+		ldX	displayBcd1 + 9 + RAM
+	endif
+l_blankCurPlayer:
+	ldaB	0, X
+	bitA	10b
+	ifeq ; player 1/2 -> replace higher bits
+		oraB	$F0
+	else
+		oraB	$0F
+	endif
+	staB	0, X
+	
+	inX
+	bitA	1b
+	ifeq ; bit 0 clear -> player 1/3
+		cpX	displayBcd1 + 8 + RAM
+	else
+		cpX	displayBcd1 + 16 + RAM
+	endif
+	bne l_blankCurPlayer
+	
+	forkSrC(blankCurPlayer2, 100, 11000001b)
+	endFork()
+blankCurPlayer2:
+	jsr	refreshPlayerScores
+	forkSrC(blankCurPlayer, 500, 11000001b)
+	endFork()
+
 	.dw 0
 	.dw 0
 	.dw 0
@@ -473,9 +509,9 @@ interrupt:
 	bne	counterHandled
 	
 	; attract mode
-	ldaA	lr(6) ; gameover
-		bitA	> lc(8)
-		ifne
+	ldaA	lr(4) ; gameover
+	bitA	> lc(1)
+	ifne
 		ldX	>attractX
 		ldaA	0, X
 		staA	lc(2)
@@ -594,7 +630,9 @@ checkSettled:
 			ldaA	0, X ; A now how long the switch has left to settle
 			andA	00001111b ; need to remove upper F ( sets Z if A = 0)
 			decA
+			oraA	$F0
 			staA	0, X	; sets Z if now A = 0
+			cmpA	$F0
 			ifeq ; A=0 -> now settled, fire event
 settled:		
 				ldX	>curCol
@@ -641,9 +679,11 @@ notSettled: ; =0 -> was settled, so now it's not
 				aslA
 			endif
 			andA	1110b ; A now has 3 bit settle time * 2
+			oraA	$F0
 						
 			ldX	>tempX
-			staA	0, X		; start settling	
+			staA	0, X		; start settling
+			cmpA	$F0	
 			beq	settled		; quick out for 0 settle
 settledEnd:
 			
@@ -657,8 +697,6 @@ settledEnd:
 	
 ; update lamps
 updateLamps:
-	;jmp updateStrobe
-
 	ldX	>curCol
 	
 	ldaA	$FF	;lamp row is inverted
@@ -672,6 +710,11 @@ updateLamps:
 	ifeq
 		eorA	flashLampCol1, X
 		andA	lampCol1, X
+		bitB	01000000b
+		ifeq
+			eorA	fastFlashLampCol1, X
+			andA	lampCol1, X
+		endif
 	endif
 	comA	; inverted
 	
@@ -690,7 +733,10 @@ updateLamps:
 	cmpA	solenoid1 - cRAM, X
 	ifge 	; solenoid <=254, turn on
 		ifgt	; solenoid < 254, decrement
-			dec	solenoid1 - cRAM, X
+			ldaB	solenoid1 - cRAM, X
+			decB
+			oraB	$F0
+			staB	solenoid1 - cRAM, X	
 		endif
 		sec
 	else
@@ -701,7 +747,10 @@ updateLamps:
 	cmpA	solenoid9 - cRAM, X
 	ifge 	; solenoid <=254, turn on
 		ifgt	; solenoid < 254, decrement
-			dec	solenoid9 - cRAM, X
+			ldaB	solenoid9 - cRAM, X
+			decB
+			oraB	$F0
+			staB	solenoid9 - cRAM, X
 		endif
 		sec
 	else

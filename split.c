@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <errno.h>
-void write(FILE *in, FILE *out) {
-	char data[2048];
-	fread(data, 2048,1, in);
-	fwrite(data, 2048,1, out);
+void write(FILE *in, FILE *out, int amount) {
+	char data[amount];
+	fread(data, amount,1, in);
+	fwrite(data, amount,1, out);
 }
 
 int main() {
@@ -12,38 +12,31 @@ int main() {
 		fprintf(stderr, "could not open rom.764, errno %i", (errno));
 		return 3;
 	}
-	FILE *a = fopen("pinmame32_23/roms/alpok_l6/gamerom6.716", "wb");
-	FILE *aa = fopen("gamerom.716", "wb");
-	FILE *b = fopen("pinmame32_23/roms/alpok_l6/green1.716", "wb");
-	FILE *bb = fopen("white1.716", "wb");
-	FILE *c = fopen("pinmame32_23/roms/alpok_l6/green2.716", "wb");
-	FILE *cc = fopen("white2.716", "wb");
+	FILE *a = fopen("pinmame32_23/roms/pharo_l2/ic14.716", "wb");
+	FILE *aa = fopen("ic14.716", "wb");
+	FILE *b = fopen("pinmame32_23/roms/pharo_l2/ic20.716", "wb");
+	FILE *bb = fopen("ic20.716", "wb");
+	FILE *c = fopen("pinmame32_23/roms/pharo_l2/ic17.532", "wb");
+	FILE *cc = fopen("ic17.532", "wb");
 	fseek(in, 0x0000, SEEK_SET);
-	write(in, a);
+	write(in, a, 2048);
 	fseek(in, 0x0000, SEEK_SET);
-	write(in, aa);
+	write(in, aa, 2048);
+	
+	fseek(in, 0x800, SEEK_SET);
+	write(in, b, 2048);
+	fseek(in, 0x800, SEEK_SET);
+	write(in, bb, 2048);
 	
 	fseek(in, 0x1000, SEEK_SET);
-	write(in, b);
+	write(in, c, 2048*2);
 	fseek(in, 0x1000, SEEK_SET);
-	write(in, bb);
-	
-	fseek(in, 0x1800, SEEK_SET);
-	write(in, c);
-	fseek(in, 0x1800, SEEK_SET);
-	write(in, cc);
+	write(in, cc, 2048*2);
 	
 	fseek(in, 0x0000, SEEK_END);
 	if(ftell(in)!=8192) {
 		fprintf(stderr, "file overflow! %i", ftell(in));
 		return 1;
-	}
-	fseek(in, 0x0800, SEEK_SET);
-	while(ftell(in)<0x1000) {
-		if(fgetc(in) != 0) {
-			fprintf(stderr, "overflow at %x!", ftell(in) + 0x6000);
-			return 2;
-		}
 	}
 	fclose(a);
 	fclose(b);

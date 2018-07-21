@@ -17,8 +17,9 @@ solenoidB:		.equ $2202
 solenoidBC:		.equ $2203
 
 RAM:			.equ $0000
-cRAM:			.equ $0100
-RAMEnd:			.equ $01FF
+eRAM:			.equ $1000
+cRAM:			.equ $1100
+RAMEnd:			.equ $13FF
 temp:			.equ RAM + $00 ; 01
 counter:		.equ RAM + $02
 counter2:		.equ RAM + $03
@@ -45,6 +46,10 @@ scanStrobe:		.equ RAM + $31
 scanX:			.equ RAM + $32 ; +
 scanTempX:		.equ RAM + $34 ; +
 irqSwitchRow:		.equ RAM + $36
+lastSwitch:		.equ RAM + $37
+pfInvalid:		.equ RAM + $38
+playerCount:		.equ RAM + $39
+
 curCol:			.equ RAM + $50 ; +
 tempX:			.equ RAM + $52 ; +
 queueHead:		.equ RAM + $54 ; +
@@ -53,23 +58,24 @@ tempQ:			.equ RAM + $58 ; +
 queue:			.equ RAM + $60	; opened | switch? | number#6
 queueEnd:		.equ RAM + $6D
 ;
-displayBcd1:	.equ RAM + $70
-displayBcd16:	.equ RAM + $7F
+displayBcd1:		.equ RAM + $70
+displayBcd16:		.equ RAM + $7F
 ballCount:		.equ displayBcd1 + 8
-waitLeft: 		.equ RAM + $80 ; dec every 8ms
+waitLeft: 		.equ RAM + $80 ; dec every 8ms, 0 = inactive
 waitLeftEnd:		.equ RAM + $86
 waitMsb:		.equ RAM + $88 ; -> 8F
 waitLsb:		.equ RAM + $90 ; -> 97
-waitReg:		.equ RAM + $98 ; -> 9F
+waitA:			.equ RAM + $98 ; -> 9F
 flashLampCol1:		.equ RAM + $A0
 flashLampCol8:		.equ RAM + $A7
 #DEFINE flc(x) 		flashLampCol1 + (x - 1)
-lastSwitch:		.equ RAM + $A8
-dropResetTimer:		.equ RAM + $A9 ; max 127
-bonusTimer:		.equ RAM + $AA ; counts down from 127 during bonus
-bonusAnim:		.equ RAM + $AB ; stores data for bonus anim or 0 if no animation in action
-; B+: game
+fastFlashLampCol1:  	.equ RAM + $A8 ; -> D7
+fastFlashLampCol8:  	.equ RAM + $AF
+#DEFINE fflc(x) 	fastFlashLampCol1 + (x - 1)
 
+waitB:			.equ RAM + $B0 ; -> B7
+waitC:			.equ RAM + $B8 ; -> BF  ; flags: kill on ball end | kill on game end | X X | thread ID (3)
+waitX:			.equ RAM + $C0 ; -> CF
 
 
 
@@ -88,9 +94,11 @@ pC_1m:			.equ pB_10 + 1
 pC_10:			.equ pC_1m + 5
 pD_1m:			.equ pC_10 + 1
 pD_10:			.equ pD_1m + 5 
+pT_1m:			.equ pD_10 + 1	; temp space for effects
+pT_10:			.equ pT_1m + 5
 ; 
-displayCol:		.equ cRAM + $6A
-state:			.equ cRAM + $6B	; loop processing performed | strobe reset | don't validate | quick scanning switches
+displayCol:		.equ cRAM + $70
+state:			.equ cRAM + $71	; loop processing performed | strobe reset | don't validate | quick scanning switches
 
 instant:		.equ 4
 debounce:		.equ 1
