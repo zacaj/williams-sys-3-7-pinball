@@ -237,7 +237,7 @@ decScore_rolled:
 ; t X
 setXToCurPlayer10:
 	pshA
-	ldaA	curPlayer + 1
+	ldaA	>curPlayer + 1
 	cmpA	0
 	bne	_addScore10N_p2
 	ldX	pA_10

@@ -109,6 +109,7 @@ _addScore100kN:
 #DEFINE score10x(x) ldaA x\ jsr _addScore10N
 #DEFINE score100x(x) ldaA x\ jsr _addScore100N
 #DEFINE score1000x(x) ldaA x\ jsr _addScore1000N
+#DEFINE score1kx(x) ldaA x\ jsr _addScore1000N
 #DEFINE score10kx(x) ldaA x\ jsr _addScore10kN
 
 #DEFINE advBonus()	jsr advanceBonus
@@ -198,7 +199,7 @@ lBonusLights_10:
 lBonusLights_1:
 	tstA
 	beq	bonusLights_done
-
+	decA
 	seC
 	rol	lc(7)
 	bcs	bonusLights_done
@@ -232,6 +233,7 @@ startBall:
 lClearLights:
 	clr	0, X
 	clr	flashLampCol1 - lampCol1, X
+	clr	fastFlashLampCol1 - lampCol1, X
 	inX
 	cpX	lc(8) + 1
 	bne	lClearLights
@@ -313,7 +315,7 @@ lInitPlayers:
 	ldaA	1
 	staA	p_Pharaoh, X
 	staA	p_nextHurryUp, X
-	ldaA	00100b; 1 magna save
+	ldaA	001001b; 1 magna save
 	staA	p_lc2, X
 	inX
 	cpX	4
@@ -715,10 +717,13 @@ swRightMagnet_delay:
 	endif
 	done(0)
 swLeftInlane:
+	score10kx(1)
 	done(1)
 swRightInlane:
+	score10kx(1)
 	done(1)
 swLeftOutlane:
+	score1kx(5)
 	ldaA	>lc(2) ; left ?
 	bitA	lr(7)
 	ifne ; left outlane lit
@@ -734,6 +739,7 @@ swLeftOutlane:
 	endif
 	done(1)
 swRightOutlane:
+	score1kx(5)
 	ldaA	>lc(2) ; right ?
 	bitA	lr(8)
 	ifne ; right outlane lit
@@ -814,9 +820,11 @@ swUpperDrop:
 
 	; check if they match
 	andB	11100000b
+	andB	>lc(6)
 	ifeq
 		ldaB	>flc(4)
 		andB	01110000b
+		andB	>lc(4)
 		ifeq ; none flashing
 			;SOUND
 			jsr	incPharoah
@@ -851,8 +859,22 @@ swUpperDrop:
 			fireSolenoid(UR_DROP)
 			delay(150)
 			clr	upperDrops
+			ldaA	>lc(4)
+			oraA	01110000b
+			staA	lc(4)
+			ldaA	>lc(6)
+			oraA	11100000b
+			staA	lc(6)
+			ldaA	>flc(4)
+			andA	~01110000b
+			staA	flc(4)
+			ldaA	>flc(6)
+			andA	~11100000b
+			staA	flc(6)
 		endif
 	endif
+
+	score1kx(3)
 
 	done(1)
 incPharoah:
@@ -865,7 +887,8 @@ incPharoah:
 	inc	p_Pharaoh, X
 	ldaA	7
 	cmpA	p_Pharaoh, X
-	ifgt	
+	ifgt
+	else	
 		staA	p_Pharaoh, X
 	endif
 
@@ -895,7 +918,7 @@ pharaohLights:
 	ldX	>curPlayer
 	ldaA	p_Pharaoh, X
 	cmpA	4
-	ifgt
+	ifgt ; AOH 
 		ldaB	11110000b ; PHAR
 		oraB	>lc(3)
 		staB	lc(3)
@@ -923,6 +946,7 @@ l_pharaohLights_PHAR:
 		decA
 		bne	l_pharaohLights_PHAR
 
+		andB	11110000b
 		oraB	>lc(3)
 		staB	lc(3)
 	endif
@@ -953,6 +977,11 @@ swLowerDrop:
 	endif
 
 	tAB
+
+	score1kx(3)
+
+	tBA
+
 	oraB	>lowerDrops
 	staB	lowerDrops
 
@@ -1098,6 +1127,8 @@ swLowerLock:
 	jsr	swLock
 	done(1)
 swLock:
+	score1kx(7)
+
 	ldaB	>lc(3)
 	andB	1100b ; bank lights
 	cmpB	1100b
@@ -1285,6 +1316,8 @@ awardHurryUp:
 	rts
 
 swUpperX:
+	score10kx(1)
+	score1kx(5)
 	lampOn(4,4) ; upper x
 	ldaA	>lc(4)
 	bitA	lr(8)
@@ -1295,6 +1328,8 @@ swUpperX:
 	endif
 	done(1)
 swLowerX:
+	score10kx(1)
+	score1kx(5)
 	lampOn(8,4) ; lower x
 	ldaA	>lc(8)
 	bitA	lr(8)
@@ -1319,6 +1354,7 @@ incBonusX:
 	rts
 	
 swSlaveEject:
+	score10kx(2)
 	ldaA	>flc(6) ; slave GI
 	bitA	lr(4)
 	ifne	; hurry up
@@ -1331,6 +1367,8 @@ swSlaveEject:
 	fireSolenoid(SLAVE_KICKER)
 	done(1)
 swHiddenEject:
+	score10kx(2)
+
 	ldaA	>flc(3) ; collect bonus
 	bitA	lr(2)
 	ifne	; hurry up

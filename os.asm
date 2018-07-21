@@ -322,7 +322,7 @@ afterQueueEvent:
 		ldaA	001b ; flash scores id
 		jsr	cancelThreads
 
-		forkSrC(blankCurPlayer, 500, 11000001b)
+		forkSrC(blankCurPlayer, 2000, 11000001b)
 	endif
 
 	ldaA	1000b
@@ -495,7 +495,7 @@ l_blankCurPlayer:
 	endFork()
 blankCurPlayer2:
 	jsr	refreshPlayerScores
-	forkSrC(blankCurPlayer, 500, 11000001b)
+	forkSrC(blankCurPlayer, 1200, 11000001b)
 	endFork()
 
 	.dw 0
