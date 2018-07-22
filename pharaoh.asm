@@ -374,7 +374,7 @@ swOuthole_flashX_loop:
 		oraA	>flc(8)
 		staA	flc(8)
 	else
-		asrA
+		lsrA
 		bne	swOuthole_flashX_loop
 	endif
 
@@ -496,7 +496,7 @@ l_endBall_wait:
 	tst	0, X
 	ifne ; timer running
 		bitB	waitC - waitLeft, X
-		ifeq ; kill on ball end
+		ifne ; kill on ball end
 			clr	0, X
 		else
 			delay(8)
@@ -528,7 +528,7 @@ l_endBall_wait:
 	ifeq ; shoot again not lit
 		; go to next player
 		inc	curPlayer + 1
-		ldaA	playerCount
+		ldaA	>playerCount
 		cmpA 	>curPlayer + 1
 		ifeq ; last player
 			clr	curPlayer + 1
@@ -548,7 +548,7 @@ l_endGame_wait:
 				tst	0, X
 				ifne ; timer running
 					bitB	waitC - waitLeft, X
-					ifeq ; kill on game  end
+					ifne ; kill on game  end
 						clr	0, X
 					else
 						delay(8)
@@ -987,16 +987,22 @@ swLowerDrop:
 
 	ldaB	>flc(3)
 	bitA	11100000b ; right drops
-	ifne ; right drops
+	ifeq ; right drops
+		jmp	swLower_leftDrops
+	endif
+
+	bitB	lr(4) ; right drop
+	ifne ; bank already flashing
+	else ; bank not flashing
+		ldaB	>lc(3)
 		bitB	lr(4) ; right drop
-		ifne ; bank already flashing
-		else ; bank not flashing
-			ldaB	>lc(3)
-			bitB	lr(4) ; right drop
-			ifeq ; lamp not on
-				flashLamp(4,3)
-				lampOn(4,3)
-				delay(2000)
+		ifeq ; lamp not on
+			flashLamp(4,3)
+			lampOn(4,3)
+			delay(2000)
+			ldaB	>flc(3)
+			bitB	lr(4)
+			ifne ; still flashing
 				flashLampFast(4,3)
 				delay(1000)
 
@@ -1015,32 +1021,37 @@ swLowerDrop:
 				endif
 			endif
 		endif
-		
-		; check if all of bank is down
-		ldaB	>lowerDrops
-		andB	1110000b ; right drops
-		cmpB	1110000b
-		ifeq ; all of bank is down in time
-			flashOff(4,3)
-			flashFastOff(4,3)
-			fireSolenoid(BELL)
-			delay(100)
-			fireSolenoid(LR_DROP)
-			delay(150)
-			ldaB	~11100000b
-			andB	>lowerDrops
-			staB	lowerDrops
-		endif
-	else
+	endif
+	
+	; check if all of bank is down
+	ldaB	>lowerDrops
+	andB	1110000b ; right drops
+	cmpB	1110000b
+	ifeq ; all of bank is down in time
+		flashOff(4,3)
+		flashFastOff(4,3)
+		fireSolenoid(BELL)
+		delay(100)
+		fireSolenoid(LR_DROP)
+		delay(150)
+		ldaB	~11100000b
+		andB	>lowerDrops
+		staB	lowerDrops
+	endif
+	jmp	swLower_after
+swLower_leftDrops:
+	bitB	lr(3) ; left drop
+	ifne ; bank already flashing
+	else ; bank not flashing
+		ldaB	>lc(3)
 		bitB	lr(3) ; left drop
-		ifne ; bank already flashing
-		else ; bank not flashing
-			ldaB	>lc(3)
-			bitB	lr(3) ; left drop
-			ifeq ; lamp not on
-				flashLamp(3,3)
-				lampOn(3,3)
-				delay(2000)
+		ifeq ; lamp not on
+			flashLamp(3,3)
+			lampOn(3,3)
+			delay(2000)
+			ldaB	>flc(3)
+			bitB	lr(3)
+			ifne ; still flashing
 				flashLampFast(3,3)
 				delay(1000)
 
@@ -1059,23 +1070,24 @@ swLowerDrop:
 				endif
 			endif
 		endif
-		
-		; check if all of bank is down
-		ldaB	>lowerDrops
-		andB	111b ; left drops
-		cmpB	111b
-		ifeq ; all of bank is down
-			flashOff(3,3)
-			flashFastOff(3,3)
-			fireSolenoid(BELL)
-			delay(100)
-			fireSolenoid(LL_DROP)
-			delay(150)
-			ldaB	~111b
-			andB	>lowerDrops
-			staB	lowerDrops
-		endif
 	endif
+	
+	; check if all of bank is down
+	ldaB	>lowerDrops
+	andB	111b ; left drops
+	cmpB	111b
+	ifeq ; all of bank is down
+		flashOff(3,3)
+		flashFastOff(3,3)
+		fireSolenoid(BELL)
+		delay(100)
+		fireSolenoid(LL_DROP)
+		delay(150)
+		ldaB	~111b
+		andB	>lowerDrops
+		staB	lowerDrops
+	endif
+swLower_after:
 
 	tst	>multiball
 	ifeq
