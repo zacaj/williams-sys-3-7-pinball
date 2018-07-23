@@ -329,7 +329,7 @@ l_copyTempScoreToPlayer:
 		staB	0, X
 	else
 		ldaB	0, X
-		andB	$0F
+		andB	$F0
 		ifeq ; bit 0 clear -> player 1/3
 			oraB	pT_1m - (displayBcd1 + 1 + eRAM), X
 		else

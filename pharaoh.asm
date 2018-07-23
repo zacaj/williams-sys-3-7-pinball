@@ -1251,8 +1251,6 @@ l_swLock_calcValue:
 	decB
 	bne	l_swLock_calcValue
 
-	jsr 	blankTempScoreZeroes
-
 	jsr	syncHurryUpValue
 
 	forkSrC(hurryUp, 2000, 11000010b)
@@ -1261,6 +1259,8 @@ l_swLock_calcValue:
 syncHurryUpValue:
 	ldaA	001b ; flash scores id
 	jsr	cancelThreads
+
+	jsr 	blankTempScoreZeroes
 
 	; display value
 	ldaA	3
@@ -1278,6 +1278,20 @@ l_hurryUp_done:
 	cpX	pT_10 + 1
 	ifeq
 		jsr	blankTempPlayer
+		jsr	refreshPlayerScores
+		flashOff(4,6) ; slaves
+		flashOff(5,6) ; tomb
+		lampOff(2,3) ; collect bonus
+		flashOff(2,5) ; locks
+		flashOff(3,5)
+
+		ldaB	>lc(3)
+		andB	1100b ; bank lights
+		cmpB	1100b
+		ifne ; locks not lit
+			lampOff(2,5)
+			lampOff(3,5)
+		endif
 		endFork()
 	endif
 
