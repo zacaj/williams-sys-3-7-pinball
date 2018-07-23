@@ -173,6 +173,9 @@ lEmptyQueue:
 	
 	jsr resetScores
 	
+	ldaA	pA_1m - dispData + 1
+	staA	dispOffsets + 0
+
 ; setup complete
 	clI		; enable timer interrupt
 	
@@ -279,7 +282,6 @@ afterFork:
 	jmp	0, X
 	; everything trashed
 afterQueueEvent:
-	jsr refreshPlayerScores
 	tst	>bonusAnim
 	ifeq
 		jsr 	bonusLights
@@ -322,7 +324,7 @@ afterQueueEvent:
 		ldaA	001b ; flash scores id
 		jsr	cancelThreads
 
-		forkSrC(blankCurPlayer, 2000, 11000001b)
+		forkSrC(blankCurPlayer, 1500, 11000001b)
 	endif
 
 	ldaA	1000b
@@ -330,7 +332,6 @@ afterQueueEvent:
 	staA	state
 	
 skipEvent:
-	jsr refreshPlayerScores
 	tst	>forkX
 	ifeq	; don't process queue if still finishing timers
 	else
@@ -464,37 +465,14 @@ quickScanDone:
 	.dw 0
 
 blankCurPlayer:
-	jsr	blankTempPlayer
-	ldaA	> curPlayer + 1
-	bitA	1b
-	ifeq ; bit 0 clear -> player 1/3
-		ldX	displayBcd1 + 1 + RAM
-	else ; bit 0 set -> player 2/4
-		ldX	displayBcd1 + 9 + RAM
-	endif
-l_blankCurPlayer:
-	ldaB	0, X
-	bitA	10b
-	ifeq ; player 1/2 -> replace higher bits
-		oraB	$F0
-	else
-		oraB	$0F
-	endif
-	staB	0, X
-	
-	inX
-	bitA	1b
-	ifeq ; bit 0 clear -> player 1/3
-		cpX	displayBcd1 + 8 + RAM
-	else
-		cpX	displayBcd1 + 16 + RAM
-	endif
-	bne l_blankCurPlayer
+	ldX	>curPlayer
+	clr	dispOffsets, X
 	
 	forkSrC(blankCurPlayer2, 100, 11000001b)
 	endFork()
 blankCurPlayer2:
-	jsr	refreshPlayerScores
+	jsr	fixDispOffsets
+
 	forkSrC(blankCurPlayer, 1200, 11000001b)
 	endFork()
 
@@ -539,50 +517,65 @@ interrupt:
 	
 	ldaA	0
 	staA	counter2
-	ldaA	01110111b
-	cmpA	>displayBcd1 + 14
-	beq	on
-	
-	ldaA	$F0
-	;staA	lampRow1
-	ldaA	01110111b
-	;staA	displayBcd1	 + 14
-	bra	counterHandled
-on:
-	ldaA	$0F
-	;staA	lampRow1
-	ldaA	00110011b
-	;staA	displayBcd1	 + 14
-
 counterHandled:
 	
 ; update display 
-	
-	; for debugging
-	;ldaA	>$C0
-	;lslA
-	;lslA
-	;lslA
-	;lslA
-	;staA	displayBcd1 + 15
-	;ldaA	>$87
-	;lslA
-	;lslA
-	;lslA
-	;lslA
-	;staA	displayBcd1 + 6
-	;
-	ldX	>curCol
 	ldaA	>displayCol
 	andA	1111b
 	ldaB 	$FF
 	staB	displayBcd
 	staA	displayStrobe
-	bitA	00001000b
-	ifeq
-		ldaB	displayBcd1, X
-	else
-		ldaB	displayBcd1 + 8, X
+
+	ldaB	>curCol + 1 
+	bitB	111b
+	ifeq ; X = 0	
+		ldX	>curCol
+		bitA	00001000b
+		ifeq
+			ldaB	0
+		else
+			ldaB	>ballCount
+		endif
+	else	; X = [1,7]
+		ldaB	dispData >> 8
+		staB	temp + 0
+
+		bitA	00001000b
+		ifeq
+			ldaA	>dispOffsets + 0
+		else
+			ldaA	>dispOffsets + 1
+		endif
+
+		ifeq	; 0 -> blank display
+			ldaB	$FF
+		else
+			addA	>curCol + 1
+			staA	temp + 1
+			ldX	>temp
+			ldaB	(dispData&$FF)-1-1, X
+			lslB
+			lslB
+			lslB
+			lslB
+			oraB	$0F
+		endif
+
+		ldaA	>displayCol
+		bitA	00001000b
+		ifeq
+			ldaA	>dispOffsets + 2
+		else
+			ldaA	>dispOffsets + 3
+		endif
+
+		ifeq ; 0 -> blank display
+		else
+			addA	>curCol + 1
+			staA	temp + 1
+			ldX	>temp
+			andB	(dispData&$FF)-1-1, X
+		endif
 	endif
 	staB	displayBcd
 	

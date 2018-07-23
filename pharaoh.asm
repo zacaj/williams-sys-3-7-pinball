@@ -304,6 +304,13 @@ startGame:
 
 	ldaB	0
 	staB	curPlayer + 1
+
+	ldaA	pA_1m - dispData + 1
+	staA	dispOffsets + 0
+
+	clr	dispOffsets + 1
+	clr	dispOffsets + 2
+	clr	dispOffsets + 3
 	
 	; reset backglass lights
 	clr	lc(1)
@@ -351,17 +358,16 @@ swStart:
 		andA	$F0
 		cmpA	$10
 		ifeq ; add player if ball 1
-			ldaA	4
-			cmpA	>playerCount
+			ldaA	>playerCount
+			cmpA	4
 			ifne	; if not on P4 already, add player
 				inc	playerCount
+				jsr	fixDispOffsets
 			endif
 		else ; restart game
 			jsr startGame
 		endif		
 	endif
-	
-	jsr refreshPlayerScores
 	
 	done(0)
 
@@ -1184,7 +1190,7 @@ startHurryUp:
 
 	; 0 temp player if no hurry up in progress
 	ldaB	$F0
-	cmpB	>pT_10
+	cmpB	>pT_1
 	ifne
 		staB	pT_1m + 0
 		staB	pT_1m + 1
@@ -1192,6 +1198,7 @@ startHurryUp:
 		staB	pT_1m + 3
 		staB	pT_1m + 4
 		staB	pT_1m + 5
+		staB	pT_1m + 6
 
 		; flash proper hurry up goal
 		ldX	>curPlayer
@@ -1245,7 +1252,7 @@ startHurryUp:
 
 	; add initial score
 l_swLock_calcValue:
-	ldX	pT_10 - 2 ; thousands
+	ldX	pT_1 - 3 ; thousands
 	ldaA	5
 	jsr	_addScoreI
 	decB
@@ -1260,38 +1267,52 @@ syncHurryUpValue:
 	ldaA	001b ; flash scores id
 	jsr	cancelThreads
 
-	jsr 	blankTempScoreZeroes
+	ldX	pT_1m
+	jsr 	blankLeadingScoreZeroes
 
 	; display value
 	ldaA	3
 	cmpA	>curPlayer + 1
 	ifeq ; p4
-		ldaA	2
+		ldaA	pT_1m - dispData + 1
+		staA	dispOffsets + 2
+	else
+		ldaA	pT_1m - dispData + 1
+		staA	dispOffsets + 3
 	endif
-	jsr 	copyTempScoreToPlayer
 	rts
+cleanUpHurryUp:
+	jsr	blankTempPlayer
+
+	ldaA	010b ; hurry up id
+	jsr	cancelThreads
+
+	flashOff(4,6) ; slaves
+	flashOff(5,6) ; tomb
+	lampOff(2,3) ; collect bonus
+	flashOff(2,5) ; locks
+	flashOff(3,5)
+
+	ldaB	>lc(3)
+	andB	1100b ; bank lights
+	cmpB	1100b
+	ifne ; locks not lit
+		lampOff(2,5)
+		lampOff(3,5)
+	endif	
+	
+	jsr	fixDispOffsets
+
+	rts
+
 hurryUp:
 	; check if value has reached 0
 	ldX	pT_1m - 1
 l_hurryUp_done:
 	inX
-	cpX	pT_10 + 1
+	cpX	pT_1 + 1
 	ifeq
-		jsr	blankTempPlayer
-		jsr	refreshPlayerScores
-		flashOff(4,6) ; slaves
-		flashOff(5,6) ; tomb
-		lampOff(2,3) ; collect bonus
-		flashOff(2,5) ; locks
-		flashOff(3,5)
-
-		ldaB	>lc(3)
-		andB	1100b ; bank lights
-		cmpB	1100b
-		ifne ; locks not lit
-			lampOff(2,5)
-			lampOff(3,5)
-		endif
+		jsr	cleanUpHurryUp
 		endFork()
 	endif
 
@@ -1304,7 +1325,7 @@ l_hurryUp_done:
 
 	; if not, subtract 5
 	ldaB	5
-	ldX	pT_10 - 2
+	ldX	pT_1 - 2
 	jsr	_decScoreI
 
 	jsr	syncHurryUpValue
@@ -1314,30 +1335,27 @@ l_hurryUp_done:
 
 	endFork()
 awardHurryUp:
-	ldaA	>pT_10
+	ldaA	>pT_1 - 1
 	andA	$0F
 	jsr	_addScore10N
 	delay(150)
-	ldaA	>pT_10 - 1
+	ldaA	>pT_1 - 2
 	andA	$0F
 	jsr	_addScore100N
 	delay(150)
-	ldaA	>pT_10 - 2
+	ldaA	>pT_1 - 3
 	andA	$0F
 	jsr	_addScore1000N
 	delay(150)
-	ldaA	>pT_10 - 3
+	ldaA	>pT_1 - 4
 	andA	$0F
 	jsr	_addScore10kN
 	delay(150)
-	ldaA	>pT_10 - 4
+	ldaA	>pT_1 - 5
 	andA	$0F
 	jsr	_addScore100kN
 
-	ldaA	010b ; hurry up id
-	jsr	cancelThreads
-
-	jsr	blankTempPlayer
+	jsr	cleanUpHurryUp
 
 	rts
 

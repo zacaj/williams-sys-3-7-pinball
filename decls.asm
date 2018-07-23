@@ -57,10 +57,10 @@ queueTail:		.equ RAM + $56 ; +
 tempQ:			.equ RAM + $58 ; +
 queue:			.equ RAM + $60	; opened | switch? | number#6
 queueEnd:		.equ RAM + $6D
+ballCount:		.equ RAM + $70
 ;
-displayBcd1:		.equ RAM + $70
-displayBcd16:		.equ RAM + $7F
-ballCount:		.equ displayBcd1 + 8
+; FREE
+; 
 waitLeft: 		.equ RAM + $80 ; dec every 8ms, 0 = inactive
 waitLeftEnd:		.equ RAM + $86
 waitMsb:		.equ RAM + $88 ; -> 8F
@@ -75,7 +75,8 @@ fastFlashLampCol8:  	.equ RAM + $AF
 
 waitB:			.equ RAM + $B0 ; -> B7
 waitC:			.equ RAM + $B8 ; -> BF  ; flags: kill on ball end | kill on game end | X X | thread ID (3)
-waitX:			.equ RAM + $C0 ; -> CF
+dispOffsets:		.equ RAM + $C0 ; + 3 offset from dispData for each of the 4 displays, + 1 (set to 0 for blank)
+waitX			.equ RAM + $C4 ; +
 
 
 
@@ -86,16 +87,18 @@ solenoid8:		.equ solenoid1 + 7	; otherwise (<E), decremented every 8ms till reac
 solenoid9:		.equ solenoid1 + 8	; F = solenoid off, otherwise on
 solenoid16:		.equ solenoid1 + 15 ; set to pulse time / 8ms to fire solenoid (5-7 reccomended)
 #DEFINE s(n) 		(0 + n)
-pA_1m:			.equ cRAM + $50	; note reverse order to match displays
-pA_10:			.equ pA_1m + 5
-pB_1m:			.equ pA_10 + 1
-pB_10:			.equ pB_1m + 5
-pC_1m:			.equ pB_10 + 1
-pC_10:			.equ pC_1m + 5
-pD_1m:			.equ pC_10 + 1
-pD_10:			.equ pD_1m + 5 
-pT_1m:			.equ pD_10 + 1	; temp space for effects
-pT_10:			.equ pT_1m + 5
+dispData:		.equ cRAM + $50	; note reverse order to match displays
+pA_1m:			.equ dispData + 0
+pA_1:			.equ pA_1m + 6
+pB_1m:			.equ pA_1 + 1
+pB_1:			.equ pB_1m + 6
+pC_1m:			.equ pB_1 + 1
+pC_1:			.equ pC_1m + 6
+pD_1m:			.equ pC_1 + 1
+pD_1:			.equ pD_1m + 6 
+pT_1m:			.equ pD_1 + 1	; temp space for effects
+pT_1:			.equ pT_1m + 6
+dispDataEnd:		.equ pT_1 + 1
 ; 
 displayCol:		.equ cRAM + $70
 state:			.equ cRAM + $71	; loop processing performed | strobe reset | don't validate | quick scanning switches

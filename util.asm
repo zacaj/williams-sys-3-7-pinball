@@ -8,163 +8,18 @@ utils:	.org $7800 + $500
 #DEFCONT		\ staA state
 #DEFCONT	\#ENDIF
 #DEFCONT	\ jmp afterQueueEvent
-
-; copy players' scores to display 
-copyScores13:
-	ldX	displayBcd1 + 1 + eRAM ; start at strobe 2
-	ldaB	$FF	; blank(F) until a number >0 is found then 0
-copy13Loop:
-	ldaA	(pA_1m-eRAM) - (displayBcd1+1), X
-	andA	$0F
-	cmpA	$00 
-	ifeq ; if pA score = 0?
-		cpX	(displayBcd1+1+eRAM) + 5 ; at strobe 7
-		ifeq
-			; change B from F (blank) to 0 (0)
-			andB	00001111b 
-			ldaA	$0F
-		else
-			tBA	; replace 0 with blank/0
-		endif
-	else
-		aslA
-		aslA
-		aslA
-		aslA
-		andB	00001111b ; mark upper half of B as 0 since number found
-		oraA	00001111b
-	endif
-	andA	pC_1m-eRAM - (displayBcd1+1), X
-	
-	;andA	$F0
-	bitA	00001111b
-	ifeq ; pC is 0
-		bitB	1111b
-		ifne
-			cpX	(displayBcd1+1+eRAM) + 5
-			ifeq
-				andB	11110000b
-			else
-				oraA	$F
-			endif
-		endif
-	else
-		andB	11110000b
-	endif
-	staA	0, X
-	
-	inX
-	cpX	displayBcd1+eRAM + 8
-	bne 	copy13Loop
-	
-	rts
-
-copyScores24:
-	ldX	displayBcd1 + 9 + eRAM
-	ldaB	$FF	; blank(F) until a number >0 is found then 0
-copy24Loop:
-	ldaA	pB_1m-eRAM - (displayBcd1 + 9), X
-	andA	$0F
-	cmpA	$00 ; is pA score 0?
-	ifeq ; if pA score = 0?
-		cpX	displayBcd1 + 9 + 5 + eRAM
-		ifeq
-			andB	00001111b 
-			ldaA	$0F
-		else
-			tBA	; replace 0 with blank/0
-		endif
-	else
-		aslA
-		aslA
-		aslA
-		aslA
-		andB	00001111b ; mark upper half of B as 0 since number found
-		oraA	00001111b
-	endif
-	andA	pD_1m-eRAM - (displayBcd1 + 9), X
-	bitA	00001111b
-	ifeq ; pC is 0
-		bitB	1111b
-		ifne
-			cpX	displayBcd1 + 9 + 5 + eRAM
-			ifeq
-				andB	11110000b
-			else
-				oraA	$F
-			endif
-		endif
-	else
-		andB	11110000b
-	endif
-	staA  0, X 
-	
-	inX
-	cpX	displayBcd1 + 16 + eRAM
-	bne copy24Loop	
-	
-	rts
-	
-blankNonPlayerScores:
-	ldaB	>lc(1) ; gameover
-	bitB	lr(4)
-	ifne
-		rts
-	endif
-	
-	ldaB	>playerCount ; 1 can play
-	cmpB	1
-	beq	blankP2
-	cmpB	2
-	beq	blankP3
-	cmpB	3
-	beq	blankP4
-	cmpB	4
-	beq	blankDone
-	bra	blankP1
-blankP1:
-	ldaA	$F0
-	oraA	>displayBcd1 + 6
-	staA	displayBcd1 + 6
-	ldaA	$F0
-	oraA	>displayBcd1 + 7
-	staA	displayBcd1 + 7
-blankP2:
-	ldaA	$F0
-	oraA	>displayBcd1 + 15 - 1
-	staA	displayBcd1 + 15 - 1
-	ldaA	$F0
-	oraA	>displayBcd1 + 16 - 1
-	staA	displayBcd1 + 16 - 1
-blankP3:
-	ldaA	$0F
-	oraA	>displayBcd1 + 6
-	staA	displayBcd1 + 6
-	ldaA	$0F
-	oraA	>displayBcd1 + 7
-	staA	displayBcd1 + 7
-blankP4:
-	ldaA	$0F
-	oraA	>displayBcd1 + 15 - 1
-	staA	displayBcd1 + 15 - 1
-	ldaA	$0F
-	oraA	>displayBcd1 + 16 - 1
-	staA	displayBcd1 + 16 - 1
-blankDone:
-	rts
-	
-refreshPlayerScores:
-	jsr copyScores13
-	jsr copyScores24
-	
-	jmp blankNonPlayerScores
-	
 	
 ; add score instantly
 ; X = place in p*_1* to add the score to
 ; A = amount to add (max 9)
 ; trashes AX
 _addScoreI:
+	; change FF to 00
+	inc	0, X
+	ifne
+		dec	0, X
+	endif
+
 	addA	0, X
 	oraA	11110000b
 	ifcs ; overflowed, need to increment next number
@@ -176,8 +31,9 @@ addScore_carryOver:		; loop to propagate carry
 		ldaA	0, X	
 		oraA	11110000b
 		cmpA	$F9
-		ifeq			; if it's already a 9, reset it and carry again
-			clr	0, X
+		ifge			; if it's already a 9, reset it and carry again
+			ldaA	$F0
+			staA	0, X
 			beq addScore_carryOver
 		else			; otherwise ++ it and done
 			inc	0, X
@@ -193,8 +49,9 @@ addScore_carryDa:
 			ldaA	0, X
 			oraA	11110000b
 			cmpA	$F9
-			ifeq
-				clr	0, X
+			ifge
+				ldaA	$F0
+				staA	0, X
 				beq 	addScore_carryDa
 			else
 				inc	0, X
@@ -206,6 +63,7 @@ addScore_carryDa:
 	endif
 	rts
 ; B: amount to subtract
+; note: assumes it won't go negative
 _decScoreI:
 	ldaA	0, X
 	andA	$0F
@@ -240,34 +98,34 @@ setXToCurPlayer10:
 	ldaA	>curPlayer + 1
 	cmpA	0
 	bne	_addScore10N_p2
-	ldX	pA_10
+	ldX	pA_1-1
 	pulA
 	rts
 _addScore10N_p2:
 	cmpA	1
 	bne	_addScore10N_p3
-	ldX	pB_10
+	ldX	pB_1-1
 	pulA
 	rts
 _addScore10N_p3:
 	cmpA	2
 	bne	_addScore10N_p4
-	ldX	pC_10
+	ldX	pC_1-1
 	pulA
 	rts
 _addScore10N_p4:
-	ldX	pD_10
+	ldX	pD_1-1
 	pulA
 	rts
 
 ; blanks any leading zeroes in the temp score except the last 2
-; t X
-blankTempScoreZeroes:
-	ldX	pT_1m
+; X = digit to start at (eg, pA_1m)
+; t AB
+blankLeadingScoreZeroes:
+	ldaB	5
 l_blankTempScoreZeroes:
 	ldaA	0, X
-	oraA	$F0
-	cmpA	$F0
+	bitA	1111b
 	ifeq
 		ldaA	$FF
 		staA	0, X
@@ -275,90 +133,38 @@ l_blankTempScoreZeroes:
 		rts
 	endif
 	inX
-	cpX	pT_10 - 1
+	decB
 	bne	l_blankTempScoreZeroes
 	
 	rts
 
-; A: player number to overwrite
-; t X
-copyTempScoreToPlayer:
-	bitA	1b
-	ifeq ; bit 0 clear -> player 1/3
-		ldX	displayBcd1 + 1 + eRAM
-	else ; bit 1 set -> player 2/4
-		ldX	displayBcd1 + 9 + eRAM
-	endif
-l_copyTempScoreToPlayer:
-	bitA	10b
-	ifeq ; player 1/2 -> replace higher bits
-		ldaB	0, X
-		andB	$0F
-		aslB
-		aslB
-		aslB
-		aslB
-		bitA	1b
-		ifeq ; bit 0 clear -> player 1/3
-			ldaB	pT_1m - (displayBcd1 + 1 + eRAM), X
+blankAllLeadingScoreZeroes:
+	ldX	dispData
+	ldaA	1
+	ldaB	5
+l_blankAllTempScoreZeroes:
+	tstA
+	ifne
+		ldaA	0, X
+		bitA	1111b
+		ifeq
+			ldaA	$FF
+			staA	0, X
 		else
-			ldaB	pT_1m - (displayBcd1 + 9 + eRAM), X
+			clrA
 		endif
-		bitB 	1b
-
-
-
-		rolB
-		rolB
-		rolB
-		rolB
-
-		staB	0, X
-		bitA	1b
-		ifeq ; bit 0 clear -> player 1/3
-			ldaB	pT_1m - (displayBcd1 + 1 + eRAM), X
-		else
-			ldaB	pT_1m - (displayBcd1 + 9 + eRAM), X
-		endif
-		seC
-		rolB
-		rolB
-		rolB
-		rolB
-		oraB	0, X
-		staB	0, X
-	else
-		ldaB	0, X
-		andB	$F0
-		ifeq ; bit 0 clear -> player 1/3
-			oraB	pT_1m - (displayBcd1 + 1 + eRAM), X
-		else
-			oraB	pT_1m - (displayBcd1 + 9 + eRAM), X
-		endif
-		staB	0, X
 	endif
 	inX
-
-	bitA	1b
-	ifeq ; bit 0 clear -> player 1/3
-		cpX	displayBcd1 + 8 + eRAM
-	else
-		cpX	displayBcd1 + 16 + eRAM
+	decB
+	ifeq
+		ldaB	5
+		inX
+		inX
 	endif
-	bne l_copyTempScoreToPlayer
-
-	bitA	1b
-	ifeq ; bit 0 clear -> player 1/3
-		ldaB	>displayBcd1+7
-		andB	$F0
-		staB	displayBcd1+7
-	else
-		ldaB	>displayBcd1+15
-		andB	$F0
-		staB	displayBcd1+15
-	endif
+	cpX	dispDataEnd
+	bne	l_blankAllTempScoreZeroes
+	
 	rts
-
 
 ; suspends execution for A ms and returns to queue processor
 ; stores B in waitC
@@ -489,22 +295,19 @@ l_cancelThread:
 	
 resetScores:
 	ldaA	$F0
-	ldX	pA_1m
+	ldX	dispData
 _zeroScores:
 	staA	0, X
 	inX
-	cpX	pD_10 + 1
+	cpX	pD_1 + 1 + 1
 	bne	_zeroScores
 	
 	ldaA	$00
 	staA	curPlayer
 	staA	curPlayer + 1
-	ldaA	$FF
-	staA	displayBcd1 + 6
-	staA	displayBcd1 + 14
-	staA	displayBcd1 + 15
-	
-	jsr	refreshPlayerScores
+
+	jsr	blankAllLeadingScoreZeroes
+
 	rts
 
 blankTempPlayer:
@@ -516,6 +319,32 @@ blankTempPlayer:
 	staA	pT_1m + 3
 	staA	pT_1m + 4
 	staA	pT_1m + 5
+	staA	pT_1m + 6
+	rts
+
+fixDispOffsets:
+	ldaA	pA_1m - dispData + 1
+	staA	dispOffsets + 0
+	ldaA	pB_1m - dispData + 1
+	staA	dispOffsets + 1
+	ldaA	pC_1m - dispData + 1
+	staA	dispOffsets + 2
+	ldaA	pD_1m - dispData + 1
+	staA	dispOffsets + 3
+	ldaA	>playerCount
+	cmpA	1
+	beq	clr2
+	cmpA	2
+	beq	clr3
+	cmpA	3
+	beq	clr4
+	rts
+clr2:
+	clr	dispOffsets + 1
+clr3:
+	clr	dispOffsets + 2
+clr4:
+	clr	dispOffsets + 3
 	rts
 
 specialOn5:
