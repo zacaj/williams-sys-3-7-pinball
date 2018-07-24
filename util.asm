@@ -122,6 +122,7 @@ _addScore10N_p4:
 ; X = digit to start at (eg, pA_1m)
 ; t AB
 blankLeadingScoreZeroes:
+	rts
 	ldaB	5
 l_blankTempScoreZeroes:
 	ldaA	0, X
@@ -139,6 +140,7 @@ l_blankTempScoreZeroes:
 	rts
 
 blankAllLeadingScoreZeroes:
+	rts
 	ldX	dispData
 	ldaA	1
 	ldaB	5

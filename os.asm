@@ -537,6 +537,13 @@ counterHandled:
 			ldaB	>ballCount
 		endif
 	else	; X = [1,7]
+		ldaB	6
+		cmpB	>curCol + 1
+		ifeq
+			inc	dispZeroes + 0
+			inc	dispZeroes + 1
+		endif
+
 		ldaB	dispData >> 8
 		staB	temp + 0
 
@@ -558,6 +565,14 @@ counterHandled:
 			lslB
 			lslB
 			lslB
+			ifeq ; digit is 0, maybe blank?
+				tst	>dispZeroes + 0
+				ifeq
+					oraB	$F0
+				endif
+			else
+				inc	dispZeroes + 0
+			endif
 			oraB	$0F
 		endif
 
@@ -569,13 +584,22 @@ counterHandled:
 			ldaA	>dispOffsets + 3
 		endif
 
-		ifeq ; 0 -> blank display
+		beq	blankLowerDisplay ; 0 -> blank display
+
+		addA	>curCol + 1
+		staA	temp + 1
+		ldX	>temp
+		ldaA	$F0
+		cmpA	(dispData&$FF)-1-1, X
+		ifeq ; digit is 0, maybe blank?
+			tst	>dispZeroes + 1
+			beq	blankLowerDisplay
 		else
-			addA	>curCol + 1
-			staA	temp + 1
-			ldX	>temp
-			andB	(dispData&$FF)-1-1, X
+			inc	dispZeroes + 1
 		endif
+
+		andB	(dispData&$FF)-1-1, X
+blankLowerDisplay:
 	endif
 	staB	displayBcd
 	
@@ -773,6 +797,8 @@ updateStrobe:
 		clr	curSwitchRowLsb
 		clr	solAStatus
 		clr	solBStatus
+		clr 	dispZeroes + 0
+		clr 	dispZeroes + 1
 		
 		ldaB	>displayCol	; reset display col only if it's > 7 
 		oraB	11110000b

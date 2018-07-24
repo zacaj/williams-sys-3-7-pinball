@@ -1300,7 +1300,7 @@ cleanUpHurryUp:
 		lampOff(2,5)
 		lampOff(3,5)
 	endif	
-	
+
 	jsr	fixDispOffsets
 
 	rts
@@ -1324,14 +1324,14 @@ l_hurryUp_done:
 	beq	l_hurryUp_done
 
 	; if not, subtract 5
-	ldaB	5
+	ldaB	2
 	ldX	pT_1 - 2
 	jsr	_decScoreI
 
 	jsr	syncHurryUpValue
 
 	; start hurry up again
-	forkSrC(hurryUp, 200, 11000010b)
+	forkSrC(hurryUp, 120, 11000010b)
 
 	endFork()
 awardHurryUp:

@@ -77,6 +77,7 @@ waitB:			.equ RAM + $B0 ; -> B7
 waitC:			.equ RAM + $B8 ; -> BF  ; flags: kill on ball end | kill on game end | X X | thread ID (3)
 dispOffsets:		.equ RAM + $C0 ; + 3 offset from dispData for each of the 4 displays, + 1 (set to 0 for blank)
 waitX			.equ RAM + $C4 ; +
+dispZeroes:		.equ RAM + $C6 ; +  0 if 0s for this display should be blanked for this strobe cycle
 
 
 
@@ -100,8 +101,8 @@ pT_1m:			.equ pD_1 + 1	; temp space for effects
 pT_1:			.equ pT_1m + 6
 dispDataEnd:		.equ pT_1 + 1
 ; 
-displayCol:		.equ cRAM + $70
-state:			.equ cRAM + $71	; loop processing performed | strobe reset | don't validate | quick scanning switches
+displayCol:		.equ cRAM + $80
+state:			.equ cRAM + $81	; loop processing performed | strobe reset | don't validate | quick scanning switches
 
 instant:		.equ 4
 debounce:		.equ 1
