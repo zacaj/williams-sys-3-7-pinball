@@ -15,6 +15,10 @@ solenoidA:		.equ $2200 ; todo: 	CB2=1 enable special solenoids, flippers
 solenoidAC		.equ $2201 ;      	CA2=1 special solenoid 5
 solenoidB:		.equ $2202
 solenoidBC:		.equ $2203
+soundPia:		.equ $2100
+soundPiaC:		.equ $2101
+commaPia:		.equ $2102
+commaPiaC:		.equ $2103
 
 RAM:			.equ $0000
 eRAM:			.equ $1000

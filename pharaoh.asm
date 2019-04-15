@@ -1,28 +1,28 @@
 ; solenoids
 #DEFINE SOL(n,t)	(n<<8)|t
-#DEFINE TROUGH_KICK		SOL(01, 40)
-#DEFINE OUTHOLE 		SOL(02, 40)
-#DEFINE BACK_GI 		SOL(03, 40)
-#DEFINE UPPER_GI 		SOL(04, 40)
-#DEFINE LOWER_GI 		SOL(05, 40)
-#DEFINE SLAVE_KICKER	SOL(06, 40)
-#DEFINE HIDDEN_KICKER	SOL(07, 40)
+#DEFINE OUTHOLE 		SOL(01, 40)
+#DEFINE TROUGH_KICK		SOL(02, 40)
+#DEFINE BACK_GI 		SOL(03, 100)
+#DEFINE UPPER_GI 		SOL(04, 100)
+#DEFINE LOWER_GI 		SOL(05, 100)
+#DEFINE SLAVE_KICKER		SOL(06, 40)
+#DEFINE HIDDEN_KICKER		SOL(07, 48)
 #DEFINE UL_DROP			SOL(09, 40)
 #DEFINE UR_DROP			SOL(10, 40)
 #DEFINE LL_DROP			SOL(11, 40)
 #DEFINE LR_DROP			SOL(12, 40)
 #DEFINE UPPER_LOCK		SOL(13, 40)
 #DEFINE LOWER_LOCK		SOL(14, 40)
-#DEFINE BELL			SOL(15, 40)
+#DEFINE BELL			SOL(15, 48)
 
 none:	.org $6000 + 192 ; size of callback table
 	done(1)
 
 ; send command # (1-31) in A
 doSound:
-	andA	11111b
-	oraA	>solenoidB
-	staA	solenoidB
+	comA
+	andA	>soundPia
+	staA	soundPia
 	nop
 	nop
 	nop
@@ -30,8 +30,11 @@ doSound:
 	nop
 	nop
 	nop
-	andA	11100000b
-	staA	solenoidB
+	nop
+	nop
+	nop
+	ldaA	$FF
+	staA	soundPia
 	rts
 #DEFINE SOUND(n) ldaA n\ jsr doSound
 	
@@ -120,6 +123,7 @@ p_Bonus:	.equ RAM + $D0
 lowerDrops:	.equ RAM + $D3 ; XRRRXLLL 1 = ignore drop (because it's already down)
 upperDrops:	.equ RAM + $D4 ; ^
 multiball:	.equ RAM + $D5
+hurryUp:	.equ RAM + $D6
 bonusAnim:	.equ RAM + $DB ; stores data for bonus anim or 0 if no animation in action
 
 p_Pharaoh:	.equ RAM + $E0 ; + 3  pharaoh letters
@@ -129,24 +133,31 @@ p_lc2:		.equ RAM + $E9 ; + 3 lamp column 2
 advanceBonus:
 	inc 	p_Bonus
 	inc	bonusAnim
-	fork(64)
+	forkSrC(advBonusAnim, 64, 11000000b)
 	rts
 	nop
 	nop
-	beginFork()
+advBonusAnim:
 	ldaB	$FF
 	cmpB	>lc(7)
 	ifeq
-		delay(64)
-		lampOff(1,8) ; 9k
+		ldaA	>lc(8)
+		bitA	lr(1) ; 9k
+		ifne
+			delay(64)
+			lampOff(1,8) ; 9k
 advanceBonus_downLoop:
-		delay(64)
-		lsrB
-		staB	lc(7)
-		bne	advanceBonus_downLoop
+			delay(64)
+			lsrB
+			staB	lc(7)
+			bne	advanceBonus_downLoop
 
-		delay(64)
+			delay(64)
+		else
+			bra	advanceBonus_countUp
+		endif
 	else
+advanceBonus_countUp: 
 		ldaB	11111110b
 		staB	bonusAnim
 advanceBonus_loop:
@@ -181,11 +192,13 @@ bonusLights:
 	andA	>lc(8)
 	staA	lc(8)
 
+	; assume 9 on for now so we can easily rotate 10s up
 	ldaA	>p_Bonus
 	ldaB	1b
 	oraB	>lc(8)
 	staB	lc(8)
 
+; turn on 10s lights until bonus gets below 10
 lBonusLights_10:
 	cmpA	10
 	blt	lBonusLights_1
@@ -196,13 +209,14 @@ lBonusLights_10:
 	sBA
 	bra	lBonusLights_10
 
+; bonus (A) now below 10, turn on individual lights in col 7
 lBonusLights_1:
 	tstA
 	beq	bonusLights_done
 	decA
 	seC
 	rol	lc(7)
-	bcs	bonusLights_done
+	bmi	bonusLights_done
 	bra	lBonusLights_1
 
 bonusLights_done:
@@ -246,14 +260,6 @@ lClearLights:
 
 	; init lights for player data
 	ldX	>curPlayer
-	;ldaA	p_Pharaoh, X
-	;andA	11110000b ; PHAR
-	;oraA	>lc(3)
-	;staA	lc(3)
-	;ldaA	p_Pharaoh, X
-	;andA	111b ; AOH
-	;oraA	>lc(4)
-	;staA	lc(4)
 	ldaA	p_lc2, X
 	staA	lc(2)
 
@@ -263,6 +269,7 @@ lClearLights:
 	ldaA	01110111b ; lower drops
 	staA	lowerDrops
 	staA	upperDrops
+	clr	hurryUp
 
 	fireSolenoid(UL_DROP)
 	delay(150)
@@ -316,10 +323,11 @@ startGame:
 	clr	lc(1)
 	clr	flc(1)
 
+	;SOUND(~$AC)
 	ldX	0
 lInitPlayers:
 	; stuff
-	ldaA	1
+	ldaA	2
 	staA	p_Pharaoh, X
 	staA	p_nextHurryUp, X
 	ldaA	001001b; 1 magna save
@@ -346,8 +354,8 @@ swStart:
 	bitA lr(4)
 	ifne ; in game over
 		ldaA	>sc(5)
-		andA	1100000b ; trough switches
-		cmpA	1100000b
+		andA	01100000b ; trough switches
+		cmpA	01100000b
 		ifeq
 			jsr startGame
 		else
@@ -512,22 +520,42 @@ l_endBall_wait:
 	cpX	waitLeftEnd
 	bne	l_endBall_wait
 
+	jsr	fixDispOffsets
+
 
 	; playfield valid -> end ball
 
-	jsr	collectBonus
-
 	; store player's data
 	ldX	>curPlayer
-	;ldaA	>lc(3)
-	;andA	11110000b ; PHAR
-	;staA	p_Pharaoh, X
-	;ldaA	>lc(4)
-	;andA	111b ; AOH
-	;oraA	>p_Pharaoh, X
-	;staA	p_Pharaoh, X
 	ldaA	>lc(2)
 	staA	p_lc2
+
+	ldaB	p_Pharaoh, X
+	ldaA	>lc(8)
+	bitA	lr(8)
+	ifeq ; 5x not lit
+		cmpB	7
+		ifge ; pharaOH
+			ldaB	6
+		endif
+	endif
+	bitA	lr(7)
+	ifeq ; 3x not lit
+		cmpB	6
+		ifge ; pharA
+			ldaB	5
+		endif
+	endif
+	bitA	lr(6)
+	ifeq ; 2x not lit
+		cmpB	5
+		ifge ; phaR
+			ldaB	4
+		endif
+	endif
+	staB	p_Pharaoh, X
+
+	jsr	collectBonus
 
 	ldaB	>lc(1) ; check shoot again light
 	bitB	lr(8)
@@ -614,18 +642,9 @@ swLeftMagnet:
 	bitA	sr(1)
 	ifeq ; released
 		jsr	specialOff5
-		;ldaA	~111b ; left magnet lights
-		;andA	>flc(2)
-		;staA	flc(2)
-
-		ldaA	>lc(2)
-		andA	~111b ; left magnet lights
-		staA	lc(2)
-		ldaA	>lc(2)
-		andA	111b ; left magnet lights
-		decA
-		oraA	>lc(2)
-		staA	lc(2)
+		ldaA	~111b ; left magnet lights
+		andA	>flc(2)
+		staA	flc(2)
 
 		ldaA	011b ; left magnet ID
 		jsr	cancelThreads
@@ -641,22 +660,26 @@ swLeftMagnet:
 
 	jsr	specialOn5
 
+	ldaA	111b
+	oraA	>flc(2)
+	staA	flc(2)
+
 swLeftMagnet_delay:
 	delayC(250, 11000011b) ; left magnet ID
 	
 	; dec magnet lights
 	ldaA	>lc(2)
+	tAB
 	andA	~111b ; left magnet lights
 	staA	lc(2)
-	ldaA	>lc(2)
-	andA	111b ; left magnet lights
-	decA
+	andB	111b ; left magnet lights
+	decB
 	ifne	 ; still magnet left
-		oraA	>lc(2)
-		staA	lc(2)
+		oraB	>lc(2)
+		staB	lc(2)
+		bra	swLeftMagnet_delay
 	else
 		jsr	specialOff5
-		bra	swLeftMagnet_delay
 	endif
 
 	done(0)
@@ -665,30 +688,18 @@ swRightMagnet:
 	bitA	sr(2)
 	ifeq ; released
 		jsr	specialOff6
-		;ldaA	~111b ; left magnet lights
-		;andA	>flc(2)
-		;staA	flc(2)
-
-		ldaA	>lc(2)
-		andA	~111000b ; right magnet lights
-		staA	lc(2)
-		ldaA	>lc(2)
-		andA	111000b ; right magnet lights
-		asrA
-		asrA
-		asrA
-		decA
-		aslA
-		aslA
-		aslA
-		oraA	>lc(2)
-		staA	lc(2)
+		ldaA	~111000b ; right magnet lights
+		andA	>flc(2)
+		staA	flc(2)
 
 		ldaA	100b ; right magnet ID
 		jsr	cancelThreads
 
 		done(0)
 	endif
+
+	SOUND(~$BD)
+	; 0 ff 7f ba ff ac ff bd
 
 	ldaA	>lc(2)
 	bitA	111000b ; left magnet lights
@@ -698,37 +709,45 @@ swRightMagnet:
 
 	jsr	specialOn6
 
+	ldaA	111000b
+	oraA	>flc(2)
+	staA	flc(2)
+
 swRightMagnet_delay:
 	delayC(250, 11000100b) ; right magnet ID
 	
 	; dec magnet lights
 	ldaA	>lc(2)
+	tAB
 	andA	~111000b ; right magnet lights
 	staA	lc(2)
-	ldaA	>lc(2)
-	andA	111000b ; right magnet lights
-	asrA
-	asrA
-	asrA
-	decA
+	andB	111000b ; right magnet lights
+	asrB
+	asrB
+	asrB
+	decB
 	ifne	 ; still magnet left
-		aslA
-		aslA
-		aslA
-		oraA	>lc(2)
-		staA	lc(2)
+		aslB
+		aslB
+		aslB
+		oraB	>lc(2)
+		staB	lc(2)
+		bra	swRightMagnet_delay
 	else
 		jsr	specialOff6
-		bra	swRightMagnet_delay
 	endif
 	done(0)
 swLeftInlane:
 	score10kx(1)
+
+	advBonus()
 	done(1)
 swRightInlane:
+	advBonus()
 	score10kx(1)
 	done(1)
 swLeftOutlane:
+	advBonus()
 	score1kx(5)
 	ldaA	>lc(2) ; left ?
 	bitA	lr(7)
@@ -745,6 +764,7 @@ swLeftOutlane:
 	endif
 	done(1)
 swRightOutlane:
+	advBonus()
 	score1kx(5)
 	ldaA	>lc(2) ; right ?
 	bitA	lr(8)
@@ -793,6 +813,7 @@ swUpperDrop:
 	tAB
 	aslB
 	comB
+	oraB	11111b
 	andB	>lc(6)
 	staB	lc(6)
 
@@ -803,6 +824,7 @@ swUpperDrop:
 	aslB
 	aslB
 	comB
+	oraB	10001111b
 	andB	>lc(4)
 	staB	lc(4)
 
@@ -833,6 +855,7 @@ swUpperDrop:
 		andB	>lc(4)
 		ifeq ; none flashing
 			;SOUND
+			fireSolenoid(BELL)
 			jsr	incPharoah
 
 			; add second letter if only one drop down
@@ -842,10 +865,14 @@ swUpperDrop:
 			ifeq
 				clrB
 			else
+				ldaB	>flc(4)
+				andB	01110000b
 				cmpB	00100000b
 				ifeq
 					clrB
 				else
+					ldaB	>flc(4)
+				andB	01110000b
 					cmpB	00010000b
 					ifeq
 						clrB
@@ -854,6 +881,7 @@ swUpperDrop:
 			endif
 			tstB
 			ifeq
+				delay(300)
 				jsr	incPharoah
 				fireSolenoid(BELL)
 			endif
@@ -881,6 +909,7 @@ swUpperDrop:
 	endif
 
 	score1kx(3)
+	advBonus()
 
 	done(1)
 incPharoah:
@@ -900,21 +929,6 @@ incPharoah:
 
 	jsr	pharaohLights
 
-	; inc PHAR
-	;ldaA	>lc(3)
-	;aslA
-	;ifcs ; need to inc OAH as well
-	;	ldaB	>lc(4)
-	;	andB	11b
-	;	seC
-	;	rolB
-	;	oraB	>lc(4)
-	;	staB	lc(4)
-	;endif
-	;oraA	lr(5)
-	;andA	11110000b
-	;oraA	>lc(3)
-	;staA	lc(3)
 	rts
 pharaohLights:
 	ldaA	11111000b ; ~AOH
@@ -985,6 +999,7 @@ swLowerDrop:
 	tAB
 
 	score1kx(3)
+	advBonus()
 
 	tBA
 
@@ -993,7 +1008,7 @@ swLowerDrop:
 
 	ldaB	>flc(3)
 	bitA	11100000b ; right drops
-	ifeq ; right drops
+	ifeq ; left drops
 		jmp	swLower_leftDrops
 	endif
 
@@ -1006,11 +1021,12 @@ swLowerDrop:
 			flashLamp(4,3)
 			lampOn(4,3)
 			delay(2000)
+			delay(1000)
 			ldaB	>flc(3)
 			bitB	lr(4)
 			ifne ; still flashing
 				flashLampFast(4,3)
-				delay(1000)
+				delay(1500)
 
 				ldaB	>flc(3)
 				bitB	lr(4)
@@ -1055,11 +1071,12 @@ swLower_leftDrops:
 			flashLamp(3,3)
 			lampOn(3,3)
 			delay(2000)
+			delay(1000)
 			ldaB	>flc(3)
 			bitB	lr(3)
 			ifne ; still flashing
 				flashLampFast(3,3)
-				delay(1000)
+				delay(1500)
 
 				ldaB	>flc(3)
 				bitB	lr(3)
@@ -1117,14 +1134,9 @@ swUpperLock:
 	bitA	lr(2)
 	ifne	; flashing -> hurry up
 		jsr	awardHurryUp
-		flashOff(2,5)
-
-		ldaB	>lc(3)
-		andB	1100b ; bank lights
-		cmpB	1100b
-		ifne ; locks not lit
-			lampOff(2,5)
-		endif
+		ldaA	1
+	else
+		clrA
 	endif
 	jsr	swLock
 	done(1)
@@ -1133,29 +1145,19 @@ swLowerLock:
 	bitA	lr(3)
 	ifne	; flashing -> hurry up
 		jsr	awardHurryUp
-		flashOff(3,5)
-
-		ldaB	>lc(3)
-		andB	1100b ; bank lights
-		cmpB	1100b
-		ifne ; locks not lit
-			lampOff(3,5)
-		endif
+		ldaA	1
+	else
+		clrA
 	endif
 	jsr	swLock
 	done(1)
+; A = whether hurry up was just collected
 swLock:
-	score1kx(7)
-
 	ldaB	>lc(3)
 	andB	1100b ; bank lights
 	cmpB	1100b
 	ifeq ; locks lit
-		;SOUND
-		fireSolenoid(TROUGH_KICK)
-		inc	multiball
 		lampOn(1,3) ; 2x
-
 		; turn off locks
 		ldaB	~110b
 		andB	>lc(5)
@@ -1163,15 +1165,22 @@ swLock:
 		ldaB	~1100b
 		andB	>lc(3)
 		staB	>lc(3)
+		;SOUND
+		fireSolenoid(TROUGH_KICK)
+		inc	multiball
+
 	else ; lock not lit
-		ldaA	>sc(5)
-		bitA	sr(2)
-		ifne	
-			ldaA	0
-		else
-			ldaA	2
+		tstA
+		ifeq
+			ldaA	>sc(5)
+			bitA	sr(2)
+			ifne	
+				ldaA	0
+			else
+				ldaA	2
+			endif
+			jsr	startHurryUp
 		endif
-		jsr	startHurryUp
 		
 		; eject ball
 		ldaA	>sc(5)
@@ -1182,85 +1191,95 @@ swLock:
 			fireSolenoid(UPPER_LOCK)
 		endif
 	endif
+	score1kx(7)
+	advBonus()
 	rts
 
+; A = hole that started hurry up
 startHurryUp:
-	ldaA	010b ; hurry up
-	jsr	cancelThreads
 
 	; 0 temp player if no hurry up in progress
-	ldaB	$F0
-	cmpB	>pT_1
-	ifne
-		staB	pT_1m + 0
-		staB	pT_1m + 1
-		staB	pT_1m + 2
-		staB	pT_1m + 3
-		staB	pT_1m + 4
-		staB	pT_1m + 5
-		staB	pT_1m + 6
-
-		; flash proper hurry up goal
-		ldX	>curPlayer
-		ldaB	p_nextHurryUp, X
-		ifeq ; 0 = top lock
-			cBA
-			ifeq	
-				incB ; next hole
-			else
-				lampOn(2,5) ; upper lock
-				flashLamp(2,5)
-			endif
-		endif
-		decB
-		ifeq ; 1 = tomb
-			flashLamp(5,6) ; tomb gi
-		endif
-		decB
-		ifeq ; 2 = lower lock
-			cBA
-			ifeq	
-				incB ; next hole
-			else
-				lampOn(3,5) ; upper lock
-				flashLamp(3,5)
-			endif
-		endif
-		decB
-		ifeq ; 3 = hidden
-			lampOn(2,3) ; collect bonus
-			flashLamp(2,3)
-		endif
-		decB
-		ifeq ; 4 = slaves
-			flashLamp(4,6) ; slave gi
-		endif
-
-		ldaA	5
-		aBA
-		cmpA	5
-		ifge
-			ldaA	0
-		endif
-		staA	p_nextHurryUp, X
-	else ; hurry up in progress
-
+	tst	>hurryUp
+	ifne; hurry up in progress
+		jsr	cleanUpHurryUp
 	endif
+
+	ldaB	$F0
+	staB	pT_1m + 0
+	staB	pT_1m + 1
+	staB	pT_1m + 3
+	staB	pT_1m + 4
+	staB	pT_1m + 5
+	staB	pT_1m + 6
+	ldaB	$F3
+	staB	pT_1m + 2
+
+	; flash proper hurry up goal
+	ldX	>curPlayer
+	ldaB	p_nextHurryUp, X
+	ifeq ; 0 = top lock
+		cBA
+		ifeq	
+			incB ; next hole
+		else
+			lampOn(2,5) ; upper lock
+			flashLamp(2,5)
+		endif
+	endif
+	decB
+	ifeq ; 1 = tomb
+		lampOn(5,6)
+		flashLamp(5,6) ; tomb gi
+	endif
+	decB
+	ifeq ; 2 = lower lock
+		cBA
+		ifeq	
+			incB ; next hole
+		else
+			lampOn(3,5) ; upper lock
+			flashLamp(3,5)
+		endif
+	endif
+	decB
+	ifeq ; 3 = hidden
+		lampOn(2,3) ; collect bonus
+		flashLamp(2,3)
+	endif
+	decB
+	ifeq ; 4 = slaves
+		lampOn(4,6)
+		flashLamp(4,6) ; slave gi
+		lampOn(1,5)
+		flashLamp(1,5)
+	endif
+
+	jsr	incNextHurryUp
 
 	ldX	>curPlayer
 	ldaB	p_Pharaoh, X
 
 	; add initial score
 l_swLock_calcValue:
+	pshA
+	cmpA	4
+	ifeq
+		ldX	pT_1 - 2 ; ten thousands
+		ldaA	1
+		jsr	_addScoreI
+	endif
+
 	ldX	pT_1 - 3 ; thousands
 	ldaA	5
 	jsr	_addScoreI
+
+	pulA
 	decB
 	bne	l_swLock_calcValue
 
 	jsr	syncHurryUpValue
 
-	forkSrC(hurryUp, 2000, 11000010b)
+	forkSrC(doHurryUp, 2000, 11000010b)
 	rts
 
 syncHurryUpValue:
@@ -1282,6 +1301,8 @@ syncHurryUpValue:
 	endif
 	rts
 cleanUpHurryUp:
+	clr	hurryUp
+
 	jsr	blankTempPlayer
 
 	ldaA	010b ; hurry up id
@@ -1289,9 +1310,12 @@ cleanUpHurryUp:
 
 	flashOff(4,6) ; slaves
 	flashOff(5,6) ; tomb
+	lampOn(5,6)
+	lampOn(4,6)
 	lampOff(2,3) ; collect bonus
 	flashOff(2,5) ; locks
 	flashOff(3,5)
+	flashOff(2,3)
 
 	ldaB	>lc(3)
 	andB	1100b ; bank lights
@@ -1305,7 +1329,18 @@ cleanUpHurryUp:
 
 	rts
 
-hurryUp:
+incNextHurryUp:
+	inc 	p_nextHurryUp, X
+	ldaB	5
+	cmpB	p_nextHurryUp, X
+	ifeq
+		ldaB	0
+	endif
+	staB	p_nextHurryUp, X
+
+	rts
+
+doHurryUp:
 	; check if value has reached 0
 	ldX	pT_1m - 1
 l_hurryUp_done:
@@ -1331,7 +1366,7 @@ l_hurryUp_done:
 	jsr	syncHurryUpValue
 
 	; start hurry up again
-	forkSrC(hurryUp, 120, 11000010b)
+	forkSrC(doHurryUp, 200, 11000010b)
 
 	endFork()
 awardHurryUp:
@@ -1399,26 +1434,57 @@ incBonusX:
 	
 swSlaveEject:
 	score10kx(2)
-	ldaA	>flc(6) ; slave GI
-	bitA	lr(4)
+	advBonus()
+	ldaB	>flc(6) ; slave GI
+	bitB	lr(4)
 	ifne	; hurry up
 		jsr	awardHurryUp
-		flashOff(4,6)
 	else
+		ldaA	4
 		jsr 	startHurryUp
 	endif
 	delay(200)
 	fireSolenoid(SLAVE_KICKER)
 	done(1)
 swHiddenEject:
-	score10kx(2)
+	score1000x(5)
+
+	jsr	incNextHurryUp
+	tst	>hurryUp
+	ifne; hurry up not in progress
+		ldX	>curPlayer
+		ldaB	p_nextHurryUp, X
+		ifeq ; 0 = top lock
+			lampOn(2,5) ; upper lock
+		endif
+		decB
+		ifeq ; 1 = tomb
+			lampOff(5,6)
+		endif
+		decB
+		ifeq ; 2 = lower lock
+			lampOn(3,5) ; upper lock
+		endif
+		decB
+		ifeq ; 3 = hidden
+			lampOn(2,3) ; collect bonus
+		endif
+		decB
+		ifeq ; 4 = slaves
+			lampOn(1,5)
+		endif
+
+		delay(300)
+
+		jsr	cleanUpHurryUp
+	else
+		delay(200)
+	endif
 
 	ldaA	>flc(3) ; collect bonus
 	bitA	lr(2)
 	ifne	; hurry up
 		jsr	awardHurryUp
-		flashOff(2,3)
-		lampOff(2,3)
 	endif
 
 	ldaA	>lc(6) ; eb
@@ -1439,16 +1505,14 @@ swHiddenEject:
 		lampOff(3,6)
 	endif
 
-	delay(200)
 	fireSolenoid(HIDDEN_KICKER)
 	done(1)
 swTomb:
-
+	advBonus()
 	ldaA	>flc(6) ; captive ball gi
 	bitA	lr(5)
 	ifne	; hurry up
 		jsr	awardHurryUp
-		flashOff(5,6)
 	else
 		jsr	incPharoah
 		ldX	>curPlayer
@@ -1460,32 +1524,12 @@ swTomb:
 		endif
 
 		ldX	>curPlayer
-		ldaA	p_Pharaoh, X
+		ldaB	p_Pharaoh, X
 l_swTomb:
 		score1000x(5)
-		decA
+		decB
 		bne	l_swTomb
 	endif
-;	ldaA	10000b ; P
-;l_swTomb_phar:
-;	bitA	>lc(3)
-;	ifne
-;		score1000x(5)
-;		clc
-;		rolA
-;		bcc	l_swTomb_phar
-;	endif
-;	ldaA	1b ; A
-;l_swTomb_aoh:
-;	bitA	>lc(4)
-;	ifne
-;		score1000x(5)
-;		clc
-;		rolA
-;		bitA	1000b ; after H
-;		beq	l_swTomb_aoh
-;	endif
-	
 	done(1)
 
 ; end callbacks

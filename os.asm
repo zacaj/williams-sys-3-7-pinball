@@ -6,7 +6,7 @@
 
 #include "pharaoh.asm"
 	
-main:		.org $7800
+main:		.org $7400
 
 test:
 	
@@ -75,6 +75,20 @@ piaSetup:
 	staA 	solenoidAC
 	ldaA 	00110100b 	;select data (3rb bit = 1), enable CB2 output low
 	staA 	solenoidBC
+
+	clr	soundPiaC	; select direction
+	clr	commaPiaC
+	ldaA	11111111b	; enable 7 output channels
+	staA	soundPia	
+	ldaA	11111111b	; 2 outputs
+	staA	commaPia
+	ldaA	00000100b	; select data
+	staA	soundPiaC
+	staA	commaPiaC
+	ldaA	01111111b
+	staA	soundPia
+	ldaA	00000000b
+	staA	commaPia
 	
 
 resetRam:
@@ -525,10 +539,11 @@ counterHandled:
 	ldaB 	$FF
 	staB	displayBcd
 	staA	displayStrobe
+	clr	commaPia
 
 	ldaB	>curCol + 1 
 	bitB	111b
-	ifeq ; X = 0	
+	ifeq ; strobe = 0	
 		ldX	>curCol
 		bitA	00001000b
 		ifeq
@@ -536,71 +551,117 @@ counterHandled:
 		else
 			ldaB	>ballCount
 		endif
-	else	; X = [1,7]
-		ldaB	6
-		cmpB	>curCol + 1
-		ifeq
-			inc	dispZeroes + 0
-			inc	dispZeroes + 1
-		endif
 
-		ldaB	dispData >> 8
-		staB	temp + 0
+		jmp	dispDigitReady
+	endif
+	
+	; strobe = [1,7]
+	ldaB	6
+	cmpB	>curCol + 1
+	ifeq ; reached strobe 7/15, turn on zeroes
+		inc	dispZeroes + 0
+		inc	dispZeroes + 1
+	endif
 
-		bitA	00001000b
-		ifeq
-			ldaA	>dispOffsets + 0
-		else
-			ldaA	>dispOffsets + 1
-		endif
+	ldaB	dispData >> 8
+	staB	temp + 0
 
-		ifeq	; 0 -> blank display
-			ldaB	$FF
-		else
-			addA	>curCol + 1
-			staA	temp + 1
-			ldX	>temp
-			ldaB	(dispData&$FF)-1-1, X
-			lslB
-			lslB
-			lslB
-			lslB
-			ifeq ; digit is 0, maybe blank?
-				tst	>dispZeroes + 0
-				ifeq
-					oraB	$F0
-				endif
-			else
-				inc	dispZeroes + 0
-			endif
-			oraB	$0F
-		endif
+	; start processing 1/3
+	bitA	00001000b
+	ifeq
+		ldaA	>dispOffsets + 0
+	else
+		ldaA	>dispOffsets + 1
+	endif
 
-		ldaA	>displayCol
-		bitA	00001000b
-		ifeq
-			ldaA	>dispOffsets + 2
-		else
-			ldaA	>dispOffsets + 3
-		endif
-
-		beq	blankLowerDisplay ; 0 -> blank display
-
+	ifeq	; 0 -> blank whole display
+		ldaB	$FF
+		clrA
+	else
 		addA	>curCol + 1
 		staA	temp + 1
+		clrA
 		ldX	>temp
-		ldaA	$F0
-		cmpA	(dispData&$FF)-1-1, X
+		ldaB	(dispData&$FF)-1-1, X
+		lslB
+		lslB
+		lslB
+		lslB
 		ifeq ; digit is 0, maybe blank?
-			tst	>dispZeroes + 1
-			beq	blankLowerDisplay
+			tst	>dispZeroes + 0
+			ifeq ; blank if 0
+				oraB	$F0
+			else
+				incA	; signal for comma
+			endif
 		else
-			inc	dispZeroes + 1
+			; non-zero, stop blanking zeros
+			inc	dispZeroes + 0
+			incA
 		endif
-
-		andB	(dispData&$FF)-1-1, X
-blankLowerDisplay:
+		oraB	$0F
 	endif
+
+	tstA
+	ifne
+		ldaA	>curCol + 1
+		andA	111b
+		cmpA	001b
+		ifeq	
+			ldaA	10000000b ; comma 1+2
+			staA	commaPia
+		else
+			cmpA	100b
+			ifeq	
+				ldaA	10000000b ; comma 1+2
+			staA	commaPia
+			endif
+		endif
+	endif
+
+	; start processing 2/4
+
+	ldaA	>displayCol
+	bitA	00001000b
+	ifeq
+		ldaA	>dispOffsets + 2
+	else
+		ldaA	>dispOffsets + 3
+	endif
+
+	beq	dispDigitReady ; 0 -> blank display
+
+	addA	>curCol + 1
+	staA	temp + 1
+	ldX	>temp
+	ldaA	$F0
+	cmpA	(dispData&$FF)-1-1, X
+	ifeq ; digit is 0, maybe blank?
+		tst	>dispZeroes + 1
+		beq	dispDigitReady
+	else
+		inc	dispZeroes + 1
+	endif
+
+	ldaA	>curCol + 1
+	andA	111b
+	cmpA	001b
+	ifeq	
+		ldaA	01000000b ; comma 3+4
+		oraA	>commaPia
+		staA	commaPia
+	else
+		cmpA	100b
+		ifeq	
+			ldaA	01000000b ; comma 3+4
+			oraA	>commaPia
+			staA	commaPia
+		endif
+	endif
+
+	andB	(dispData&$FF)-1-1, X
+	
+dispDigitReady:
 	staB	displayBcd
 	
 ; read switches
@@ -743,7 +804,8 @@ updateLamps:
 	; if =255, off, otherwise on
 	; else leave it at 254
 	
-	inc	curCol	; indexed can't use base >255, so temp inc X by 255 (1 MSB)
+	ldaA	cRAM >> 8
+	staA	curCol	; indexed can't use base >255, so temp inc X by 255 (1 MSB)
 	ldaA	254
 	ldX	>curCol
 	; update solenoid in current 'column' (1-8) 
@@ -774,7 +836,7 @@ updateLamps:
 		clc
 	endif
 	ror		solBStatus	
-	dec		curCol ; undo inc
+	clr		curCol ; undo inc
 	
 ; update strobe	
 updateStrobe:

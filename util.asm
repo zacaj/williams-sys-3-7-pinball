@@ -378,6 +378,8 @@ specialOff6:
 ; trashes B (max 104ms)
 #DEFINE fireSolenoid(s)	ldaB ((s&$FF)/8)|$F0\ staB solenoid1+(s>>8)-1 
 #DEFINE fireSolenoidA(s)	ldaA ((s&$FF)/8)|$F0\ staA solenoid1+(s>>8)-1 
+#DEFINE solenoidOn(s)	ldaB $FE\ staA solenoid1+(s>>8)-1
+#DEFINE solenoidOff(s)	ldaB $FF\ staA solenoid1+(s>>8)-1
 
 ; trashes AX
 ; place: 1-5 = 10s thru 100ks
