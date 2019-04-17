@@ -122,8 +122,10 @@ innerEnd:
 	endFork()
 	
 ; switch callbacks:
-
-none:	.org $6000 + 192 ; size of callback table
+placeholder: .org $6000
+	nop ; here to make sure the rom starts at $6000
+	
+none:	.org $6800 + 192 ; size of callback table
 	done(1)
 	
 bonusLights:
@@ -818,7 +820,7 @@ addCollect:
 ; end callbacks
 	.msfirst
 ; needs to be on $**00 address
-callbackTable: 	.org $6000 ; note: TRANSPOSED
+callbackTable: 	.org $6800 ; note: TRANSPOSED
 	.dw swTilt	\.dw swTilt\.dw swStart	\.dw none\.dw none\.dw none\.dw swTilt\.dw none
 	.dw swOuthole	\.dw swTilt\.dw swRightOutlane\.dw swRightInlane\.dw sw10pt\.dw sw500pt\.dw swCaptiveRollover\.dw swCaptiveTarget
 	.dw swDropTip	\.dw swDroptIp\.dw swDroptiP\.dw swAdvBonus\.dw sw10pt\.dw swTopEject\.dw sw10pt\.dw none
