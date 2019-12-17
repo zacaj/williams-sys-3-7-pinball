@@ -33,9 +33,8 @@ counter2:		.equ RAM + $03
 strobe:			.equ RAM + $07
 lampCol1:		.equ RAM + $08
 lampCol8:		.equ lampCol1 + 7 
-#DEFINE upper(x)    ((x)>255)
 #DEFINE lc(x) 		(lampCol1 + ((x&$FF)-1))
-#DEFINE lr(x)		(1 << (    (x>>(x>255*8))    -1))
+#DEFINE lr(x)		(1 << (    (x>>((x>255)*8))    -1))
 curSwitchRowLsb:	.equ RAM + $10 
 ; 
 curPlayer:		.equ RAM + $12 ; + 0-3

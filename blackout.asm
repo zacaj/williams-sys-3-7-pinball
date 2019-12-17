@@ -171,7 +171,8 @@ p_Targets:	.equ GRAM + $20 ; thru $23 XXXGGGGG (targets collected, matches lamp 
 ; max GRAM + $27
 advanceBonus:
 	inc 	p_Bonus
-	fork(64)
+	jsr 	bonusLights
+	;fork(64)
 	rts
 	nop
 	nop
@@ -231,49 +232,58 @@ bonusLights:
 	ldaB	~(lr(BONUS_8)|lr(BONUS_9)|lr(BONUS_10))
 	andB	>lc(BONUS_10)
 	staB	lc(BONUS_10)
-	ldaB	lr(SHOOT_AGAIN_PF)
-	andB	>lc(BONUS_10)
-	staB	lc(BONUS_10)
 
-	ldaA	>p_Bonus
+	ldaB	>p_Bonus
 
 lBonusLights_10:
-	cmpA	30
-	ifgt	
+	cmpB	30
+	ifge	
 		lampOn(BONUS_10)
 		lampOn(BONUS_20)
-		subA	30
+		cmpB	39
+		ifge
+			ldaB	39
+		endif
+		subB	30
 	else
-		cmpA	10
-		ifgt	
-			cmpA 20
-			ifgt
+		cmpB	10
+		ifge	
+			cmpB 	20
+			ifge
 				lampOn(BONUS_20)
-				subA	20
+				subB	20
 			else
 				lampOn(BONUS_10)
-				subA	10
+				subB	10
 			endif
 		endif
 	endif
-	cmpA	9	
-	ifgt	
-		; bonus >= 9
+	; A now <10
+	cmpB	9	
+	ifeq	
+		; bonus = 9
 		lampOn(BONUS_9)
-		decA
+		decB
 	endif
+	tBA
+	ldaB	lr(SHOOT_AGAIN_PF)
+	andB	>lc(BONUS_1)
+	clr 	lc(BONUS_1)
+	incA ; add 1 since there's a shoot again in front to fill
 lBonusLights_1:
 	tstA
 	beq	bonusLights_done
 	decA
 	seC
-	rol	lc(BONUS_10)
-	bcc	lBonusLights_1
+	rol		lc(BONUS_1)
+	bcc		lBonusLights_1
 	lampOn(BONUS_8)
-	lsr lc(BONUS_10)
 bonusLights_done:
-	oraB >lc(BONUS_10) ; restore shoot again
-	staB lc(BONUS_10)
+	ldaA	~lr(SHOOT_AGAIN_PF)
+	andA	>lc(BONUS_1)
+	staA	lc(BONUS_1)
+	oraB 	>lc(BONUS_1) ; restore shoot again
+	staB 	lc(BONUS_1)
 	pulB
 	pulA
 	rts
@@ -309,17 +319,17 @@ lClearLights:
 	ldaA	1
 	staA	p_Bonus
 	jsr	bonusLights
-	ldaA	>p_Col3_6 + 0, X
+	ldaA	p_Col3_6 + 0, X
 	staA	lc(3)
-	ldaA	>p_Col3_6 + 4, X
+	ldaA	p_Col3_6 + 4, X
 	staA	lc(4)
-	ldaA	>p_Col3_6 + 8, X
+	ldaA	p_Col3_6 + 8, X
 	staA	lc(5)
-	ldaA	>p_Col3_6 + 12, X
+	ldaA	p_Col3_6 + 12, X
 	staA	lc(6)
 
 	;
-	ldaA	01110111b ; ignore drops while reset
+	ldaA	01110111b ; ignore drops while resetting
 	staA	drops
 
 	fireSolenoid(RED_RESET)
@@ -395,6 +405,9 @@ lInitPlayers:
 	lampOn(ONE_PLAYER) ; one player
 	
 	lampOff(GAME_OVER) ; game over
+
+	ldaA	1
+	staA	playerCount
 	
 	rts
 	
@@ -432,6 +445,7 @@ swStart:
 				andA	lr(ONE_PLAYER)|lr(TWO_PLAYERS)|lr(THREE_PLAYERS)|lr(FOUR_PLAYERS)
 				oraA	>lc(FOUR_PLAYERS)
 				staA	lc(FOUR_PLAYERS)
+				inc 	playerCount
 			endif
 		else ; restart game
 			jsr startGame
@@ -733,6 +747,7 @@ lLeftSpinner:
 swCenterSpinnerStandup:
 swLeftSpinnerStandup:
 	score10x(5)
+	advBonus()
 	done(1)
 
 swTarget:
