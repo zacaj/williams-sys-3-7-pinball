@@ -120,7 +120,6 @@ _addScore10N_p4:
 	rts
 
 ; suspends execution for A ms and returns to queue processor
-; stores B in waitC
 ; should only be called from switch callbacks
 ; trashes X, condition codes
 _delay:	

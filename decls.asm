@@ -67,12 +67,12 @@ tempQ:			.equ RAM + $58 ; +
 queue:			.equ RAM + $60	; opened | switch? | number#6
 queueEnd:		.equ RAM + $6D
 ballCount:		.equ RAM + $6F ; upper nibble is ball #, lower unused
+waitLeft: 		.equ RAM + $70 ; dec every 8ms, 0 = inactive
+waitLeftEnd:		.equ RAM + $76
+waitMsb:		.equ RAM + $78 ; -> 7F
+waitB:			.equ RAM + $80 ; -> 87
+waitC:			.equ RAM + $88 ; -> 8F  ; flags: kill on ball end | kill on game end | X X | thread ID (3)
 
-waitB:			.equ RAM + $70 ; -> 77
-waitC:			.equ RAM + $78 ; -> 7F  ; flags: kill on ball end | kill on game end | X X | thread ID (3)
-waitLeft: 		.equ RAM + $80 ; dec every 8ms, 0 = inactive
-waitLeftEnd:		.equ RAM + $86
-waitMsb:		.equ RAM + $88 ; -> 8F
 waitLsb:		.equ RAM + $90 ; -> 97
 waitA:			.equ RAM + $98 ; -> 9F
 flashLampCol1:		.equ RAM + $A0

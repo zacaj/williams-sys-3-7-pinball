@@ -19,6 +19,7 @@
 ; lamps
 #define LAMP(n,r,c) n: .equ (((r)<<8)|c)
 LAMP(BONUS_1,2,1)
+LAMP(BONUS_7,8,1)
 LAMP(SHOOT_AGAIN_PF,1,1)
 LAMP(BONUS_8,1,2)
 LAMP(BONUS_9,2,2)
@@ -171,8 +172,9 @@ p_Targets:	.equ GRAM + $20 ; thru $23 XXXGGGGG (targets collected, matches lamp 
 ; max GRAM + $27
 advanceBonus:
 	inc 	p_Bonus
-	jsr 	bonusLights
-	;fork(64)
+	inc 	bonusAnim
+	;jsr 	bonusLights
+	fork(64)
 	rts
 	nop
 	nop
@@ -181,40 +183,42 @@ advanceBonus:
 	bitB	lr(BONUS_9)
 	
 	ifne ; 9 is on, count off 1->9 and turn on ten
-		ldaB	>lc(BONUS_1)
+		ldaB	~lr(BONUS_1)
 advanceBonus_downLoop:
-		andB	~lr(BONUS_9)
-		andB	>lc(BONUS_10)
-		staB	lc(BONUS_10)
+		andB	~lr(BONUS_1)
+		tBA
+		andA	>lc(BONUS_1)
+		staA	lc(BONUS_1)
 		delay(64)
 		seC
 		rolB
 		bcs	advanceBonus_downLoop
+
 		lampOff(BONUS_8) ; 8k
 		delay(64)
 		lampOff(BONUS_9) ; 9k
 		delay(64)
 	else ; not at 9 yet
-		ldaB 	lr(BONUS_9)
+		ldaB 	lr(BONUS_1)
 advanceBonus_loop:
-		bitB	>lc(BONUS_10)
+		bitB	>lc(BONUS_7)
 		beq	advanceBonus_end
 		tBA
-		eorB	>lc(BONUS_10)
-		staB	lc(BONUS_10)
-		tAB
+		eorB	>lc(BONUS_1)
+		staB	lc(BONUS_1)
 		delay(64)
-		tBA
-		oraB	>lc(BONUS_10)
-		staB	lc(BONUS_10)
+		tAB
+		oraB	>lc(BONUS_1)
+		staB	lc(BONUS_1)
+		tAB
 		aslB
 		bcc advanceBonus_loop
 
-		lampOff(1,2) ; 8k
+		lampOff(BONUS_8) ; 8k
 		delay(64)
 advanceBonus_end:
-
 	endif
+	clr		bonusAnim
 	jsr 	bonusLights
 	endFork()
 	
@@ -291,7 +295,7 @@ bonusLights_done:
 
 startBall:
 	ldX	>curPlayer
-	ldaA	1
+	ldaA	7
 	staA	p_Bonus
 	enablePf
 
@@ -513,6 +517,8 @@ swOuthole_bonusLoop:
 		staB	p_Bonus
 		bra	swOuthole_bonusLoop
 	endif
+
+	clr		bonusAnim
 	; end loop
 	rts
 
