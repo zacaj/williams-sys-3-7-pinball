@@ -4,7 +4,7 @@
 
 #include "util.asm"
 
-#include "pharaoh.asm"
+#include "blackout.asm"
 	
 main:		.org $7800
 

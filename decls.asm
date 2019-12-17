@@ -26,8 +26,10 @@ counter2:		.equ RAM + $03
 strobe:			.equ RAM + $07
 lampCol1:		.equ RAM + $08
 lampCol8:		.equ lampCol1 + 7 
-#DEFINE lc(x) 		lampCol1 + (x-1)
-#DEFINE lr(x)		((1 << (x-1))
+#DEFINE upper(x)    ((x)>255);((x>>8)/(x>>8))
+#DEFINE lc(x) 		(lampCol1 + ((x&$FF)-1))
+;#DEFINE lr(x)		(1 << (    ((((x&$FF00)!=0)*(x>>8))+(((x&$FF00)=0)*(x)))    -1))
+#DEFINE lr(x)		(1 << (    (x>>(x>255*8))    -1))
 curSwitchRowLsb:	.equ RAM + $10 
 ; 
 curPlayer:		.equ RAM + $12 ; + 0-3
@@ -68,10 +70,10 @@ waitLsb:		.equ RAM + $90 ; -> 97
 waitA:			.equ RAM + $98 ; -> 9F
 flashLampCol1:		.equ RAM + $A0
 flashLampCol8:		.equ RAM + $A7
-#DEFINE flc(x) 		flashLampCol1 + (x - 1)
+#DEFINE flc(x) 		flashLampCol1 + ((x&$FF) - 1)
 fastFlashLampCol1:  	.equ RAM + $A8 ; -> D7
 fastFlashLampCol8:  	.equ RAM + $AF
-#DEFINE fflc(x) 	fastFlashLampCol1 + (x - 1)
+#DEFINE fflc(x) 	fastFlashLampCol1 + ((x&$FF) - 1)
 
 waitB:			.equ RAM + $B0 ; -> B7
 waitC:			.equ RAM + $B8 ; -> BF  ; flags: kill on ball end | kill on game end | X X | thread ID (3)

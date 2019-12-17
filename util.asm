@@ -378,6 +378,8 @@ specialOff6:
 ; trashes B (max 104ms)
 #DEFINE fireSolenoid(s)	ldaB ((s&$FF)/8)|$F0\ staB solenoid1+(s>>8)-1 
 #DEFINE fireSolenoidA(s)	ldaA ((s&$FF)/8)|$F0\ staA solenoid1+(s>>8)-1 
+#DEFINE onSolenoid(s)	ldaA $EE\ staA solenoid1+(s>>8)-1 
+#DEFINE offSolenoid(s)	ldaA $FF\ staA solenoid1+(s>>8)-1 
 
 ; trashes AX
 ; place: 1-5 = 10s thru 100ks
@@ -392,11 +394,13 @@ specialOff6:
 #define disablePf ldaA 	>solenoidBC\ andA 11110111b\ staA solenoidBC
 #define enablePf ldaA 	>solenoidBC\ oraA 00111000b\ staA solenoidBC
 
-#define lampOn(r,c) ldaA lr(r)\ oraA >lc(c)\ staA lc(c)
-#define flashLamp(r,c) ldaA lr(r)\ oraA >flc(c)\ staA flc(c)
-#define flashLampFast(r,c) ldaA lr(r)\ oraA >fflc(c)\ staA fflc(c)
-#define lampOff(r,c) ldaA ~lr(r)\ andA >lc(c)\ staA lc(c)
-#define flashOff(r,c) ldaA ~lr(r)\ andA >flc(c)\ staA flc(c)
-#define flashFastOff(r,c) ldaA ~lr(r)\ andA >fflc(c)\ staA fflc(c)
+#define lampOn(l) ldaA lr(l)\ oraA >lc(l)\ staA lc(l)
+#define flashLamp(l) ldaA lr(l)\ oraA >flc(l)\ staA flc(l)
+#define flashLampFast(l) ldaA lr(l)\ oraA >fflc(l)\ staA fflc(l)
+#define lampOff(l) ldaA ~lr(l)\ andA >lc(l)\ staA lc(l)
+#define flashOff(l) ldaA ~lr(l)\ andA >flc(l)\ staA flc(l)
+#define flashFastOff(l) ldaA ~lr(l)\ andA >fflc(l)\ staA fflc(l)
+#define checkLamp(l) ldaA lc(l)\ bitA lr(l)
+#define checkFlash(l) ldaA flc(l)\ bitA lr(l)
 
 #include "attract.asm"
