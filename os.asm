@@ -90,6 +90,8 @@ resetRamLoop:
 	cpX	RAMEnd + 1
 	bne	resetRamLoop
 
+#define CLEAR_CRAM
+#ifdef CLEAR_CRAM
 	ldaA	$F0
 	ldX	cRAM
 resetCRamLoop:
@@ -97,6 +99,9 @@ resetCRamLoop:
 	inX
 	cpX	cRAM + $FF + 1
 	bne	resetCRamLoop
+#else
+	clr		state
+#endif
 	
 	ldS	RAMEnd
 	
@@ -111,6 +116,9 @@ resetCRamLoop:
 	
 	ldaA	$FF	
 	staA 	displayStrobe
+
+	ldaA	$00
+	staA	ballCount
 
 	ldaA	00
 	staA	strobe
@@ -171,13 +179,19 @@ lEmptyQueue:
 	staA	queueTail + 1
 	
 ; test numbers
-	lampOn(4,1) ; game over
+	lampOn(GAME_OVER) ; game over
 
 	
 	jsr resetScores
 	
 	ldaA	pA_1m - dispData + 1
 	staA	dispOffsets + 0
+	;ldaA	pB_1m - dispData + 1
+	;staA	dispOffsets + 1
+	;ldaA	pC_1m - dispData + 1
+	;staA	dispOffsets + 2
+	;ldaA	pD_1m - dispData + 1
+	;staA	dispOffsets + 3
 
 ; setup complete
 	clI		; enable timer interrupt
@@ -522,9 +536,9 @@ counterHandled:
 	staB	displayBcd
 	staA	displayStrobe
 
+#ifdef SEVEN_DIGIT
 	ldaB	>curCol + 1 
 	bitB	111b
-
 	; now set B to the data for the display digit
 	ifeq ; X = 0, strobe 1/9	
 		ldX	>curCol
@@ -602,6 +616,105 @@ counterHandled:
 blankLowerDisplay:
 		; already blank, nothing to do
 	endif
+#else ; SIX_DIGIT
+	ldaB	>curCol + 1 
+	cmpB	7
+	; now set B to the data for the display digit
+	ifeq ; X = 7, strobe 8 = ball in play	
+		bitA	00001000b
+		ifeq ; strobe 1-8
+			ldaB	>ballCount ; left digit of ball
+		else ; strobe 9-16
+			ldaB	>counter2 ; left digit of credit
+			lslB
+			lslB
+			lslB
+			lslB
+		endif
+		jmp		displayDigitReady
+	endif
+	cmpB	5	
+	ifgt ; X = 6, strobe = 7, 15
+		bitA	00001000b
+		ifeq ; strobe 1-8
+			ldaB	$0F ; left digit of ball
+		else ; strobe 9-16
+			ldaB	>counter2 ; left digit of credit
+			lslB
+			lslB
+			lslB
+			lslB
+		endif
+	else ; X = [0,5], strobe 1-6, 9-14
+		ldaB	4 ; 2nd to last
+		cmpB	>curCol + 1
+		ifeq ; stop blanking, do 0s
+			inc	dispZeroes + 0
+			inc	dispZeroes + 1
+		endif
+
+		ldaB	dispData >> 8
+		staB	temp + 0
+
+		; process  players 1/2, upper nibble
+		bitA	00001000b
+		ifeq ; strobe 1-8
+			ldaA	>dispOffsets + 0
+		else ; strobe 9-16
+			ldaA	>dispOffsets + 1
+		endif
+
+		ifeq	; 0 -> display disabled -> blank display
+			ldaB	$FF
+		else ; read from given display data
+			addA	>curCol + 1
+			staA	temp + 1
+			ldX		>temp
+			ldaB	(dispData&$FF), X
+			lslB
+			lslB
+			lslB
+			lslB
+			ifeq ; digit is 0, maybe blank?
+				tst	>dispZeroes + 0
+				ifeq ; blank it
+					oraB	$F0
+				endif
+			else
+				inc	dispZeroes + 0 ; non-zero, so stop blanking zeros
+			endif
+			oraB	$0F
+		endif
+
+		; process players 3/4, lower nubble
+		ldaA	>displayCol
+		bitA	00001000b
+		ifeq
+			ldaA	>dispOffsets + 2
+		else
+			ldaA	>dispOffsets + 3
+		endif
+
+		beq	blankLowerDisplay ; 0 -> blank display
+
+		addA	>curCol + 1
+		staA	temp + 1
+		ldX	>temp
+		ldaA	$F0
+		cmpA	(dispData&$FF), X
+		ifeq ; digit is 0, maybe blank?
+			tst	>dispZeroes + 1
+			beq	blankLowerDisplay
+		else
+			inc	dispZeroes + 1
+		endif
+
+		andB	(dispData&$FF), X
+blankLowerDisplay:
+		; already blank, nothing to do
+	endif
+displayDigitReady:
+#endif
 	staB	displayBcd
 	
 ; read switches

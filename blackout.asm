@@ -17,27 +17,7 @@
 #DEFINE BLACKOUT	SOL(15, 255) 
 
 ; lamps
-;#define LAMP(r,c) (((r)<<8)|c)
 #define LAMP(n,r,c) n: .equ (((r)<<8)|c)
-;#define lr(SHOOT_AGAIN) lr(1)
-;#define SHOOT_AGAINc lc(1)
-;#define SHOOT_AGAIN LAMP(1,1)
-;#define lr(BONUS_9) lr(2)
-;#define lc(BONUS_10) lc(1)
-;#define BONUS_1 2,1
-;#define lr(BONUS_8) lr(1)
-;#define BONUS_8 LAMP(1,2)
-;BONUS_8: .equ LAMP(1,2)
-;#define lr(BONUS_9) lr(2)
-;#define BONUS_9 2,2
-;#define lr(BONUS_10) lr(4)
-;#define lc(BONUS_10) lc(2)
-;#define BONUS_10 4,2
-;#define GREEN_1r lr(1)
-;#define GREENc lc(3)
-;#define BONUS_20r lr(1)
-;#define BONUS_20c lc(7)
-;#define BONUS_20 1,7
 LAMP(BONUS_1,2,1)
 LAMP(SHOOT_AGAIN_PF,1,1)
 LAMP(BONUS_8,1,2)

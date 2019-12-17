@@ -60,14 +60,14 @@ playerCount:		.equ RAM + $39
 
 ; free $3A - $4F
 
-curCol:			.equ RAM + $50 ; +
+curCol:			.equ RAM + $50 ; + 0 - 7
 tempX:			.equ RAM + $52 ; +
 queueHead:		.equ RAM + $54 ; +
 queueTail:		.equ RAM + $56 ; +
 tempQ:			.equ RAM + $58 ; +
 queue:			.equ RAM + $60	; opened | switch? | number#6
 queueEnd:		.equ RAM + $6D
-ballCount:		.equ RAM + $6F
+ballCount:		.equ RAM + $6F ; upper nibble is ball #, lower unused
 
 waitB:			.equ RAM + $70 ; -> 77
 waitC:			.equ RAM + $78 ; -> 7F  ; flags: kill on ball end | kill on game end | X X | thread ID (3)
@@ -82,7 +82,7 @@ flashLampCol8:		.equ RAM + $A7
 dispOffsets:		.equ RAM + $B0 ; + 3 offset from dispData for each of the 4 displays, + 1 (set to 0 for blank)
 waitX			.equ RAM + $B4 ; +
 dispZeroes:		.equ RAM + $B6 ; +  0 if 0s for this display should be blanked for this strobe cycle
-; free B7 on
+; free B8 on
 
 ; Game RAM $C0 thru $E8
 

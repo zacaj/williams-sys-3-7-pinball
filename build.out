@@ -1,0 +1,15 @@
+
+C:\Users\zacaj\Documents\sys6>tasmx -68 -s -b os.asm rom.764 
+TASM 6800-6811 Assembler  Version 3.1  February, 1998.
+ Copyright (C) 1998 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+
+C:\Users\zacaj\Documents\sys6>bounds-check.exe
+unused space from 669b to 67ff (356 bytes)
+unused space from 724e to 77ff (1457 bytes)
+unused space from 7ccf to 7cff (48 bytes)
+unused space from 7f20 to 7ff7 (215 bytes)
+
+C:\Users\zacaj\Documents\sys6>split.exe pinmame32_23/roms/blkou_l1/ sys6 
