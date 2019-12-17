@@ -17,23 +17,29 @@ solenoidB:		.equ $2202
 solenoidBC:		.equ $2203
 
 RAM:			.equ $0000
+GRAM: 		    .equ RAM + $D0
+#ifdef SYS7
 eRAM:			.equ $1000
 cRAM:			.equ $1100
 RAMEnd:			.equ $13FF
+#else
+cRAM:           .equ $0100
+RAMEnd:         .equ $00FF
+#endif
+
 temp:			.equ RAM + $00 ; 01
 counter:		.equ RAM + $02
 counter2:		.equ RAM + $03
 strobe:			.equ RAM + $07
 lampCol1:		.equ RAM + $08
 lampCol8:		.equ lampCol1 + 7 
-#DEFINE upper(x)    ((x)>255);((x>>8)/(x>>8))
+#DEFINE upper(x)    ((x)>255)
 #DEFINE lc(x) 		(lampCol1 + ((x&$FF)-1))
-;#DEFINE lr(x)		(1 << (    ((((x&$FF00)!=0)*(x>>8))+(((x&$FF00)=0)*(x)))    -1))
 #DEFINE lr(x)		(1 << (    (x>>(x>255*8))    -1))
 curSwitchRowLsb:	.equ RAM + $10 
 ; 
 curPlayer:		.equ RAM + $12 ; + 0-3
-;;;
+; free $14 - $1F
 switchRow1:		.equ RAM + $20
 switchRow8:		.equ switchRow1 + 7 
 #DEFINE sc(x) 		switchRow1 + x - 1
@@ -52,6 +58,8 @@ lastSwitch:		.equ RAM + $37
 pfInvalid:		.equ RAM + $38
 playerCount:		.equ RAM + $39
 
+; free $3A - $4F
+
 curCol:			.equ RAM + $50 ; +
 tempX:			.equ RAM + $52 ; +
 queueHead:		.equ RAM + $54 ; +
@@ -59,10 +67,10 @@ queueTail:		.equ RAM + $56 ; +
 tempQ:			.equ RAM + $58 ; +
 queue:			.equ RAM + $60	; opened | switch? | number#6
 queueEnd:		.equ RAM + $6D
-ballCount:		.equ RAM + $70
-;
-; FREE
-; 
+ballCount:		.equ RAM + $6F
+
+waitB:			.equ RAM + $70 ; -> 77
+waitC:			.equ RAM + $78 ; -> 7F  ; flags: kill on ball end | kill on game end | X X | thread ID (3)
 waitLeft: 		.equ RAM + $80 ; dec every 8ms, 0 = inactive
 waitLeftEnd:		.equ RAM + $86
 waitMsb:		.equ RAM + $88 ; -> 8F
@@ -71,17 +79,14 @@ waitA:			.equ RAM + $98 ; -> 9F
 flashLampCol1:		.equ RAM + $A0
 flashLampCol8:		.equ RAM + $A7
 #DEFINE flc(x) 		flashLampCol1 + ((x&$FF) - 1)
-fastFlashLampCol1:  	.equ RAM + $A8 ; -> D7
-fastFlashLampCol8:  	.equ RAM + $AF
-#DEFINE fflc(x) 	fastFlashLampCol1 + ((x&$FF) - 1)
+dispOffsets:		.equ RAM + $B0 ; + 3 offset from dispData for each of the 4 displays, + 1 (set to 0 for blank)
+waitX			.equ RAM + $B4 ; +
+dispZeroes:		.equ RAM + $B6 ; +  0 if 0s for this display should be blanked for this strobe cycle
+; free B7 on
 
-waitB:			.equ RAM + $B0 ; -> B7
-waitC:			.equ RAM + $B8 ; -> BF  ; flags: kill on ball end | kill on game end | X X | thread ID (3)
-dispOffsets:		.equ RAM + $C0 ; + 3 offset from dispData for each of the 4 displays, + 1 (set to 0 for blank)
-waitX			.equ RAM + $C4 ; +
-dispZeroes:		.equ RAM + $C6 ; +  0 if 0s for this display should be blanked for this strobe cycle
+; Game RAM $C0 thru $E8
 
-
+stack:          .equ RAM + $E8
 
 settleRow1:		.equ cRAM + $00 ;must be at 0
 settleRow8End:		.equ settleRow1+  (8*8)-1

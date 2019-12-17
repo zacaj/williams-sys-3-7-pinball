@@ -180,14 +180,15 @@ _addScore100kN:
 
 #DEFINE advBonus()	jsr advanceBonus
 
-GRAM: 		.equ RAM + $D0
 p_Col3_6: 	.equ GRAM + $00 ; thru $0F 
 p_Bonus:	.equ GRAM + $10
 drops:		.equ GRAM + $11 ; XRRRXLLL 1 = ignore drop (because it's already down)
 bonusAnim:	.equ GRAM + $12 ; stores temp data for bonus animations
 bonusTimer:	.equ GRAM + $13 ; extended settle timer for outhole 
 
-p_Targets:	.equ GRAM + $20 ; XXXGGGGG (targets collected, matches lamp matrix)
+p_Targets:	.equ GRAM + $20 ; thru $23 XXXGGGGG (targets collected, matches lamp matrix)
+
+; max GRAM + $27
 advanceBonus:
 	inc 	p_Bonus
 	fork(64)
@@ -417,7 +418,17 @@ lInitPlayers:
 	
 	rts
 	
+swPlayfieldValidated:
+	lampOff(SHOOT_AGAIN_PF) ; shoot again
+	;lampOff(8,1)
 
+	; turn off flashing outlane
+	ldaA	>flc(LEFT_OUTLANE) 
+	andA	lr(LEFT_OUTLANE)|lr(RIGHT_OUTLANE)
+	comA
+	andA	>lc(LEFT_OUTLANE)
+	staA	lc(LEFT_OUTLANE)
+	rts
 	
 swTilt: 
 	;SOUND($0B)
@@ -1005,8 +1016,8 @@ swEject:
 	endif
 
 	
-	ldX	pT_1m
-	jsr 	blankLeadingScoreZeroes
+	;ldX	pT_1m
+	;jsr 	blankLeadingScoreZeroes
 
 	; display value
 	ldaA	3

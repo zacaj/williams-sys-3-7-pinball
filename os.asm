@@ -78,7 +78,11 @@ piaSetup:
 	
 
 resetRam:
+#ifdef SYS7
 	ldX	eRAM
+#else	
+	ldX	RAM
+#endif
 	ldaA	0
 resetRamLoop:
 	staA	0, X
@@ -93,7 +97,6 @@ resetCRamLoop:
 	inX
 	cpX	cRAM + $FF + 1
 	bne	resetCRamLoop
-	
 	
 	ldS	RAMEnd
 	
@@ -267,11 +270,11 @@ afterFork:
 	
 	bitB	01000000b ; B.7 = active in game over
 	ifeq 	 ; not active in game over
-		ldaB	>lc(1)	; gameover mask
-		bitB	lr(4)
+		ldaB	>lc(GAME_OVER)	; gameover mask
+		bitB	lr(GAME_OVER)
 		bne	skipEvent
-		ldaB	>lc(1) ; tilt bit
-		bitB	lr(3)
+		ldaB	>lc(TILT) ; tilt bit
+		bitB	lr(TILT)
 		bne	skipEvent
 	endif
 	
@@ -300,15 +303,8 @@ afterQueueEvent:
 		tst	>pfInvalid
 		ifne 
 			clr	pfInvalid
-			
-			lampOff(1,1) ; shoot again
-			lampOff(8,1)
 
-			ldaA	>flc(2) 
-			andA	11000000b ; outlanes
-			comA
-			andA	>lc(2)
-			staA	lc(2)
+			jsr swPlayfieldValidated
 		endif
 	else
 		; clear don't validate bit
@@ -317,8 +313,8 @@ afterQueueEvent:
 		staA	state
 	endif
 
-	ldaA	>lc(1)
-	bitA	lr(4) ; gameover
+	ldaA	>lc(GAME_OVER)
+	bitA	lr(GAME_OVER) ; gameover
 	ifeq
 		; flash current score after inactivity delay
 		ldaA	001b ; flash scores id
@@ -343,13 +339,13 @@ skipQueue:
 				
 doQuickScan:
 	;	jmp 	quickScanDone		
-	ldaB	>lc(1)	; gameover mask	
-	bitB	lr(4)
+	ldaB	>lc(GAME_OVER)	; gameover mask	
+	bitB	lr(GAME_OVER)
 	ifne
 		jmp 	quickScanDone
 	endif
-	ldaB	>lc(1) ; tilt bit
-	bitB	lr(3)
+	ldaB	>lc(TILT) ; tilt bit
+	bitB	lr(TILT)
 	ifne
 		jmp 	quickScanDone
 	endif
@@ -487,8 +483,8 @@ interrupt:
 	bne	counterHandled
 	
 	; attract mode
-	ldaA	lr(4) ; gameover
-	bitA	> lc(1)
+	ldaA	lr(GAME_OVER) ; gameover
+	bitA	>lc(GAME_OVER)
 	ifne
 		ldX	>attractX
 		ldaA	0, X
@@ -528,18 +524,20 @@ counterHandled:
 
 	ldaB	>curCol + 1 
 	bitB	111b
-	ifeq ; X = 0	
+
+	; now set B to the data for the display digit
+	ifeq ; X = 0, strobe 1/9	
 		ldX	>curCol
 		bitA	00001000b
-		ifeq
+		ifeq ; strobe 1-8
 			ldaB	0
-		else
+		else ; strobe 9-16
 			ldaB	>ballCount
 		endif
-	else	; X = [1,7]
-		ldaB	6
+	else	; X = [1,7], strobe 2-8, 10-16
+		ldaB	6 ; 2nd to last
 		cmpB	>curCol + 1
-		ifeq
+		ifeq ; stop blanking, do 0s
 			inc	dispZeroes + 0
 			inc	dispZeroes + 1
 		endif
@@ -547,16 +545,17 @@ counterHandled:
 		ldaB	dispData >> 8
 		staB	temp + 0
 
+		; process  players 1/2, upper nibble
 		bitA	00001000b
-		ifeq
+		ifeq ; strobe 1-8
 			ldaA	>dispOffsets + 0
-		else
+		else ; strobe 9-16
 			ldaA	>dispOffsets + 1
 		endif
 
-		ifeq	; 0 -> blank display
+		ifeq	; 0 -> display disabled -> blank display
 			ldaB	$FF
-		else
+		else ; read from given display data
 			addA	>curCol + 1
 			staA	temp + 1
 			ldX	>temp
@@ -567,15 +566,16 @@ counterHandled:
 			lslB
 			ifeq ; digit is 0, maybe blank?
 				tst	>dispZeroes + 0
-				ifeq
+				ifeq ; blank it
 					oraB	$F0
 				endif
 			else
-				inc	dispZeroes + 0
+				inc	dispZeroes + 0 ; non-zero, so stop blanking zeros
 			endif
 			oraB	$0F
 		endif
 
+		; process players 3/4, lower nubble
 		ldaA	>displayCol
 		bitA	00001000b
 		ifeq
@@ -600,6 +600,7 @@ counterHandled:
 
 		andB	(dispData&$FF)-1-1, X
 blankLowerDisplay:
+		; already blank, nothing to do
 	endif
 	staB	displayBcd
 	
@@ -727,13 +728,8 @@ updateLamps:
 	ifeq
 		eorA	flashLampCol1, X
 		andA	lampCol1, X
-		bitB	01000000b
-		ifeq
-			eorA	fastFlashLampCol1, X
-			andA	lampCol1, X
-		endif
 	endif
-	comA	; inverted
+	comA	; inverted for driver board
 	
 	staA	lampCol
 	ldaA	00

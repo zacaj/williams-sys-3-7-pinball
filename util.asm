@@ -62,6 +62,7 @@ addScore_carryDa:
 		endif
 	endif
 	rts
+#if 0
 ; B: amount to subtract
 ; note: assumes it won't go negative
 _decScoreI:
@@ -90,7 +91,7 @@ decScore_rolled:
 	endif
 
 	rts
-
+#endif
 	
 ; t X
 setXToCurPlayer10:
@@ -116,56 +117,6 @@ _addScore10N_p3:
 _addScore10N_p4:
 	ldX	pD_1-1
 	pulA
-	rts
-
-; blanks any leading zeroes in the temp score except the last 2
-; X = digit to start at (eg, pA_1m)
-; t AB
-blankLeadingScoreZeroes:
-	rts
-	ldaB	5
-l_blankTempScoreZeroes:
-	ldaA	0, X
-	bitA	1111b
-	ifeq
-		ldaA	$FF
-		staA	0, X
-	else
-		rts
-	endif
-	inX
-	decB
-	bne	l_blankTempScoreZeroes
-	
-	rts
-
-blankAllLeadingScoreZeroes:
-	rts
-	ldX	dispData
-	ldaA	1
-	ldaB	5
-l_blankAllTempScoreZeroes:
-	tstA
-	ifne
-		ldaA	0, X
-		bitA	1111b
-		ifeq
-			ldaA	$FF
-			staA	0, X
-		else
-			clrA
-		endif
-	endif
-	inX
-	decB
-	ifeq
-		ldaB	5
-		inX
-		inX
-	endif
-	cpX	dispDataEnd
-	bne	l_blankAllTempScoreZeroes
-	
 	rts
 
 ; suspends execution for A ms and returns to queue processor
@@ -307,8 +258,6 @@ _zeroScores:
 	ldaA	$00
 	staA	curPlayer
 	staA	curPlayer + 1
-
-	jsr	blankAllLeadingScoreZeroes
 
 	rts
 
