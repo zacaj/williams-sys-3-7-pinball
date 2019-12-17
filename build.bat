@@ -1,2 +1,3 @@
 tasmx -68 -s -b os.asm rom.764
-split.exe
+bounds-check.exe
+split.exe pinmame32_23/roms/blkou_l1/ sys6
