@@ -340,7 +340,7 @@ lClearLights:
 	delay(150)
 	fireSolenoid(YELLOW_RESET)
 		
-	;inc	pfInvalid
+	inc	pfInvalid
 	; flash player light
 	ldaA	00001111b ; player up lights
 	oraA	>flc(8)
@@ -425,6 +425,11 @@ swPlayfieldValidated:
 	comA
 	andA	>lc(LEFT_OUTLANE)
 	staA	lc(LEFT_OUTLANE)
+
+	ldaA	>flc(P1_UP)
+	andA	~(lr(P1_UP)|lr(P2_UP)|lr(P3_UP)|lr(P4_UP))
+	staA	flc(P1_UP)
+
 	rts
 	
 swTilt: 
